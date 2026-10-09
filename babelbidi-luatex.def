@@ -1,0 +1,194 @@
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-luatex.def}
+[2026/10/09 v0.1.0 LuaTeX support for Babelbidi]
+
+\makeatletter
+
+
+% ------------------------------------------
+% Footnote Hook
+% ------------------------------------------
+
+\let\bbd@fn@dir\relax
+\newtoks\bbd@fn@pending@toks
+\newif\ifbbd@fn@pending
+
+\def\bbd@fn@setdir{%
+    \if@RTL
+        \global\let\bbd@fn@dir\relax
+    \else
+        \global\let\bbd@fn@dir\setparLTR
+    \fi
+}%
+
+\@ifundefined{bbl@footnote}{}{%
+    \let\bbd@orig@bbl@footnote\bbl@footnote
+    \def\bbl@footnote#1#2#3{%
+        \bbd@fn@setdir
+        \bbd@orig@bbl@footnote{#1}{#2}{#3}}%
+}%
+
+\let\bbd@fn@makefntext\@makefntext
+\def\@makefntext#1{%
+    \bbd@fn@dir
+    \bbd@fn@makefntext{#1}%
+}%
+
+\let\bbd@orig@footnotetext\@footnotetext
+
+
+\def\bbd@fn@deferred@footnotetext#1{%
+    \global\let\bbd@fn@dir\setparRTL
+    \bbd@orig@footnotetext{#1}%
+}%
+
+\def\bbd@fn@flush{%
+    \ifbbd@fn@pending
+        \global\bbd@fn@pendingfalse
+        \the\bbd@fn@pending@toks
+        \global\bbd@fn@pending@toks{}%
+    \fi
+}%
+
+\def\@footnotetext#1{%
+    \ifmmode
+        \global\bbd@fn@pendingtrue
+        \global\bbd@fn@pending@toks\expandafter{%
+            \the\bbd@fn@pending@toks
+            \bbd@fn@deferred@footnotetext{#1}%
+        }%
+        \aftergroup\bbd@fn@flush
+    \else
+        \bbd@orig@footnotetext{#1}%
+    \fi
+}%
+
+\let\bbd@orig@fn@fntext\fn@fntext
+
+\def\fn@fntext#1{%
+    \ifmmode
+        \global\let\bbd@fn@dir\setparRTL
+    \fi
+    \bbd@orig@fn@fntext{#1}%
+}
+
+
+% ------------------------------------------
+% makebox r and l
+% ------------------------------------------
+
+\def\bm@l{%
+    \if@RTL
+        \hss\unhbox\@tempboxa
+    \else
+        \unhbox\@tempboxa\hss
+    \fi
+}
+\let\bm@t\bm@l
+
+\def\bm@r{%
+    \if@RTL
+        \unhbox\@tempboxa\hss
+    \else
+        \hss\unhbox\@tempboxa
+    \fi
+}
+\let\bm@b\bm@r
+
+
+% ------------------------------------------
+% tabular alignment
+% ------------------------------------------
+
+\def\bbd@swap@lr@chnum@do{%
+    \ifcase\@chnum\relax
+    \or
+        \@chnum=\tw@
+    \or
+        \@chnum=\@ne
+    \fi
+}
+
+\def\bbd@swap@lr@chnum{%
+    \if@RTL
+        \bbd@swap@lr@chnum@do
+    \fi
+}
+
+\def\bbd@patch@kernel@tabular{%
+    \@ifundefined{bbd@kernel@tabular@patched}{%
+        \@ifundefined{@tabclassz}{}{%
+            \let\bbd@orig@tabclassz\@tabclassz
+            \def\bbd@kernel@tabular@patched{}%
+            \def\@tabclassz{%
+                \bbd@swap@lr@chnum
+                \bbd@orig@tabclassz
+            }%
+        }%
+    }{}%
+}
+
+\def\bbd@patch@array@tabular{%
+    \@ifundefined{bbd@array@tabular@patched}{%
+        \@ifundefined{@classz}{}{%
+            \let\bbd@orig@classz\@classz
+            \def\bbd@array@tabular@patched{}%
+            \def\@classz{%
+                \bbd@swap@lr@chnum
+                \bbd@orig@classz
+            }%
+        }%
+    }{}%
+}
+
+
+\AddToHook{package/array/after}{%
+    \bbd@patch@array@tabular
+}%
+\AddToHook{begindocument}{%
+    \@ifpackageloaded{array}{%
+        \bbd@patch@array@tabular
+    }{%
+        \bbd@patch@kernel@tabular
+    }%
+}%
+
+
+% ------------------------------------------
+% multicol
+% ------------------------------------------
+
+\AddToHook{env/multicols/begin}{%
+    \if@RTL
+        \RLmulticolcolumns
+    \else
+        \LRmulticolcolumns
+    \fi
+}
+
+
+
+\makeatother
+
+\endinput

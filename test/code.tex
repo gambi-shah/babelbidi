@@ -1,0 +1,87 @@
+
+\documentclass{article}
+
+
+
+\usepackage[english,french,arabic,main=greek]{babelbidi}
+
+
+
+\babelfont[english]{rm}{Times New Roman}
+\babelfont[english]{tt}{JetBrains Mono}
+
+\babelfont[french]{rm}{Noto Serif}
+\babelfont[french]{tt}{Source Code Pro}
+
+\babelfont[arabic]{rm}{Vazirmatn}
+\babelfont[arabic]{tt}{Vazir Code}
+
+\usepackage{listings}
+\usepackage{minted}
+
+\begin{document}
+
+
+    \begin{otherlanguage}{french}
+        French:
+    \ttfamily code font 123
+   \end{otherlanguage}
+
+
+
+    \begin{otherlanguage}{english}
+        English:
+        \ttfamily code font 123
+    \end{otherlanguage}
+
+
+
+    \begin{otherlanguage}{arabic}
+        Arabic:
+        \ttfamily code font 123
+    \end{otherlanguage}
+
+
+
+
+\bgroup    {\latinttfamily code font 123} \egroup
+
+
+
+Before \textbf{Verbatim}
+    \begin{verbatim}
+        # Print a simple message
+        print("code font 123")
+    \end{verbatim}
+    After verbatim
+
+
+
+
+\definecolor{pycomment}{HTML}{3D7B7B}
+\definecolor{pykeyword}{HTML}{008000}
+\definecolor{pystring}{HTML}{BA2121}
+
+Before \textbf{Listings}
+    \begin{lstlisting}[language=Python,
+        basicstyle=\ttfamily,
+        commentstyle=\itshape\color{pycomment},
+        keywordstyle=\color{pykeyword},
+        stringstyle=\color{pystring},
+        showstringspaces=false,
+        breaklines=true]
+        # Print a simple message
+        print("code font 123")
+    \end{lstlisting}
+    After Listings
+
+
+
+Before \textbf{Minted}
+    \begin{minted}{python}
+        # Print a simple message
+        print("code font 123")
+    \end{minted}
+    After Minted
+
+\end{document}

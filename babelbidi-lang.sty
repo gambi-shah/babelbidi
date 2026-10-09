@@ -1,0 +1,304 @@
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% This work is "maintained" by Amer Amikhteh.
+
+\NeedsTeXFormat{LaTeX2e}
+
+\ProvidesPackage{babelbidi-lang}
+[2026/10/09 v0.1.0 Babel language metadata, selection, and bidi utilities]
+
+
+\makeatletter
+
+
+% --------------------------------------------------------------------------
+% Manual language options
+% --------------------------------------------------------------------------
+
+\def\bbd@option@code{}
+\def\bbd@option@latin{}
+\def\bbd@option@ltr{}
+\def\bbd@option@rtl{}
+
+\DeclareKeys[babelbidi-lang]{%
+    code  .store = \bbd@option@code,
+    latin .store = \bbd@option@latin,
+    ltr   .store = \bbd@option@ltr,
+    rtl   .store = \bbd@option@rtl
+}
+
+\ProcessKeyOptions[babelbidi-lang]
+
+
+% --------------------------------------------------------------------------
+% Constants
+% --------------------------------------------------------------------------
+
+\def\bbd@name@english{english}
+\def\bbd@name@null{null}
+\def\bbd@name@nil{nil}
+\def\bbd@script@latin{Latin}
+\def\bbd@direction@ltr{LTR}
+\def\bbd@direction@rtl{RTL}
+
+
+% --------------------------------------------------------------------------
+% Babel language metadata
+% --------------------------------------------------------------------------
+
+\def\bbd@script#1{%
+    \ifcsname bbl@sname@#1\endcsname
+        \csname bbl@sname@#1\endcsname
+    \else
+        null%
+    \fi
+}
+
+\def\bbd@dir#1{%
+    \def\bbd@dirresult{null}%
+    \ifcsname bbl@sname@#1\endcsname
+        \ifcsname bbl@provide@dirs\endcsname
+            \bbl@provide@dirs{#1}%
+        \fi
+        \ifcsname bbl@wdir@#1\endcsname
+            \edef\bbd@wdir{%
+                \csname bbl@wdir@#1\endcsname
+            }%
+            \ifx\bbd@wdir\@empty
+                \def\bbd@dirresult{null}%
+            \else
+                \ifnum\bbd@wdir=0
+                    \def\bbd@dirresult{LTR}%
+                \else
+                    \def\bbd@dirresult{RTL}%
+                \fi
+            \fi
+        \fi
+    \fi
+}
+
+\def\bbd@english{%
+    \def\bbd@result{null}%
+    \def\bbd@found{0}%
+    \bbl@foreach{\bbl@ini@loaded}{%
+        \ifnum\bbd@found=0
+            \edef\bbd@tmp{##1}%
+            \ifx\bbd@tmp\bbd@name@english
+                \def\bbd@result{english}%
+                \def\bbd@found{1}%
+            \fi
+        \fi
+    }%
+}
+
+
+% --------------------------------------------------------------------------
+% Metadata tests
+% --------------------------------------------------------------------------
+
+\def\bbd@if@latin#1{%
+    \edef\bbd@tmp{\bbd@script{#1}}%
+    \ifx\bbd@tmp\bbd@script@latin
+        \expandafter\@firstoftwo
+    \else
+        \expandafter\@secondoftwo
+    \fi
+}
+
+\def\bbd@if@direction#1#2{%
+    \bbd@dir{#1}%
+    \edef\bbd@wanted{#2}%
+    \ifx\bbd@dirresult\bbd@wanted
+        \expandafter\@firstoftwo
+    \else
+        \expandafter\@secondoftwo
+    \fi
+}
+
+
+% --------------------------------------------------------------------------
+% Search functions
+% --------------------------------------------------------------------------
+
+\def\bbd@first@latin{%
+    \def\bbd@result{null}%
+    \def\bbd@found{0}%
+    \bbl@foreach{\bbl@ini@loaded}{%
+        \ifnum\bbd@found=0
+            \edef\bbd@tmp{##1}%
+            \ifx\bbd@tmp\bbd@name@nil
+                % Ignore Babel's synthetic nil language.
+            \else
+                \edef\bbd@tmp{\bbd@script{##1}}%
+                \ifx\bbd@tmp\bbd@script@latin
+                    \edef\bbd@result{##1}%
+                    \def\bbd@found{1}%
+                \fi
+            \fi
+        \fi
+    }%
+}
+
+\def\bbd@first@direction#1{%
+    \def\bbd@result{null}%
+    \def\bbd@found{0}%
+    \bbl@foreach{\bbl@ini@loaded}{%
+        \ifnum\bbd@found=0
+            \bbd@if@direction{##1}{#1}{%
+                \edef\bbd@result{##1}%
+                \def\bbd@found{1}%
+            }{}%
+        \fi
+    }%
+}
+
+
+
+% --------------------------------------------------------------------------
+% Language selectors
+% --------------------------------------------------------------------------
+
+\def\bbd@select@code{%
+    \edef\bbd@main{\bbl@main@language}%
+    \edef\bbd@script@result{\bbd@script{\bbd@main}}%
+    \ifx\bbd@script@result\bbd@script@latin
+        \edef\bbd@result{\bbd@main}%
+    \else
+        \bbd@english
+        \ifx\bbd@result\bbd@name@null
+            \bbd@first@latin
+            \ifx\bbd@result\bbd@name@null
+                \bbd@dir{\bbd@main}%
+                \ifx\bbd@dirresult\bbd@direction@ltr
+                    \edef\bbd@result{\bbd@main}%
+                \else
+                    \bbd@first@direction{\bbd@direction@ltr}%
+                    \ifx\bbd@result\bbd@name@null
+                        \edef\bbd@result{\bbd@main}%
+                    \fi
+                \fi
+            \fi
+        \fi
+    \fi
+}
+
+
+\def\bbd@select@latin{%
+    \edef\bbd@main{\bbl@main@language}%
+    \bbd@if@latin{\bbd@main}{%
+        \edef\bbd@result{\bbd@main}%
+    }{%
+        \bbd@first@latin
+        \ifx\bbd@result\bbd@name@null
+            \def\bbd@result{english}%
+        \fi
+    }%
+}
+
+\def\bbd@select@ltr{%
+    \edef\bbd@main{\bbl@main@language}%
+    \bbd@if@direction{\bbd@main}{\bbd@direction@ltr}{%
+        \edef\bbd@result{\bbd@main}%
+    }{%
+        \bbd@first@direction{\bbd@direction@ltr}%
+        \ifx\bbd@result\bbd@name@null
+            \def\bbd@result{english}%
+        \fi
+    }%
+}
+
+\def\bbd@select@rtl{%
+    \edef\bbd@main{\bbl@main@language}%
+    \bbd@if@direction{\bbd@main}{\bbd@direction@rtl}{%
+        \edef\bbd@result{\bbd@main}%
+    }{%
+        \bbd@first@direction{\bbd@direction@rtl}%
+        \ifx\bbd@result\bbd@name@null
+            \def\bbd@result{arabic}%
+        \fi
+    }%
+}
+
+
+% --------------------------------------------------------------------------
+% Resolve and cache all language selections
+% --------------------------------------------------------------------------
+
+\AddToHook{begindocument/before}[babelbidi-lang]{%
+    \ifx\bbd@option@code\@empty
+        \bbd@select@code
+        \edef\bbd@lang@code{\bbd@result}%
+    \else
+        \edef\bbd@lang@code{\bbd@option@code}%
+    \fi
+
+    \ifx\bbd@option@latin\@empty
+        \bbd@select@latin
+        \edef\bbd@lang@latin{\bbd@result}%
+    \else
+        \edef\bbd@lang@latin{\bbd@option@latin}%
+    \fi
+
+    \ifx\bbd@option@ltr\@empty
+        \bbd@select@ltr
+        \edef\bbd@lang@ltr{\bbd@result}%
+    \else
+        \edef\bbd@lang@ltr{\bbd@option@ltr}%
+    \fi
+
+    \ifx\bbd@option@rtl\@empty
+        \bbd@select@rtl
+        \edef\bbd@lang@rtl{\bbd@result}%
+    \else
+        \edef\bbd@lang@rtl{\bbd@option@rtl}%
+    \fi
+}
+
+
+% --------------------------------------------------------------------------
+% Inline language commands
+% --------------------------------------------------------------------------
+
+\NewDocumentCommand\lr{m}{\foreignlanguage[captions]{\bbd@lang@ltr}{#1}}
+\NewDocumentCommand\rl{m}{\foreignlanguage[captions]{\bbd@lang@rtl}{#1}}
+
+
+% --------------------------------------------------------------------------
+% Latin environment
+% --------------------------------------------------------------------------
+
+\NewDocumentEnvironment{latin}{}%
+{%
+    \par
+    \begin{otherlanguage}{\bbd@lang@latin}%
+}%
+{%
+    \end{otherlanguage}%
+    \par
+}%
+
+
+% ------------------------------------------
+% Date helpers
+% ------------------------------------------
+
+\DeclareRobustCommand{\latintoday}{%
+    \foreignlanguage[date]{\bbd@lang@latin}{\today}%
+}
+
+\makeatother
+
+\endinput

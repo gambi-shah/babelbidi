@@ -1,0 +1,95 @@
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-layout.def}
+[2026/10/09 v0.1.0 Layout fixes for Babelbidi]
+
+
+\makeatletter
+
+
+% ------------------------------------------
+% Footnote rule
+% ------------------------------------------
+\ifXeTeX
+    \def\footnoterule{%
+        \kern-3\p@
+        \hbox to \columnwidth{\hfill\rule{.4\columnwidth}{0.4\p@}}%
+        \kern 2.6\p@
+    }
+\fi
+
+
+\ifLuaTeX
+    \def\footnoterule{%
+        \kern-3\p@
+        \hbox dir TLT to \columnwidth{%
+            \hss
+            \vrule width .4\columnwidth height 0.4\p@ depth 0pt%
+        }%
+        \kern 2.6\p@
+    }
+
+
+    % ------------------------------------------
+    %   Tikz
+    % ------------------------------------------
+
+    \ifbbd@beamerrl
+    \else
+        \AtBeginEnvironment{tikzpicture}{%
+            \global\edef\bbd@tikz@saved@pardir{\the\pardir}%
+            \pardir TLT
+        }
+
+        \AtEndEnvironment{tikzpicture}{%
+            \pardir\bbd@tikz@saved@pardir
+        }
+    \fi
+
+
+    % ------------------------------------------
+    %   fancyhdr
+    % ------------------------------------------
+
+    \def\bbd@patch@fancyhdr{%
+        \setlength{\headheight}{1.2em}%
+    }
+
+    \AddToHook{package/fancyhdr/after}{%
+        \bbd@patch@fancyhdr
+        \AddToHook{fancyhdr/head/begin}{\beginL}%
+        \AddToHook{fancyhdr/head/end}{\endL}%
+        \AddToHook{fancyhdr/foot/begin}{\beginL}%
+        \AddToHook{fancyhdr/foot/end}{\endL}%
+    }%
+    \AddToHook{begindocument}{%
+        \@ifpackageloaded{fancyhdr}{%
+            \bbd@patch@fancyhdr
+        }{}%
+    }%
+\fi
+
+
+\makeatother
+
+\endinput

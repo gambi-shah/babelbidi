@@ -1,0 +1,39 @@
+# LaTeX auxiliary files
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.lot
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex*
+*.toc
+*.vrb
+*.xdv
+*.log
+
+# Minted
+_minted*/
+**/_minted*/
+
+# Editors
+.vscode/
+*~
+*.swp
+*.bak
+
+# Test output PDFs
+/code.pdf
+/langs.pdf
+/luatex.pdf
+
+# Generated documentation files
+*.hd

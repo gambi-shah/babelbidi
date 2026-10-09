@@ -1,0 +1,114 @@
+% !TeX program = lualatex
+\documentclass{article}
+
+\usepackage[
+persian,
+layout=footnotes counters,
+%layout={tabular pars}
+]{babelbidi}
+
+\usepackage{pict2e}
+
+\babelprovide[import]{english}
+
+\babelfont[persian]{rm}{HM XNiloofar}
+\babelfont[english]{rm}{Latin Modern Roman}
+
+\begin{document}
+
+    \section{متن دوجهتی، پانوشت‌ها و فهرست‌ها}
+
+    این یک پاراگراف فارسی است که در آن یک پانوشت فارسی درج شده است%
+    \footnote{این پانوشت به زبان فارسی نوشته شده است.} سپس متن فارسی ادامه
+    پیدا می‌کند.
+
+
+       \begin{latin}
+        This is an English paragraph with an English footnote%
+        \footnote{This is an English footnote.}
+        inside a bidirectional document.
+    \end{latin}
+
+
+      \hfill \foreignlanguage{english}{ A other test for footnote.
+        \footnote{%
+            This footnote is entirely in inline English.
+        }
+    }
+
+    \subsection{فهرست‌ها}
+
+    فهرست شماره‌دار:
+
+    \begin{enumerate}
+        \item مورد نخست در فهرست.
+        \item مورد دوم در فهرست.
+        \item مورد سوم در فهرست.
+    \end{enumerate}
+
+    فهرست نشانه‌دار:
+
+    \begin{itemize}
+        \item متن فارسی در یک فهرست نشانه‌دار.
+        \item یک عبارت انگلیسی:
+        \begin{otherlanguage}{english}
+            An English item inside the list.
+        \end{otherlanguage}
+        \item مورد دیگری در فهرست.
+    \end{itemize}
+
+    \begin{otherlanguage}{english}
+        \subsection{Lists in English}
+
+        The following list is written in English:
+
+        \begin{enumerate}
+            \item The first English item.
+            \item The second English item.
+        \end{enumerate}
+    \end{otherlanguage}
+
+    \subsection{محیط گرافیکی}
+
+    متن فارسی پیش از محیط گرافیکی:
+
+    \begin{center}
+        \begin{picture}(260,90)
+            \linethickness{0.5pt}
+
+            \put(0,0){\framebox(260,90){}}
+
+            \put(130,70){\makebox(0,0)[c]{نمودار سادهٔ دوجهتی}}
+
+            \put(20,45){\makebox(0,0)[c]{آغاز}}
+
+            \put(130,45){\vector(1,0){55}}
+
+            \put(240,45){\makebox(0,0)[c]{پایان}}
+
+            \put(130,20){\makebox(0,0)[c]{%
+                    \begin{otherlanguage}{english}
+                        English label
+                    \end{otherlanguage}
+            }}
+        \end{picture}
+    \end{center}
+
+    در این مثال، خود محیط گرافیکی و چارچوب آن چپ‌به‌راست باقی می‌ماند،
+    اما متن‌های فارسی داخل آن باید جهت درست خود را حفظ کنند.
+
+    \subsection{جدول و جعبه‌ها}
+
+    \makebox[7cm][l]{صبحی آرام در کنار دریا}
+
+    \makebox[7cm][r]{غروب دل‌انگیز پاییز}
+
+    \bigskip
+
+    \begin{tabular}{l|r}
+        بهار & تابستان \\
+        \hline
+        شکوفه‌باران است. & آفتاب سوزان دارد.
+    \end{tabular}
+
+\end{document}

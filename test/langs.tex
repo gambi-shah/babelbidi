@@ -1,0 +1,45 @@
+\documentclass{article}
+
+
+\usepackage{babelbidi}
+\babelprovide[import,main]{greek}
+
+\babelprovide{persian}
+\babelfont{rm}[arabic]{Amiri}
+\babelfont{rm}[persian]{Vazirmatn}
+\babelprovide{french}
+\babelprovide{english}
+
+\babelfont{sf}{Latin Modern Sans}
+\babelfont{tt}{Latin Modern Mono}
+
+
+\babelbidilangs{
+    code  = english,
+    latin = english,
+    ltr   = english,
+    rtl   = arabic
+}
+
+\begin{document}
+\makeatletter
+%\begin{otherlanguage}{english}
+Code: \bbd@lang@code
+\par
+LR: \bbd@lang@ltr\par
+RL: \bbd@lang@rtl\par
+Latin: \bbd@lang@latin
+%  \end{otherlanguage}
+\makeatother
+
+\lr{LR text}
+\rl{متن راستچین}
+\begin{latin}
+    This is a Latin Paragraph
+\end{latin}
+End
+
+
+
+
+\end{document}

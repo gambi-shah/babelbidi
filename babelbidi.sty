@@ -1,0 +1,230 @@
+% Babelbidi: Bidirectional typesetting support for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This package is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This package is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+%
+% This package consists of the file babelbidi.sty and the files
+% distributed with it.
+
+\NeedsTeXFormat{LaTeX2e}
+
+\ProvidesPackage{babelbidi}
+[2026/10/09 v0.1.0 Bidi extensions for Babel]
+
+
+\RequirePackage{iftex}
+\RequirePackage{xkeyval}
+\RequirePackage{babelbidi-lang}
+\NewDocumentCommand{\babelbidilangs}{m}{%
+    \SetKeys[babelbidi-lang]{#1}%
+}
+
+
+\makeatletter
+
+% ------------------------------------------
+% Package options
+% ------------------------------------------
+
+\define@key{bbd}{bidi}{%
+    \gdef\bbd@bidi{#1}%
+}
+
+
+\define@key{bbd}{layout}{%
+    \edef\bbd@layout{#1}%
+}
+
+
+\def\bbd@layout{}
+
+\ifPDFTeX
+    \setkeys{bbd}{bidi=default}
+\fi
+
+\ifXeTeX
+    \setkeys{bbd}{bidi=bidi-r}
+\fi
+
+\ifLuaTeX
+    \setkeys{bbd}{%
+        bidi=basic,
+        layout=counters graphics footnotes lists
+    }
+\fi
+
+\DeclareOptionX{bidi}{%
+    \setkeys{bbd}{bidi=#1}%
+}
+
+\DeclareOptionX{layout}{%
+    \setkeys{bbd}{layout=#1}%
+}
+
+\DeclareOptionX*{%
+    \edef\bbd@options{%
+        \bbd@options,\CurrentOption
+    }%
+}
+
+\def\bbd@options{}
+
+\ProcessOptionsX\relax
+
+
+% ------------------------------------------
+% beamer conditionals
+% ------------------------------------------
+\newif\ifbbd@beamer
+\@ifclassloaded{beamer}{\bbd@beamertrue}{}
+
+\newif\ifbbd@beamerrl
+\@ifclassloaded{beamer-rl}{\bbd@beamerrltrue}{}
+
+% ------------------------------------------
+% Resolve Bug of arabiccore Package or beamer
+% ------------------------------------------
+
+\@ifundefined{if@rl}{%
+    \newif\if@rl
+}{}
+
+\ifPDFTeX
+    \ifbbd@beamer
+        % \addto\extraarabic{
+        \providecommand{\labelitemiv}
+        {\if@rl\protect $-$ %
+            \else\protect\textperiodcentred\fi}
+        \providecommand{\labelitemi}
+        {\if@rl\protect\textLR{$\bullet$}
+            \else\protect\textbullet\fi}
+
+        \providecommand{\labelitemii}
+        {\if@rl\protect\textLR{$\circ$} %
+            \else\protect\textLR{ \normalfont\bfseries\textendash}\fi}
+
+        \providecommand{\labelitemiii}
+        {\if@rl\protect\textLR{$*$} %
+            \else\protect\textasteriskcentered\fi}
+
+        \providecommand{\labelenumi}
+        {\if@rl(\I{\number\c@enumi}).%
+            \else{\number\c@enumi}.\fi}
+
+        \providecommand{\labelenumii}
+        {\if@rl\abjadnumeral{\number\c@enumii}. %
+            \else({\number\c@enumii})\fi}
+
+        \providecommand{\labelenumiii}
+        {\if@rl\I{\number\c@enumiii}$\space-\space$ %
+            \else({\number\c@enumiii})\fi}
+
+        \providecommand{\labelenumiv}
+        {\if@rl\abjadnumeral{\number\c@enumiv}$\space-\space$ %
+            \else({\number\c@enumiv})\fi}
+        % }
+    \fi \fi
+
+% ------------------------------------------
+% Engine setup
+% ------------------------------------------
+
+\ifPDFTeX
+
+    \RequirePackage[bidi=\bbd@bidi,\bbd@options]{babel}
+\fi
+
+\ifXeTeX
+    \RequirePackage[
+        bidi=\bbd@bidi,
+        \bbd@options
+    ]{babel}
+\fi
+
+\ifLuaTeX
+    \ifbbd@beamerrl
+    \else
+        \RequirePackage[
+            bidi=\bbd@bidi,
+            layout=\bbd@layout,
+            \bbd@options
+        ]{babel}
+    \fi
+\fi
+
+
+% ------------------------------------------
+% Beamer beamerbasebox from beamer-rl class
+% ------------------------------------------
+
+\makeatletter
+\ifbbd@beamer
+    \ifbbd@beamerrl
+    \else
+        \ifLuaTeX \input{babelbidi-beamer.def} \fi
+    \fi
+\fi
+\makeatother
+
+% ------------------------------------------
+% Load package components
+% ------------------------------------------
+
+\input{babelbidi-api.def}
+
+
+\makeatletter
+\AddToHook{begindocument/before}{%
+    \ifXeTeX    \input{babelbidi-xetex.def}     \fi
+    \ifLuaTeX   \input{babelbidi-luatex.def}    \fi
+
+    \edef\bbd@main{\bbl@main@language}%
+    \edef\bbd@main@script{\bbd@script{\bbd@main}}%
+    \ifx\bbd@main@script\bbd@script@latin
+        \let\latinttfamily\ttfamily
+    \else
+        \input{babelbidi-code.def}%
+    \fi
+}
+
+
+\@ifundefined{bbl@latinarabic}{}{%
+    \let\bbd@arabic\@arabic
+    \AddToHook{env/minted/before}{%
+        \let\@arabic\bbl@latinarabic
+    }%
+    \AddToHook{env/minted/after}{%
+        \let\@arabic\bbd@arabic
+    }%
+}%
+
+
+\AddToHook{begindocument}{
+    \if@RTLmain
+        \input{babelbidi-layout.def}
+    \fi}
+\makeatother
+
+
+
+
+
+
+\makeatother
+
+\endinput

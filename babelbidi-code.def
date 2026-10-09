@@ -1,0 +1,174 @@
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-code.def}
+[2026/10/09 v0.1.0 Code support for Babelbidi]
+
+\makeatletter
+
+
+\DeclareRobustCommand{\latinttfamily}{%
+    \bbd@select@code
+    \edef\bbd@selected@language{\bbd@result}%
+    \edef\bbd@selectedtt{%
+        \csname bbl@ttdflt@\bbd@selected@language\endcsname
+    }%
+    \begingroup
+    \edef\languagename{\bbd@selected@language}%
+    \bbl@switchfont
+    \global\let\bbd@selectedtt\ttdefault
+    \endgroup
+    \fontfamily{\bbd@selectedtt}\selectfont
+}
+
+% ------------------------------------------------
+% Verbatim
+% ------------------------------------------------
+
+\def\verbatim@font{%
+    \normalfont
+    \ifTUTeX
+        \latinttfamily
+    \else
+        \ttfamily\fontencoding{T1}\selectfont
+    \fi
+    \bbl@pardir{0}%
+    \bbl@textdir{0}%
+    \bbl@bodydir{0}
+    \ifLuaTeX
+        \ifhmode\unskip\fi
+    \else
+        \ifhmode\unskip\fi
+        \beginL
+    \fi
+}
+
+\AddToHook{env/verbatim/before}{%
+    \ifLuaTeX\else\vspace{-\baselineskip}\fi
+    \removelastskip
+    \ifPDFTeX
+        \bgroup
+        \selectlanguage{\bbd@lang@code}%
+    \fi
+}
+
+\AddToHook{env/verbatim/after}{%
+    \ifXeTeX\endL\removelastskip\fi
+    \ifPDFTeX\egroup\fi
+}
+
+\g@addto@macro\verb@egroup{%
+    \ifLuaTeX\else\endL\fi
+}
+
+
+% ------------------------------------------------
+% Listings Package
+% ------------------------------------------------
+
+\@ifpackageloaded{listings}{%
+    \lst@AddToHook{Init}{%
+        \bbd@select@code
+        \edef\bbd@lang@code{\bbd@result}%
+        \lst@ifdisplaystyle
+        \par
+        \expandafter\selectlanguage\expandafter{\bbd@lang@code}%
+        \else
+        \ifXeTeX\unskip\fi
+        \edef\bbd@tmp{%
+            \noexpand\begin{otherlanguage*}{\bbd@lang@code}%
+        }%
+        \bbd@tmp
+        \ifXeTeX\beginL\fi
+        \unskip
+        \fi
+    }
+    \lst@AddToHook{DeInit}{%
+        \lst@ifdisplaystyle
+        \else
+        \end{otherlanguage*}%
+        \ifXeTeX\endL\fi
+        \unskip
+        \fi
+    }
+}{}
+
+% ------------------------------------------------
+% Minted Package
+% ------------------------------------------------
+
+\bbd@select@code
+\edef\bbd@lang@code{\bbd@result}
+
+\@ifpackageloaded{minted}{%
+    \NewCommandCopy{\bbd@RobustMintProcess}{\RobustMintProcess}
+
+    \RenewDocumentCommand{\RobustMintProcess}{m m m}{%
+        \par
+        \begin{otherlanguage}{\bbd@lang@code}%
+            \ifLuaTeX
+                \vspace{\topsep}
+                \begin{minipage}{\linewidth}%
+            \fi
+            \bbd@RobustMintProcess{#1}{#2}{#3}%
+            \ifLuaTeX
+                \end{minipage}%
+                \vspace{\topsep}%
+            \fi
+        \end{otherlanguage}%
+    }
+
+    \NewCommandCopy{\bbd@mintinline}{\mintinline}
+
+    \RenewDocumentCommand{\mintinline}{s O{} m m}{%
+        \lr{\unskip
+            \IfBooleanTF{#1}
+            {%
+                \bbd@mintinline*[#2]{#3}{#4}%
+            }
+            {%
+                \bbd@mintinline[#2]{#3}{#4}%
+            }%
+        }\unskip
+    }
+
+    \AddToHook{env/minted/before}{%
+        \par
+        \begin{otherlanguage}{\bbd@lang@code}%
+        \ifLuaTeX
+            \begin{center}
+            \begin{minipage}{\linewidth}%
+        \fi
+    }
+
+    \AddToHook{env/minted/after}{%
+        \ifLuaTeX
+            \end{minipage}%
+            \end{center}
+        \fi
+        \end{otherlanguage}%
+    }
+}{}
+
+\makeatother
+
+\endinput

@@ -1,0 +1,146 @@
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-api.def}
+[2026/10/09 v0.1.0 Bidi API for Babelbidi]
+
+\makeatletter
+
+
+% ------------------------------------------
+% Determining text direction
+% ------------------------------------------
+
+\providecommand{\if@RTL}{\ifnum\bbl@thetextdir>\z@}
+\providecommand{\@RTLtrue}{\chardef\bbl@thetextdir\@ne}
+\providecommand{\@RTLfalse}{\chardef\bbl@thetextdir\z@}
+
+\providecommand{\bbd@main@dir}{0}
+
+\providecommand{\if@RTLmain}{%
+    \ifnum\bbd@main@dir>\z@
+}
+
+\providecommand{\@RTLmaintrue}{%
+    \gdef\bbd@main@dir{1}%
+}
+
+\providecommand{\@RTLmainfalse}{%
+    \gdef\bbd@main@dir{0}%
+}
+
+\AddToHook{begindocument}{%
+    \ifnum\bbl@thetextdir>\z@
+        \@RTLmaintrue
+    \else
+        \@RTLmainfalse
+    \fi
+}%
+
+% ------------------------------------------
+% basic bidi commands
+% ------------------------------------------
+
+\ifLuaTeX
+    \providecommand{\setparLTR}{%
+        \@RTLfalse
+        \pardir TLT\relax
+        \textdir TLT\relax
+    }%
+
+    \providecommand{\setparRTL}{%
+        \@RTLtrue
+        \pardir TRT\relax
+        \textdir TRT\relax
+    }%
+
+    \providecommand{\beginR}{%
+        \@RTLtrue
+        \begingroup
+        \textdir TRT\relax
+    }%
+
+    \providecommand{\beginL}{%
+        \@RTLfalse
+        \begingroup
+        \textdir TLT\relax
+    }%
+
+    \def\endR{\endgroup}
+    \def\endL{\endgroup}
+\fi
+
+
+% ------------------------------------------
+% Core APIs
+% ------------------------------------------
+
+\providecommand{\RLE}[1]{%
+    \leavevmode
+    {%
+        \bbl@textdir{1}%
+        #1%
+    }%
+}%
+
+\providecommand{\LRE}[1]{%
+    \leavevmode
+    {%
+        \bbl@textdir{0}%
+        #1%
+    }%
+}%
+
+\ProvideDocumentEnvironment{RTL}{}
+{%
+    \par
+    \begingroup
+    \bbl@pardir{1}%
+    \bbl@textdir{1}%
+    \bbl@bodydir{1}
+}
+{%
+    \par
+    \endgroup
+}%
+
+
+\ProvideDocumentEnvironment{LTR}{}
+{%
+    \par
+    \begingroup
+    \bbl@pardir{0}%
+    \bbl@textdir{0}%
+    \bbl@bodydir{0}
+}
+{%
+    \par
+    \endgroup
+}%
+
+\let\LR\LRE
+\let\RL\RLE
+
+
+\makeatother
+
+\endinput

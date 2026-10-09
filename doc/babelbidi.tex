@@ -1,0 +1,346 @@
+  % !TeX program = lualatex
+
+\documentclass{ltxdoc}
+
+
+\usepackage{babelbidi}
+
+\babelprovide[import , mapdigits  ,onchar = ids fonts letters]{arabic}
+\babelprovide[import,,onchar=ids fonts letters]{persian}
+\babelprovide[import,main,onchar=ids fonts letters]{english}
+
+\babelfont{rm}[english]{Times New Roman}
+\babelfont{tt}[english]{JetBrains Mono}
+\babelfont{rm}[arabic]{Amiri}
+\babelfont{rm}[persian]{Vazirmatn}
+\babelfont{tt}[persian]{Vazir Code}
+\babelfont{tt}[arabic]{Kawkab Mono}
+% Hasubi Mono
+% Kawkab Mono
+
+\usepackage{pkgmeta}
+\usepackage{datemultical}
+\dmcset{babelbidi}{\pkgmeta[year]{babelbidi}}{\pkgmeta[month]{babelbidi}}{\pkgmeta[day]{babelbidi}}
+
+\usepackage[svgnames]{xcolor}
+\usepackage{minted}
+\usepackage{booktabs}
+
+\usepackage{hyperref}
+
+\setminted{
+    breaklines=true,
+    breakanywhere=true
+}
+\setminted[latex]{bgcolor=Gold, bgcolorpadding=0.5em}
+\setminted[bash]{bgcolor=Gainsboro}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue
+}
+
+
+
+
+\title{The \textsf{babelbidi} Package}
+\author{Amer Amikhteh}
+\date{%
+    Version \pkgmeta[version]{babelbidi}\\[2pt]
+    \dmc{babelbidi}{long}
+}
+
+
+\begin{document}
+    \maketitle
+
+  \begin{abstract}
+      \textsf{babelbidi} extends Babel's bidirectional support by correcting
+      direction-sensitive behaviour and adding complementary interfaces
+      for text direction and language selection. It works with LuaLaTeX,
+      XeLaTeX, and pdfLaTeX, with either an LTR or an RTL main language
+      and with languages supported by Babel.
+  \end{abstract}
+
+    \section{Introduction}
+
+    Babel provides the infrastructure for typesetting documents containing
+    both left-to-right (LTR) and right-to-left (RTL) languages. Some layout
+    components, however, do not always behave correctly in RTL contexts,
+    and Babel does not provide all the basic direction interfaces that may
+    be useful in a document.
+
+    \textsf{babelbidi} addresses these gaps in two ways:
+    \begin{enumerate}
+        \item
+        it patches
+        direction-sensitive layout behaviour
+        \item
+        and provides a small set of bidi
+        and language-selection APIs.
+    \end{enumerate}
+
+   Most layout patches concern LuaLaTeX. For documents whose main language
+   does not use the Latin script, code-related direction handling is provided
+   with LuaLaTeX, XeLaTeX, and pdfLaTeX.
+
+
+    The basic direction commands follow interfaces found in bidi
+    implementations such as \textsf{luabidi}. The commands \verb|\lr|,
+    \verb|\rl|, and the \texttt{latin} environment are inspired in part by
+    interfaces familiar to users of \textsf{xepersian}.
+
+ \section{Loading}
+
+ The package is loaded as follows:
+
+ \begin{minted}{latex}
+     \usepackage[<options>]{babelbidi}
+ \end{minted}
+
+ The package accepts Babel options. The \texttt{bidi} and
+ \texttt{layout} options are handled by \texttt{babelbidi} and
+ passed to Babel; the remaining options are passed directly to Babel.
+
+ If \texttt{bidi} is not specified, its default value depends
+ on the engine:
+
+ \begin{center}
+     \begin{tabular}{ll}
+         \toprule
+         Engine   & Default value of \texttt{bidi} \\
+         \midrule
+         Lua\TeX  & \texttt{basic}                  \\
+         Xe\TeX   & \texttt{bidi-r}                 \\
+         Pdf\TeX  & \texttt{default}                \\
+         \bottomrule
+     \end{tabular}
+ \end{center}
+
+ With \LuaTeX, the default value of \texttt{layout} is:
+
+ \begin{minted}{latex}
+     layout={counters graphics footnotes lists}
+ \end{minted}
+
+ Specifying \texttt{layout} replaces this default; it does not
+ add to it. For example:
+
+ \begin{minted}{latex}
+     layout={counters footnotes}
+ \end{minted}
+
+ This selects only \texttt{counters} and \texttt{footnotes}
+ for the \texttt{layout} option. To retain \texttt{graphics}
+ and \texttt{lists}, include them explicitly in the value.
+ When the value contains multiple selectors, enclose it in braces.
+
+
+For best results, consider the following recommendations:
+\begin{enumerate}
+    \item For slides with an RTL main language, \textsf{beamer-rl} is
+    recommended over \textsf{beamer}, though it is not required.
+
+    \item LuaLaTeX is recommended for its broader capabilities and
+    Lua\footnote{Lua is a lightweight programming language designed
+        to be embedded in applications.} extensibility. Separately,
+    Babel's \texttt{onchar} option can automatically select a language
+    based on the characters in the text. For Arabic:
+    \begin{minted}{latex}
+        \babelprovide[import, mapdigits, onchar=ids fonts letters]{arabic}
+    \end{minted}
+    Punctuation such as parentheses may still require explicit
+    language selection.
+\end{enumerate}
+
+
+
+
+
+
+   \section{Direction and Language APIs}
+
+   \textsf{babelbidi} provides commands and environments for selecting text
+   direction and for selecting the languages used by auxiliary text,
+   including Latin text, left-to-right text, right-to-left text, and code.
+
+   \subsection{Commands}
+
+   \begin{center}
+       \begin{tabular}{@{}ll@{}}
+           \toprule
+           Command & Description \\
+           \midrule
+           \verb|\LRE|
+           & Typesets its argument with left-to-right text direction \\
+           \verb|\RLE|
+           & Typesets its argument with right-to-left text direction \\
+           \verb|\LR|
+           & Alias for \verb|\LRE| \\
+           \verb|\RL|
+           & Alias for \verb|\RLE| \\
+           \verb|\lr|
+           & Typesets its argument in the selected left-to-right language \\
+           \verb|\rl|
+           & Typesets its argument in the selected right-to-left language \\
+           \verb|\latintoday|
+           & Prints today's date in the selected Latin language \\
+           \bottomrule
+       \end{tabular}
+   \end{center}
+
+   \subsection{Environments}
+
+   \begin{center}
+       \begin{tabular}{@{}ll@{}}
+           \toprule
+           Environment & Description \\
+           \midrule
+           \texttt{RTL}
+           & Typesets its contents with right-to-left text direction \\
+           \texttt{LTR}
+           & Typesets its contents with left-to-right text direction \\
+           \texttt{latin}
+           & Typesets its contents in the selected Latin language \\
+           \bottomrule
+       \end{tabular}
+   \end{center}
+
+  \subsection{Language Selection}
+
+The languages used by the \texttt{latin} environment, the commands
+\verb|\lr| and \verb|\rl|, and code-related material can be specified
+with \verb|\babelbidilangs|:
+
+\begin{center}
+    \begin{tabular}{@{}ll@{}}
+        \toprule
+        Key & Language selected for \\
+        \midrule
+        \texttt{latin}
+        & The \texttt{latin} environment \\
+        \texttt{ltr}
+        & The \verb|\lr| command \\
+        \texttt{rtl}
+        & The \verb|\rl| command \\
+        \texttt{code}
+        & Code-related material \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+For example:
+
+\begin{minted}{latex}
+    \babelbidilangs{latin=english,rtl=arabic}
+\end{minted}
+
+
+  If a key is not specified, \textsf{babelbidi} determines its value from
+  the languages loaded by \texttt{Babel}. The values of the \texttt{latin},
+  \texttt{ltr}, \texttt{rtl}, and \texttt{code} keys are selected according to
+  the main language of the document:
+
+  \begin{description}
+      \item[\texttt{latin}:]
+      The main language if it uses the Latin script; otherwise, the first
+      loaded Latin-script language, or \texttt{english} if no such language
+      is available.
+
+      \item[\texttt{ltr}:]
+      The main language if it is left to right; otherwise, the first loaded
+      left-to-right language, or \texttt{english} if no such language is
+      available.
+
+      \item[\texttt{rtl}:]
+      The main language if it is right to left; otherwise, the first loaded
+      right-to-left language, or \texttt{arabic} if no such language is
+      available.
+
+      \item[\texttt{code}:]
+      The main language if it uses the Latin script; otherwise,
+      \texttt{english} if it has been loaded; otherwise, the first loaded
+      Latin-script language; otherwise, the main language if it is left to
+      right; otherwise, the first loaded left-to-right language; and,
+      finally, the main language.
+  \end{description}
+
+  The automatically selected languages can be overridden individually by
+  passing the corresponding keys to \verb|\babelbidilangs|.
+
+
+   \section{Patches}
+
+   The package applies the following patches automatically when the
+   corresponding engine or package is in use.
+
+   \begin{enumerate}
+       \item \textbf{Common patches}
+       \begin{enumerate}
+           \item Code language selection: when the main language does not use
+           the Latin script, the code-related patches use the language selected
+           by the \texttt{code} key. These patches cover the \texttt{verbatim}
+           environment, the \textsf{listings} package, and the \textsf{minted}
+           environment and inline command. Documents with a Latin-script main
+           language do not need these patches.
+       \end{enumerate}
+
+       \item \textbf{XeLaTeX patches}
+       \begin{enumerate}
+           \item \textsf{natbib}: corrects citation links in RTL text with
+           recent \textsf{hyperref} versions.
+           \item \textsf{fontspec}: disables its math-mode handling when
+           Babel bidi mode is active.
+       \end{enumerate}
+
+       \item \textbf{LuaLaTeX patches}
+       \begin{enumerate}
+           \item \texttt{\string\makebox} and tables: adjust the positions
+           of \texttt{l} and \texttt{r} material and swap table-column
+           alignment in RTL text.
+           \item \textsf{multicol}: selects RTL or LTR column order according
+           to the current text direction.
+          \item Footnotes: adjust footnote paragraph direction in RTL contexts;
+          footnotes issued in math mode in RTL-main documents are treated as RTL.
+           \item TikZ: use LTR paragraph direction inside
+           \texttt{tikzpicture}, except with \textsf{beamer-rl}.
+           \item \textsf{fancyhdr}: increase the head height and typeset
+           headers and footers in LTR direction.
+           \item \textsf{beamer}: correct the layout of rounded boxes, except
+           when \textsf{beamer-rl} is loaded.
+       \end{enumerate}
+
+       \item \textbf{RTL-main footnote-rule patch}
+       \begin{enumerate}
+           \item With XeLaTeX and LuaLaTeX, typeset the footnote rule
+           in a stable LTR direction when the main language is RTL.
+       \end{enumerate}
+   \end{enumerate}
+
+
+
+\section{Current Limitations and Possible Directions}
+
+\begin{enumerate}
+    \item \textbf{Incomplete API coverage.}
+    Several APIs provided by \textsf{luabidi} are not yet defined by
+    \textsf{babelbidi}. Extending this API coverage is a priority for
+    the next release.
+
+    \item \textbf{Limited compatibility testing.}
+    The package has not been tested with every combination of
+    document class and third-party package. Broader testing may help
+    identify interactions that require further work.
+\end{enumerate}
+
+
+\section{License}
+
+The \texttt{BabelBidi} package is released under the
+\lr{LaTeX Project Public License (LPPL)},
+version \lr{1.3c} or later.
+The full text of the license is available in the \texttt{LICENSE} file.
+
+
+\end{document}
