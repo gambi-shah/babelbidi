@@ -24,7 +24,7 @@
 \NeedsTeXFormat{LaTeX2e}
 
 \ProvidesPackage{babelbidi}
-[2026/10/09 v0.1.0 Bidi extensions for Babel]
+[2026/10/11 v0.2.0 Bidi extensions for Babel]
 
 
 \RequirePackage{iftex}
@@ -83,6 +83,43 @@
 }
 
 \def\bbd@options{}
+
+% Cache Babel's repeated font mappings within each LuaTeX run.
+\newif\ifbbd@font@cache
+\bbd@font@cachetrue
+
+\DeclareOptionX{fontcache}[true]{%
+    \edef\bbd@fontcache@option{#1}%
+    \def\bbd@fontcache@true{true}%
+    \def\bbd@fontcache@false{false}%
+    \ifx\bbd@fontcache@option\bbd@fontcache@true
+        \bbd@font@cachetrue
+    \else\ifx\bbd@fontcache@option\bbd@fontcache@false
+            \bbd@font@cachefalse
+        \else
+            \PackageError{babelbidi}{Invalid fontcache value '#1'}%
+            {Use fontcache=true or fontcache=false.}%
+        \fi\fi
+}
+
+
+
+
+\DeclareOptionX{code}{%
+    \SetKeys[babelbidi-lang]{code=#1}%
+}
+
+\DeclareOptionX{latin}{%
+    \SetKeys[babelbidi-lang]{latin=#1}%
+}
+
+\DeclareOptionX{ltr}{%
+    \SetKeys[babelbidi-lang]{ltr=#1}%
+}
+
+\DeclareOptionX{rtl}{%
+    \SetKeys[babelbidi-lang]{rtl=#1}%
+}
 
 \ProcessOptionsX\relax
 
@@ -181,12 +218,45 @@
 \fi
 \makeatother
 
+
+% ------------------------------------------------
+% Fix for label errors caused by Babel's counters layout
+% ------------------------------------------------
+
+\makeatletter
+\long\def\bbd@firstofone#1{#1}
+
+\let\bbd@label\label
+
+\AddToHook{begindocument/before}{%
+    \@ifundefined{babelsublr}{}{%
+        \protected\def\label#1{%
+            \ifnum\@enumdepth>\z@
+                \if@inlabel
+                    \begingroup
+                    \let\babelsublr\bbd@firstofone
+                    \let\babelsubrl\bbd@firstofone
+                    \edef\bbd@tmp{#1}%
+                    \expandafter\bbd@label\expandafter{\bbd@tmp}%
+                    \endgroup
+                \else
+                    \bbd@label{#1}%
+                \fi
+            \else
+                \bbd@label{#1}%
+            \fi
+        }
+    }
+}
+\makeatother
+
+
 % ------------------------------------------
 % Load package components
 % ------------------------------------------
 
 \input{babelbidi-api.def}
-
+\ifLuaTeX  \input{babelbidi-onchar.def} \fi
 
 \makeatletter
 \AddToHook{begindocument/before}{%

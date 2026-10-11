@@ -1,0 +1,107 @@
+% babelbidi-onchar.def
+%
+% BabelBidi: bidirectional support for LaTeX.
+%
+% This file is part of the BabelBidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+
+\ProvidesFile{babelbidi-onchar.def}
+[2026/10/11 v0.2.0 Cache for Babel font mappings]
+
+\makeatletter
+
+% Keep the upstream implementation as a compatibility guard. If Babel or
+% another package changes it, retain the upstream behaviour automatically.
+\def\bbd@fontcache@expected@mapdir#1{%
+  \begingroup
+  \setbox\z@\hbox{% Force text mode
+    \def\languagename{#1}%
+    \let\bbl@ifrestoring\@firstoftwo % To avoid font warning
+    \bbl@switchfont
+    \ifnum\fontid\font>\z@ % A hack, for the pgf nullfont hack
+      \directlua{
+        Babel.locale_props[\the\csname bbl@id@@#1\endcsname]%
+          ['/\bbl@prefontid'] = \fontid\font\space}%
+    \fi}%
+  \endgroup}%
+
+\directlua{
+  babelbidi_font_cache = {entries = {}, hits = 0, misses = 0, size = 0}
+  function babelbidi_font_cache.restore(key, locale, source)
+  local cache = babelbidi_font_cache
+  local target = cache.entries[key]
+  if target then
+  cache.hits = cache.hits + 1
+  Babel.locale_props[locale]['/' .. source] = target
+  token.set_macro('bbd@fontcache@hit', '1')
+  else
+  cache.misses = cache.misses + 1
+  token.set_macro('bbd@fontcache@hit', '0')
+  end
+  end
+  function babelbidi_font_cache.store(key, locale, source, target)
+  local cache = babelbidi_font_cache
+  if not cache.entries[key] then cache.size = cache.size + 1 end
+  cache.entries[key] = target
+  Babel.locale_props[locale]['/' .. source] = target
+  end
+}
+
+
+
+\def\bbd@fontcache@mapdir#1{%
+  \begingroup
+  % A physical font ID alone is insufficient: NFSS can select the same
+  % physical font for different requested sizes or family contexts.
+  \edef\bbd@fontcache@key{#1/\bbl@prefontid/\f@encoding/\f@family/%
+    \f@series/\f@shape/\f@size/\bbl@font@fams}%
+  \bbl@foreach\bbl@font@fams{%
+    \edef\bbd@fontcache@key{\bbd@fontcache@key/%
+      \csname##1default\endcsname/%
+      \expandafter\meaning\csname bbl@##1dflt@#1\endcsname/%
+      \expandafter\meaning\csname bbl@famrst@##1\endcsname}%
+  }%
+  \directlua{babelbidi_font_cache.restore(
+    "\luaescapestring{\bbd@fontcache@key}",
+    \the\csname bbl@id@@#1\endcsname, \bbl@prefontid)}%
+  \ifnum\bbd@fontcache@hit=0\relax
+    \setbox\z@\hbox{%
+      \def\languagename{#1}%
+      \let\bbl@ifrestoring\@firstoftwo
+      \bbl@switchfont
+      \ifnum\fontid\font>\z@
+        \directlua{babelbidi_font_cache.store(
+          "\luaescapestring{\bbd@fontcache@key}",
+          \the\csname bbl@id@@#1\endcsname,
+          \bbl@prefontid, \fontid\font)}%
+      \fi}%
+  \fi
+  \endgroup
+}
+
+% Install after font/language setup; preamble font configuration is untouched.
+% This only wraps Babel's mapper; it does not enable onchar processing.
+\AddToHook{begindocument/end}[babelbidi/font-cache]{%
+  \ifbbd@font@cache
+    \ifx\bbl@mapdir\bbd@fontcache@expected@mapdir
+      \let\bbl@mapdir\bbd@fontcache@mapdir
+    \else
+      \PackageWarningNoLine{babelbidi}{%
+        Unsupported Babel font mapper; font cache disabled}%
+    \fi
+  \fi
+}
+
+\makeatother
+\endinput

@@ -1,0 +1,36 @@
+\documentclass{article}
+\usepackage[fontcache=true]{babelbidi}
+\usepackage{xstring}
+\babelprovide[main,import]{persian}
+\babelprovide[import,onchar=fonts]{english}
+
+\babelfont[persian]{rm}{Amiri}
+\babelfont[english]{rm}{Times New Roman}
+
+
+%TeX Gyre Termes
+\begin{document}
+    \normalfont
+    قبل از تغییر فونت:
+
+    فارسی English ABC 123 xyz فارسی.
+
+    \normalfont
+    فارسی English ABC 123 xyz فارسی.
+
+    \normalfont
+
+    \bigskip
+    \AddToHook{rmfamily}[change-latin-font]{%
+        \IfStrEq{\languagename}{english}{%
+            \fontspec[Color=FF0000]{TeX Gyre Cursor}%
+        }{}%
+    }
+    \normalfont
+    از اینجا به بعد متن انگلیسی باید قرمز و ماشین‌تحریر باشد:
+
+    فارسی English ABC 123 xyz فارسی.
+
+    \normalfont
+    فارسی English ABC 123 xyz فارسی.
+\end{document}

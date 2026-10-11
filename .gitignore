@@ -37,3 +37,6 @@ _minted*/
 
 # Generated documentation files
 *.hd
+
+# Temporary consolidated report for AI review
+/babelbidi.txt

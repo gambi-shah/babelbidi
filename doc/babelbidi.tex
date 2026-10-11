@@ -99,12 +99,15 @@
      \usepackage[<options>]{babelbidi}
  \end{minted}
 
- The package accepts Babel options. The \texttt{bidi} and
- \texttt{layout} options are handled by \texttt{babelbidi} and
- passed to Babel; the remaining options are passed directly to Babel.
+ The package accepts options for both Babel and
+\textsf{babelbidi}. Options not defined by
+\textsf{babelbidi} are passed to Babel. The \texttt{bidi} and
+\texttt{layout} options are Babel options for which
+\textsf{babelbidi} provides engine-dependent defaults.
 
- If \texttt{bidi} is not specified, its default value depends
- on the engine:
+
+ If \texttt{bidi} is not specified, \textsf{babelbidi} selects
+its default value according to the engine:
 
  \begin{center}
      \begin{tabular}{ll}
@@ -118,10 +121,12 @@
      \end{tabular}
  \end{center}
 
- With \LuaTeX, the default value of \texttt{layout} is:
+ With \LuaTeX, \textsf{babelbidi} selects the following default
+value for \texttt{layout}:
+
 
  \begin{minted}{latex}
-     layout={counters graphics footnotes lists}
+     counters graphics footnotes lists
  \end{minted}
 
  Specifying \texttt{layout} replaces this default; it does not
@@ -132,9 +137,10 @@
  \end{minted}
 
  This selects only \texttt{counters} and \texttt{footnotes}
- for the \texttt{layout} option. To retain \texttt{graphics}
- and \texttt{lists}, include them explicitly in the value.
- When the value contains multiple selectors, enclose it in braces.
+for the \texttt{layout} option. To retain \texttt{graphics}
+and \texttt{lists}, include them explicitly in the value.
+When the value contains multiple selectors, the value must be
+enclosed in \textbf{braces}.
 
 
 For best results, consider the following recommendations:
@@ -154,6 +160,19 @@ For best results, consider the following recommendations:
     language selection.
 \end{enumerate}
 
+
+
+ With \LuaTeX, the \texttt{fontcache} option controls caching of
+font mappings used by Babel's \texttt{onchar=fonts} option.
+It is a boolean option and is enabled by default to improve
+compilation speed. In special cases, such as font changes made
+through the \texttt{rmfamily} hook, cached mappings may prevent
+these changes from taking effect. The cache can be disabled
+when necessary:
+
+\begin{minted}{latex}
+    \usepackage[fontcache=false]{babelbidi}
+\end{minted}
 
 
 
@@ -207,11 +226,13 @@ For best results, consider the following recommendations:
        \end{tabular}
    \end{center}
 
-  \subsection{Language Selection}
+\subsection{Language Selection}
+\label{sec:language-selection}
 
 The languages used by the \texttt{latin} environment, the commands
 \verb|\lr| and \verb|\rl|, and code-related material can be specified
-with \verb|\babelbidilangs|:
+with the following keys, either as package options or with
+\verb|\babelbidilangs|:
 
 \begin{center}
     \begin{tabular}{@{}ll@{}}
@@ -230,44 +251,50 @@ with \verb|\babelbidilangs|:
     \end{tabular}
 \end{center}
 
-For example:
+For example, the languages can be specified when loading the package:
 
 \begin{minted}{latex}
-    \babelbidilangs{latin=english,rtl=arabic}
+    \usepackage[code=dutch,rtl=arabic]{babelbidi}
 \end{minted}
 
+Alternatively, use \verb|\babelbidilangs| after loading the package:
 
-  If a key is not specified, \textsf{babelbidi} determines its value from
-  the languages loaded by \texttt{Babel}. The values of the \texttt{latin},
-  \texttt{ltr}, \texttt{rtl}, and \texttt{code} keys are selected according to
-  the main language of the document:
+\begin{minted}{latex}
+    \babelbidilangs{code=dutch,rtl=arabic}
+\end{minted}
 
-  \begin{description}
-      \item[\texttt{latin}:]
-      The main language if it uses the Latin script; otherwise, the first
-      loaded Latin-script language, or \texttt{english} if no such language
-      is available.
+If a key is not specified, \textsf{babelbidi} determines its value from
+the languages loaded by \texttt{Babel}. The values of the \texttt{latin},
+\texttt{ltr}, \texttt{rtl}, and \texttt{code} keys are selected according to
+the main language of the document:
 
-      \item[\texttt{ltr}:]
-      The main language if it is left to right; otherwise, the first loaded
-      left-to-right language, or \texttt{english} if no such language is
-      available.
+\begin{description}
+    \item[\texttt{latin}:]
+    The main language if it uses the Latin script; otherwise, the first
+    loaded Latin-script language, or \texttt{english} if no such language
+    is available.
 
-      \item[\texttt{rtl}:]
-      The main language if it is right to left; otherwise, the first loaded
-      right-to-left language, or \texttt{arabic} if no such language is
-      available.
+    \item[\texttt{ltr}:]
+    The main language if it is left to right; otherwise, the first loaded
+    left-to-right language, or \texttt{english} if no such language is
+    available.
 
-      \item[\texttt{code}:]
-      The main language if it uses the Latin script; otherwise,
-      \texttt{english} if it has been loaded; otherwise, the first loaded
-      Latin-script language; otherwise, the main language if it is left to
-      right; otherwise, the first loaded left-to-right language; and,
-      finally, the main language.
-  \end{description}
+    \item[\texttt{rtl}:]
+    The main language if it is right to left; otherwise, the first loaded
+    right-to-left language, or \texttt{arabic} if no such language is
+    available.
 
-  The automatically selected languages can be overridden individually by
-  passing the corresponding keys to \verb|\babelbidilangs|.
+    \item[\texttt{code}:]
+    The main language if it uses the Latin script; otherwise,
+    \texttt{english} if it has been loaded; otherwise, the first loaded
+    Latin-script language; otherwise, the main language if it is left to
+    right; otherwise, the first loaded left-to-right language; and,
+    finally, the main language.
+\end{description}
+
+The automatically selected languages can be overridden individually
+with the corresponding package options or with \verb|\babelbidilangs|.
+
 
 
    \section{Patches}
@@ -284,6 +311,8 @@ For example:
            environment, the \textsf{listings} package, and the \textsf{minted}
            environment and inline command. Documents with a Latin-script main
            language do not need these patches.
+           \item \texttt{\string\label}: prevents errors caused by Babel's
+           direction commands in label keys derived from enumeration counters.
        \end{enumerate}
 
        \item \textbf{XeLaTeX patches}
@@ -299,8 +328,6 @@ For example:
            \item \texttt{\string\makebox} and tables: adjust the positions
            of \texttt{l} and \texttt{r} material and swap table-column
            alignment in RTL text.
-           \item \textsf{multicol}: selects RTL or LTR column order according
-           to the current text direction.
           \item Footnotes: adjust footnote paragraph direction in RTL contexts;
           footnotes issued in math mode in RTL-main documents are treated as RTL.
            \item TikZ: use LTR paragraph direction inside

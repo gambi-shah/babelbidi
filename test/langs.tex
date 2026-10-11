@@ -1,45 +1,46 @@
 \documentclass{article}
 
+\usepackage[rtl=arabic]{babelbidi}
 
-\usepackage{babelbidi}
 \babelprovide[import,main]{greek}
-
 \babelprovide{persian}
-\babelfont{rm}[arabic]{Amiri}
-\babelfont{rm}[persian]{Vazirmatn}
 \babelprovide{french}
 \babelprovide{english}
 
+\babelfont{rm}[arabic]{Amiri}
+\babelfont{rm}[persian]{Vazirmatn}
 \babelfont{sf}{Latin Modern Sans}
 \babelfont{tt}{Latin Modern Mono}
 
-
 \babelbidilangs{
-    code  = english,
-    latin = english,
-    ltr   = english,
-    rtl   = arabic
+    % code  = english,
+    % latin = english,
+    % ltr   = english,
+    % rtl   = arabic,
 }
 
 \begin{document}
-\makeatletter
-%\begin{otherlanguage}{english}
-Code: \bbd@lang@code
-\par
-LR: \bbd@lang@ltr\par
-RL: \bbd@lang@rtl\par
-Latin: \bbd@lang@latin
-%  \end{otherlanguage}
-\makeatother
 
-\lr{LR text}
-\rl{متن راستچین}
-\begin{latin}
-    This is a Latin Paragraph
-\end{latin}
-End
+    \section{Language Mappings}
 
+    \makeatletter
+    \begin{tabular}{ll}
+        Code  & \texttt{\bbd@lang@code}  \\
+        Latin & \texttt{\bbd@lang@latin} \\
+        LTR   & \texttt{\bbd@lang@ltr}   \\
+        RTL   & \texttt{\bbd@lang@rtl}
+    \end{tabular}
+    \makeatother
 
+    \section{Bidirectional Text}
 
+    \noindent
+    \lr{Left-to-right text}
+
+    \rl{متن راست‌به‌چپ}
+
+    \begin{latin}
+        This is a Latin paragraph.
+    \end{latin}
 
 \end{document}

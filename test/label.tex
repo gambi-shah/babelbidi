@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage[bidi=default,layout=counters]{babelbidi}
+
+\begin{document}
+    \begin{enumerate}
+        \renewcommand{\labelenumi}{%
+            \arabic{enumi})\label{\arabic{enumi}}}
+        \item First
+    \end{enumerate}
+
+    Reference: \ref{1}.
+\end{document}

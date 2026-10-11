@@ -1,0 +1,32 @@
+\documentclass[]{book}
+\usepackage[testsdir=./csv]{testenv}
+\usetestlibrary{csv}
+
+\usepackage{multicol}
+
+\usepackage{babelbidi}
+\babelprovide[import]{english}
+\babelprovide[import,main]{persian}
+
+\babelfont[persian]{rm}{HM XNiloofar}
+\babelfont[english]{rm}{Latin Modern Roman}
+
+
+
+\begin{document}
+    سلام
+
+   % \RLmulticolcolumns
+    \begin{multicols}{3}
+        ستون اول
+
+        ستون دوم
+
+        ستون سوم
+    \end{multicols}
+
+
+
+
+
+\end{document}
