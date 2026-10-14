@@ -3,7 +3,7 @@
 \documentclass{ltxdoc}
 
 
-\usepackage{babelbidi}
+\usepackage[arabic,persian,english]{babelbidi}
 
 \babelprovide[import , mapdigits  ,onchar = ids fonts letters]{arabic}
 \babelprovide[import,,onchar=ids fonts letters]{persian}
@@ -56,11 +56,7 @@
     \maketitle
 
   \begin{abstract}
-      \textsf{babelbidi} extends Babel's bidirectional support by correcting
-      direction-sensitive behaviour and adding complementary interfaces
-      for text direction and language selection. It works with LuaLaTeX,
-      XeLaTeX, and pdfLaTeX, with either an LTR or an RTL main language
-      and with languages supported by Babel.
+       \textsf{babelbidi} extends Babel's bidirectional support by fixing direction-sensitive behaviour and providing interfaces for explicit text direction, language selection, and font configuration, including glyph fallback with LuaTeX. It supports languages available through Babel and works with LuaTeX (recommended), XeTeX, or pdfTeX, with either an LTR or RTL main language.
   \end{abstract}
 
     \section{Introduction}
@@ -90,6 +86,23 @@
     implementations such as \textsf{luabidi}. The commands \verb|\lr|,
     \verb|\rl|, and the \texttt{latin} environment are inspired in part by
     interfaces familiar to users of \textsf{xepersian}.
+
+
+\section{Obtaining and Installing}
+
+The official version of the \texttt{babelbidi} package is available from CTAN:
+
+\begin{center}
+    \url{https://ctan.org/pkg/babelbidi}
+\end{center}
+
+Once the \TeX{} Live package database has been updated, the package can be
+installed with the following command:
+
+\begin{minted}{bash}
+    tlmgr install babelbidi
+\end{minted}
+
 
  \section{Loading}
 
@@ -178,69 +191,124 @@ when necessary:
 
 
 
-   \section{Direction and Language APIs}
+\section{Font fallback}
 
-   \textsf{babelbidi} provides commands and environments for selecting text
-   direction and for selecting the languages used by auxiliary text,
-   including Latin text, left-to-right text, right-to-left text, and code.
+With LuaLaTeX, \textsf{babelbidi} can use fonts from other Babel languages
+when the current font lacks a required glyph. Declare an ordered fallback
+chain in the preamble:
 
-   \subsection{Commands}
+\begin{minted}{latex}
+    \fontfallback{english}{persian,greek}
+\end{minted}
 
-   \begin{center}
-       \begin{tabular}{@{}ll@{}}
-           \toprule
-           Command & Description \\
-           \midrule
-           \verb|\LRE|
-           & Typesets its argument with left-to-right text direction \\
-           \verb|\RLE|
-           & Typesets its argument with right-to-left text direction \\
-           \verb|\LR|
-           & Alias for \verb|\LRE| \\
-           \verb|\RL|
-           & Alias for \verb|\RLE| \\
-           \verb|\lr|
-           & Typesets its argument in the selected left-to-right language \\
-           \verb|\rl|
-           & Typesets its argument in the selected right-to-left language \\
-           \verb|\latintoday|
-           & Prints today's date in the selected Latin language \\
-           \bottomrule
-       \end{tabular}
-   \end{center}
+The source and candidate languages must be known to Babel. They can be
+specified as package options or loaded explicitly with \verb|\babelprovide|.
+Their fonts must be declared with \verb|\babelfont|. Candidates are tried in
+order, while the text language, direction, font family, series, shape, and
+size are preserved. Fallback applies to text fonts, including custom
+families, but not to math fonts. It works with or without
+\texttt{onchar=fonts} and also uses the \texttt{fontcache} setting.
 
-   \subsection{Environments}
+A later declaration replaces the previous chain; an empty candidate list
+disables fallback:
 
-   \begin{center}
-       \begin{tabular}{@{}ll@{}}
-           \toprule
-           Environment & Description \\
-           \midrule
-           \texttt{RTL}
-           & Typesets its contents with right-to-left text direction \\
-           \texttt{LTR}
-           & Typesets its contents with left-to-right text direction \\
-           \texttt{latin}
-           & Typesets its contents in the selected Latin language \\
-           \bottomrule
-       \end{tabular}
-   \end{center}
+\begin{minted}{latex}
+    \fontfallback{english}{}
+\end{minted}
 
-\subsection{Language Selection}
-\label{sec:language-selection}
+Unknown languages, repeated candidates, and self-references are ignored with
+a warning where appropriate. Fallback is not recursive and is applied per
+glyph before shaping. It is available only with LuaLaTeX; XeLaTeX and
+pdfLaTeX warn and ignore explicit fallback declarations.
 
-The languages used by the \texttt{latin} environment, the commands
-\verb|\lr| and \verb|\rl|, and code-related material can be specified
-with the following keys, either as package options or with
-\verb|\babelbidilangs|:
+\section{Direction and Language APIs}
+
+\textsf{babelbidi} provides commands, environments, and package options
+for controlling text direction, selecting languages, and setting fonts.
+
+
+\subsection{Font Selection}
+
+When running under XeLaTeX or LuaLaTeX, \textsf{babelbidi} provides the
+following commands:
+
+\begin{itemize}
+    \item \cmd{\settextfont}\oarg{options}\marg{font}:
+    Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
+    main language.
+
+    \item \cmd{\setlatintextfont}\oarg{options}\marg{font}:
+    Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
+    selected Latin language.
+
+    \item \cmd{\deflatinfont}\marg{command}\oarg{options}\marg{font}:
+    Defines a Latin font family command.
+
+    \item \cmd{\setlatinsansfont}\oarg{options}\marg{font}:
+    Sets the sans-serif font for the selected Latin language.
+
+    \item \cmd{\setlatinmonofont}\oarg{options}\marg{font}:
+    Sets the monospaced font for the selected Latin language and
+    configures it for use by \cmd{\latinttfamily}.
+\end{itemize}
+
+\subsection{Commands}
 
 \begin{center}
     \begin{tabular}{@{}ll@{}}
         \toprule
-        Key & Language selected for \\
+        Command & Description \\
+        \midrule
+        \verb|\LRE|
+        & Typesets its argument from left to right \\
+        \verb|\RLE|
+        & Typesets its argument from right to left \\
+        \verb|\LR|
+        & Alias for \verb|\LRE| \\
+        \verb|\RL|
+        & Alias for \verb|\RLE| \\
+        \verb|\lr|
+        & Typesets its argument in the selected left-to-right language \\
+        \verb|\rl|
+        & Typesets its argument in the selected right-to-left language \\
+        \verb|\latintoday|
+        & Prints today's date in the selected Latin language \\
+        \verb|\latinttfamily|
+        & Selects the configured Latin monospaced font family \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+\subsection{Environments}
+
+\begin{center}
+    \begin{tabular}{@{}ll@{}}
+        \toprule
+        Environment & Description \\
+        \midrule
+        \texttt{RTL}
+        & Typesets its contents from right to left \\
+        \texttt{LTR}
+        & Typesets its contents from left to right \\
+        \texttt{latin}
+        & Typesets its contents in the selected Latin language \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+\subsection{Language Selection}
+\label{sec:language-selection}
+
+The following package keys select the languages used for Latin text,
+directional text, and code-related material:
+
+\begin{center}
+    \begin{tabular}{@{}ll@{}}
+        \toprule
+        Key & Used for \\
         \midrule
         \texttt{latin}
-        & The \texttt{latin} environment \\
+        & The \texttt{latin} environment and Latin font commands \\
         \texttt{ltr}
         & The \verb|\lr| command \\
         \texttt{rtl}
@@ -251,49 +319,39 @@ with the following keys, either as package options or with
     \end{tabular}
 \end{center}
 
-For example, the languages can be specified when loading the package:
+For example:
 
 \begin{minted}{latex}
     \usepackage[code=dutch,rtl=arabic]{babelbidi}
 \end{minted}
 
-Alternatively, use \verb|\babelbidilangs| after loading the package:
+Unless specified explicitly, the values of these keys are selected
+automatically and updated after each \verb|\babelprovide| call. Explicit
+values remain unchanged.
 
-\begin{minted}{latex}
-    \babelbidilangs{code=dutch,rtl=arabic}
-\end{minted}
-
-If a key is not specified, \textsf{babelbidi} determines its value from
-the languages loaded by \texttt{Babel}. The values of the \texttt{latin},
-\texttt{ltr}, \texttt{rtl}, and \texttt{code} keys are selected according to
-the main language of the document:
+The automatic selections are determined as follows:
 
 \begin{description}
     \item[\texttt{latin}:]
     The main language if it uses the Latin script; otherwise, the first
-    loaded Latin-script language, or \texttt{english} if no such language
-    is available.
+    loaded Latin-script language; otherwise, \texttt{english}.
 
     \item[\texttt{ltr}:]
     The main language if it is left to right; otherwise, the first loaded
-    left-to-right language, or \texttt{english} if no such language is
-    available.
+    left-to-right language; otherwise, \texttt{english}.
 
     \item[\texttt{rtl}:]
     The main language if it is right to left; otherwise, the first loaded
-    right-to-left language, or \texttt{arabic} if no such language is
-    available.
+    right-to-left language; otherwise, \texttt{arabic}.
 
     \item[\texttt{code}:]
-    The main language if it uses the Latin script; otherwise,
-    \texttt{english} if it has been loaded; otherwise, the first loaded
-    Latin-script language; otherwise, the main language if it is left to
-    right; otherwise, the first loaded left-to-right language; and,
-    finally, the main language.
+    The main Latin-script language, if available; otherwise,
+    \texttt{english}, if loaded; otherwise, the first loaded
+    Latin-script language; otherwise, the main or first loaded
+    left-to-right language; finally, the main language.
 \end{description}
 
-The automatically selected languages can be overridden individually
-with the corresponding package options or with \verb|\babelbidilangs|.
+Languages should be declared before their fonts are configured.
 
 
 
@@ -369,5 +427,16 @@ The \texttt{BabelBidi} package is released under the
 version \lr{1.3c} or later.
 The full text of the license is available in the \texttt{LICENSE} file.
 
+\section{Author and Maintainer}
+
+The \texttt{babelbidi} package is developed and maintained by
+\textbf{Amer Amikhteh}.
+
+The project's source code, development versions, and issue tracker are
+available in the project repository:
+
+\begin{center}
+    \url{https://github.com/gambi-shah/babelbidi}
+\end{center}
 
 \end{document}

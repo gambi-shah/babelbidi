@@ -1,0 +1,35 @@
+\documentclass{article}
+
+\usepackage{babelbidi}
+
+\babelprovide[import,main]{persian}
+\babelprovide[import]{english}
+
+\settextfont{Vazirmatn}
+\setlatintextfont{Times New Roman}
+\setlatinsansfont{Arial}
+\setlatinmonofont{Vazir Code}
+
+\deflatinfont{\latinfont}{Times New Roman}
+
+\begin{document}
+
+    متن فارسی با فونت اصلی.
+
+    \selectlanguage{english}
+
+    English text in roman font.
+
+    \textsf{English text in sans-serif font.}
+
+    \texttt{English text in Latin monospace font.}
+
+    {\latinfont A separately defined Latin font family.}
+
+    \selectlanguage{persian}
+
+    فارسی و
+    {\latinttfamily Latin monospace}
+    در یک متن.
+
+\end{document}

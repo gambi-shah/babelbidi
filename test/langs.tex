@@ -1,46 +1,35 @@
+% !TeX program = lualatex
 \documentclass{article}
 
-\usepackage[rtl=arabic]{babelbidi}
-
-\babelprovide[import,main]{greek}
-\babelprovide{persian}
-\babelprovide{french}
-\babelprovide{english}
+\usepackage[french,english,persian,greek,rtl=arabic]{babelbidi}
 
 \babelfont{rm}[arabic]{Amiri}
 \babelfont{rm}[persian]{Vazirmatn}
 \babelfont{sf}{Latin Modern Sans}
 \babelfont{tt}{Latin Modern Mono}
 
-\babelbidilangs{
-    % code  = english,
-    % latin = english,
-    % ltr   = english,
-    % rtl   = arabic,
-}
-
 \begin{document}
 
-    \section{Language Mappings}
+\section{Language Mappings}
 
-    \makeatletter
-    \begin{tabular}{ll}
-        Code  & \texttt{\bbd@lang@code}  \\
-        Latin & \texttt{\bbd@lang@latin} \\
-        LTR   & \texttt{\bbd@lang@ltr}   \\
-        RTL   & \texttt{\bbd@lang@rtl}
-    \end{tabular}
-    \makeatother
+\makeatletter
+\begin{tabular}{ll}
+    Code  & \texttt{\bbd@main@code}  \\
+    Latin & \texttt{\bbd@main@latin} \\
+    LTR   & \texttt{\bbd@main@ltr}   \\
+    RTL   & \texttt{\bbd@main@rtl}
+\end{tabular}
+\makeatother
 
-    \section{Bidirectional Text}
+\section{Bidirectional Text}
 
-    \noindent
-    \lr{Left-to-right text}
+\noindent
+\lr{Left-to-right text}
 
-    \rl{متن راست‌به‌چپ}
+\rl{متن راست‌به‌چپ}
 
-    \begin{latin}
-        This is a Latin paragraph.
-    \end{latin}
+\begin{latin}
+    This is a Latin paragraph.
+\end{latin}
 
 \end{document}

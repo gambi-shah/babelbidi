@@ -1,3 +1,5 @@
+% babelbidi-lang.sty
+%
 % Babelbidi: Bidi extensions for Babel.
 %
 % Copyright (C) 2026 Amer Amikhteh
@@ -18,7 +20,7 @@
 \NeedsTeXFormat{LaTeX2e}
 
 \ProvidesPackage{babelbidi-lang}
-[2026/10/09 v0.1.0 Babel language metadata, selection, and bidi utilities]
+[2026/10/14 v0.3.0 Babel language metadata, selection, and bidi utilities]
 
 
 \makeatletter
@@ -69,21 +71,32 @@
 
 \def\bbd@dir#1{%
     \def\bbd@dirresult{null}%
-    \ifcsname bbl@sname@#1\endcsname
-        \ifcsname bbl@provide@dirs\endcsname
-            \bbl@provide@dirs{#1}%
-        \fi
-        \ifcsname bbl@wdir@#1\endcsname
-            \edef\bbd@wdir{%
-                \csname bbl@wdir@#1\endcsname
-            }%
-            \ifx\bbd@wdir\@empty
-                \def\bbd@dirresult{null}%
-            \else
-                \ifnum\bbd@wdir=0
-                    \def\bbd@dirresult{LTR}%
+    \edef\bbd@dir@language{#1}%
+    \ifx\bbd@dir@language\bbd@name@nil
+        % nil is a placeholder, not a candidate auxiliary language.
+    \else
+        \ifcsname bbl@sname@#1\endcsname
+            \ifcsname bbl@provide@dirs\endcsname
+                % Babel also writes Lua locale properties for localeid.
+                % Assign the inspected language's id in a local context.
+                \begingroup
+                \edef\languagename{#1}%
+                \bbl@id@assign
+                \bbl@provide@dirs{#1}%
+                \endgroup
+            \fi
+            \ifcsname bbl@wdir@#1\endcsname
+                \edef\bbd@wdir{%
+                    \csname bbl@wdir@#1\endcsname
+                }%
+                \ifx\bbd@wdir\@empty
+                    \def\bbd@dirresult{null}%
                 \else
-                    \def\bbd@dirresult{RTL}%
+                    \ifnum\bbd@wdir=0
+                        \def\bbd@dirresult{LTR}%
+                    \else
+                        \def\bbd@dirresult{RTL}%
+                    \fi
                 \fi
             \fi
         \fi
@@ -109,22 +122,28 @@
 % Metadata tests
 % --------------------------------------------------------------------------
 
+\newif\ifbbd@latin
+\newif\ifbbd@direction
+
 \def\bbd@if@latin#1{%
-    \edef\bbd@tmp{\bbd@script{#1}}%
-    \ifx\bbd@tmp\bbd@script@latin
-        \expandafter\@firstoftwo
+    \bbd@latinfalse
+    \edef\bbd@tmp{#1}%
+    \ifx\bbd@tmp\bbd@name@nil
+        \let\bbd@tmp\bbd@name@null
     \else
-        \expandafter\@secondoftwo
+        \edef\bbd@tmp{\bbd@script{#1}}%
+    \fi
+    \ifx\bbd@tmp\bbd@script@latin
+        \bbd@latintrue
     \fi
 }
 
 \def\bbd@if@direction#1#2{%
+    \bbd@directionfalse
     \bbd@dir{#1}%
     \edef\bbd@wanted{#2}%
     \ifx\bbd@dirresult\bbd@wanted
-        \expandafter\@firstoftwo
-    \else
-        \expandafter\@secondoftwo
+        \bbd@directiontrue
     \fi
 }
 
@@ -138,15 +157,10 @@
     \def\bbd@found{0}%
     \bbl@foreach{\bbl@ini@loaded}{%
         \ifnum\bbd@found=0
-            \edef\bbd@tmp{##1}%
-            \ifx\bbd@tmp\bbd@name@nil
-                % Ignore Babel's synthetic nil language.
-            \else
-                \edef\bbd@tmp{\bbd@script{##1}}%
-                \ifx\bbd@tmp\bbd@script@latin
-                    \edef\bbd@result{##1}%
-                    \def\bbd@found{1}%
-                \fi
+            \bbd@if@latin{##1}%
+            \ifbbd@latin
+                \edef\bbd@result{##1}%
+                \def\bbd@found{1}%
             \fi
         \fi
     }%
@@ -157,10 +171,11 @@
     \def\bbd@found{0}%
     \bbl@foreach{\bbl@ini@loaded}{%
         \ifnum\bbd@found=0
-            \bbd@if@direction{##1}{#1}{%
+            \bbd@if@direction{##1}{#1}%
+            \ifbbd@direction
                 \edef\bbd@result{##1}%
                 \def\bbd@found{1}%
-            }{}%
+            \fi
         \fi
     }%
 }
@@ -173,21 +188,25 @@
 
 \def\bbd@select@code{%
     \edef\bbd@main{\bbl@main@language}%
-    \edef\bbd@script@result{\bbd@script{\bbd@main}}%
-    \ifx\bbd@script@result\bbd@script@latin
+    \bbd@if@latin{\bbd@main}%
+    \ifbbd@latin
         \edef\bbd@result{\bbd@main}%
     \else
         \bbd@english
         \ifx\bbd@result\bbd@name@null
             \bbd@first@latin
             \ifx\bbd@result\bbd@name@null
-                \bbd@dir{\bbd@main}%
-                \ifx\bbd@dirresult\bbd@direction@ltr
+                \bbd@if@direction{\bbd@main}{\bbd@direction@ltr}%
+                \ifbbd@direction
                     \edef\bbd@result{\bbd@main}%
                 \else
                     \bbd@first@direction{\bbd@direction@ltr}%
                     \ifx\bbd@result\bbd@name@null
-                        \edef\bbd@result{\bbd@main}%
+                        \ifx\bbd@main\bbd@name@nil
+                            \def\bbd@result{english}%
+                        \else
+                            \edef\bbd@result{\bbd@main}%
+                        \fi
                     \fi
                 \fi
             \fi
@@ -198,73 +217,88 @@
 
 \def\bbd@select@latin{%
     \edef\bbd@main{\bbl@main@language}%
-    \bbd@if@latin{\bbd@main}{%
+    \bbd@if@latin{\bbd@main}%
+    \ifbbd@latin
         \edef\bbd@result{\bbd@main}%
-    }{%
+    \else
         \bbd@first@latin
         \ifx\bbd@result\bbd@name@null
             \def\bbd@result{english}%
         \fi
-    }%
+    \fi
 }
 
 \def\bbd@select@ltr{%
     \edef\bbd@main{\bbl@main@language}%
-    \bbd@if@direction{\bbd@main}{\bbd@direction@ltr}{%
+    \bbd@if@direction{\bbd@main}{\bbd@direction@ltr}%
+    \ifbbd@direction
         \edef\bbd@result{\bbd@main}%
-    }{%
+    \else
         \bbd@first@direction{\bbd@direction@ltr}%
         \ifx\bbd@result\bbd@name@null
             \def\bbd@result{english}%
         \fi
-    }%
+    \fi
 }
 
 \def\bbd@select@rtl{%
     \edef\bbd@main{\bbl@main@language}%
-    \bbd@if@direction{\bbd@main}{\bbd@direction@rtl}{%
+    \bbd@if@direction{\bbd@main}{\bbd@direction@rtl}%
+    \ifbbd@direction
         \edef\bbd@result{\bbd@main}%
-    }{%
+    \else
         \bbd@first@direction{\bbd@direction@rtl}%
         \ifx\bbd@result\bbd@name@null
             \def\bbd@result{arabic}%
         \fi
-    }%
+    \fi
 }
 
 
 % --------------------------------------------------------------------------
-% Resolve and cache all language selections
+% Select the four aliases at package load and after each babelprovide
 % --------------------------------------------------------------------------
 
-\AddToHook{begindocument/before}[babelbidi-lang]{%
+\def\bbd@update@langs{%
+    \begingroup
     \ifx\bbd@option@code\@empty
         \bbd@select@code
-        \edef\bbd@lang@code{\bbd@result}%
+        \xdef\bbd@main@code{\bbd@result}%
     \else
-        \edef\bbd@lang@code{\bbd@option@code}%
+        \xdef\bbd@main@code{\bbd@option@code}%
     \fi
 
     \ifx\bbd@option@latin\@empty
         \bbd@select@latin
-        \edef\bbd@lang@latin{\bbd@result}%
+        \xdef\bbd@main@latin{\bbd@result}%
     \else
-        \edef\bbd@lang@latin{\bbd@option@latin}%
+        \xdef\bbd@main@latin{\bbd@option@latin}%
     \fi
 
     \ifx\bbd@option@ltr\@empty
         \bbd@select@ltr
-        \edef\bbd@lang@ltr{\bbd@result}%
+        \xdef\bbd@main@ltr{\bbd@result}%
     \else
-        \edef\bbd@lang@ltr{\bbd@option@ltr}%
+        \xdef\bbd@main@ltr{\bbd@option@ltr}%
     \fi
 
     \ifx\bbd@option@rtl\@empty
         \bbd@select@rtl
-        \edef\bbd@lang@rtl{\bbd@result}%
+        \xdef\bbd@main@rtl{\bbd@result}%
     \else
-        \edef\bbd@lang@rtl{\bbd@option@rtl}%
+        \xdef\bbd@main@rtl{\bbd@option@rtl}%
     \fi
+    \endgroup
+}
+
+\bbd@update@langs
+
+% Preserve Babel's optional-argument parser and update immediately in the
+% preamble as well as in the document, after Babel has finished its work.
+\NewCommandCopy\bbd@babelprovide\babelprovide
+\RenewDocumentCommand\babelprovide{O{} m}{%
+    \bbd@babelprovide[#1]{#2}%
+    \bbd@update@langs
 }
 
 
@@ -272,8 +306,8 @@
 % Inline language commands
 % --------------------------------------------------------------------------
 
-\NewDocumentCommand\lr{m}{\foreignlanguage[captions]{\bbd@lang@ltr}{#1}}
-\NewDocumentCommand\rl{m}{\foreignlanguage[captions]{\bbd@lang@rtl}{#1}}
+\NewDocumentCommand\lr{m}{\foreignlanguage[captions]{\bbd@main@ltr}{#1}}
+\NewDocumentCommand\rl{m}{\foreignlanguage[captions]{\bbd@main@rtl}{#1}}
 
 
 % --------------------------------------------------------------------------
@@ -283,7 +317,7 @@
 \NewDocumentEnvironment{latin}{}%
 {%
     \par
-    \begin{otherlanguage}{\bbd@lang@latin}%
+    \begin{otherlanguage}{\bbd@main@latin}%
 }%
 {%
     \end{otherlanguage}%
@@ -296,7 +330,7 @@
 % ------------------------------------------
 
 \DeclareRobustCommand{\latintoday}{%
-    \foreignlanguage[date]{\bbd@lang@latin}{\today}%
+    \foreignlanguage[date]{\bbd@main@latin}{\today}%
 }
 
 \makeatother

@@ -1,0 +1,134 @@
+% babelbidi-fontfallback.def
+%
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-fontfallback.def}
+[2026/10/14 v0.3.0 Language-aware font fallbacks for Babelbidi]
+
+
+\directlua{babelbidi_font_fallback = dofile(kpse.find_file('babelbidi-fontfallback.lua'))}
+
+\makeatletter
+\ExplSyntaxOn
+\prop_new:N \g__bbd_fallback_prop
+\seq_new:N \g__bbd_fallback_targets_seq
+\bool_new:N \g__bbd_fallback_active_bool
+\tl_new:N \l__bbd_fallback_source_tl
+\tl_new:N \l__bbd_fallback_ids_tl
+\clist_new:N \l__bbd_fallback_clist
+
+% Declarations may precede babelprovide and babelfont. A later declaration
+% replaces the source's chain; an empty list disables it.
+\NewDocumentCommand \fontfallback { m m }
+{
+    \tl_set:Nx \l__bbd_fallback_source_tl { \tl_trim_spaces:n {#1} }
+    \clist_set:Nn \l__bbd_fallback_clist {#2}
+    \prop_gput:NVV \g__bbd_fallback_prop
+    \l__bbd_fallback_source_tl \l__bbd_fallback_clist
+}
+
+\cs_new_protected:Npn \bbd_fontfallback_setup:
+{
+    \prop_map_inline:Nn \g__bbd_fallback_prop
+    {
+        \cs_if_exist:cTF { bbl@id@@##1 }
+        {
+            \seq_if_in:NnF \g__bbd_fallback_targets_seq {##1}
+            { \seq_gput_right:Nn \g__bbd_fallback_targets_seq {##1} }
+            \tl_clear:N \l__bbd_fallback_ids_tl
+            \clist_map_inline:nn {##2}
+            {
+                \cs_if_exist:cTF { bbl@id@@####1 }
+                {
+                    \str_if_eq:nnF {##1} {####1}
+                    {
+                        \bool_gset_true:N \g__bbd_fallback_active_bool
+                        \tl_put_right:Nx \l__bbd_fallback_ids_tl
+                        { \int_use:c { bbl@id@@####1 } , }
+                        \seq_if_in:NnF \g__bbd_fallback_targets_seq {####1}
+                        { \seq_gput_right:Nn \g__bbd_fallback_targets_seq {####1} }
+                    }
+                }
+                { \PackageWarning{babelbidi}{Unknown~fallback~target~locale~'####1'} }
+            }
+            \directlua{babelbidi_font_fallback.set(
+                \int_use:c { bbl@id@@##1 }, {\l__bbd_fallback_ids_tl})}
+        }
+        { \PackageWarning{babelbidi}{Unknown~fallback~source~locale~'##1'} }
+    }
+    \bool_if:NT \g__bbd_fallback_active_bool
+    {
+        % Reuse the upstream mapper already retained by babelbidi's cache.
+        % This creates mappings without enabling automatic onchar selection.
+        \cs_if_exist:NF \bbl@mapdir
+        { \cs_set_eq:NN \bbl@mapdir \bbd@fontcache@expected@mapdir }
+        \AddToHook{selectfont}[babelbidi/font-fallback]{\bbd@fontfallback@mapcurrent}
+        \bbd@fontfallback@mapcurrent
+        \directlua{babelbidi_font_fallback.install()}
+    }
+}
+
+\cs_new_protected:Npn \bbd_fontfallback_maptargets:
+{
+    \seq_map_inline:Nn \g__bbd_fallback_targets_seq
+    { \bbd@fontfallback@maptarget{##1} }
+}
+\ExplSyntaxOff
+
+\makeatletter
+\@onlypreamble\fontfallback
+\newif\ifbbd@fontfallback@mapping
+\newattribute\bbd@fontfallback@context
+\directlua{babelbidi_font_fallback.attribute =
+    luatexbase.registernumber('bbd@fontfallback@context')}
+
+% Reuse Babel's mapper, including babelbidi's cache once it is installed.
+\def\bbd@fontfallback@maptarget#1{%
+    \begingroup
+    \edef\bbl@prefontid{\bbd@fontfallback@sourcefont}%
+    \bbl@mapdir{#1}%
+    \endgroup
+}
+
+\def\bbd@fontfallback@mapcurrent{%
+    \ifbbd@fontfallback@mapping\else
+        \ifnum\fontid\font>\z@
+            \edef\bbd@fontfallback@sourcefont{\fontid\font}%
+            \begingroup
+            \bbd@fontfallback@mappingtrue
+            \let\bbl@mapselect\relax
+            \csname bbd_fontfallback_maptargets:\endcsname
+            \endgroup
+            \directlua{babelbidi_font_fallback.capture(\bbd@fontfallback@sourcefont)}%
+        \fi
+    \fi
+}
+
+\AddToHook{begindocument/end}[babelbidi/font-fallback]{%
+    \@ifundefined{bbl@switchfont}{%
+        \PackageWarningNoLine{babelbidi}{Font~fallback~requires~Babel's~font~resolver}%
+    }{\csname bbd_fontfallback_setup:\endcsname}%
+}
+\DeclareHookRule{begindocument/end}{babelbidi/font-fallback}{before}{babelbidi/font-cache}
+\makeatother
+\endinput

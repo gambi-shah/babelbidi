@@ -1,3 +1,5 @@
+% babelbidi-code.def
+%
 % Babelbidi: Bidi extensions for Babel.
 %
 % Copyright (C) 2026 Amer Amikhteh
@@ -21,24 +23,10 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-code.def}
-[2026/10/09 v0.1.0 Code support for Babelbidi]
+[2026/10/14 v0.3.0 Code support for Babelbidi]
 
 \makeatletter
 
-
-\DeclareRobustCommand{\latinttfamily}{%
-    \bbd@select@code
-    \edef\bbd@selected@language{\bbd@result}%
-    \edef\bbd@selectedtt{%
-        \csname bbl@ttdflt@\bbd@selected@language\endcsname
-    }%
-    \begingroup
-    \edef\languagename{\bbd@selected@language}%
-    \bbl@switchfont
-    \global\let\bbd@selectedtt\ttdefault
-    \endgroup
-    \fontfamily{\bbd@selectedtt}\selectfont
-}
 
 % ------------------------------------------------
 % Verbatim
@@ -67,7 +55,7 @@
     \removelastskip
     \ifPDFTeX
         \bgroup
-        \selectlanguage{\bbd@lang@code}%
+        \selectlanguage{\bbd@main@code}%
     \fi
 }
 
@@ -87,15 +75,13 @@
 
 \@ifpackageloaded{listings}{%
     \lst@AddToHook{Init}{%
-        \bbd@select@code
-        \edef\bbd@lang@code{\bbd@result}%
         \lst@ifdisplaystyle
         \par
-        \expandafter\selectlanguage\expandafter{\bbd@lang@code}%
+        \expandafter\selectlanguage\expandafter{\bbd@main@code}%
         \else
         \ifXeTeX\unskip\fi
         \edef\bbd@tmp{%
-            \noexpand\begin{otherlanguage*}{\bbd@lang@code}%
+            \noexpand\begin{otherlanguage*}{\bbd@main@code}%
         }%
         \bbd@tmp
         \ifXeTeX\beginL\fi
@@ -116,15 +102,12 @@
 % Minted Package
 % ------------------------------------------------
 
-\bbd@select@code
-\edef\bbd@lang@code{\bbd@result}
-
 \@ifpackageloaded{minted}{%
     \NewCommandCopy{\bbd@RobustMintProcess}{\RobustMintProcess}
 
     \RenewDocumentCommand{\RobustMintProcess}{m m m}{%
         \par
-        \begin{otherlanguage}{\bbd@lang@code}%
+        \begin{otherlanguage}{\bbd@main@code}%
             \ifLuaTeX
                 \vspace{\topsep}
                 \begin{minipage}{\linewidth}%
@@ -153,7 +136,7 @@
 
     \AddToHook{env/minted/before}{%
         \par
-        \begin{otherlanguage}{\bbd@lang@code}%
+        \begin{otherlanguage}{\bbd@main@code}%
         \ifLuaTeX
             \begin{center}
             \begin{minipage}{\linewidth}%

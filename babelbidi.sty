@@ -24,15 +24,11 @@
 \NeedsTeXFormat{LaTeX2e}
 
 \ProvidesPackage{babelbidi}
-[2026/10/11 v0.2.0 Bidi extensions for Babel]
+[2026/10/14 v0.3.0 Bidi extensions for Babel]
 
 
 \RequirePackage{iftex}
 \RequirePackage{xkeyval}
-\RequirePackage{babelbidi-lang}
-\NewDocumentCommand{\babelbidilangs}{m}{%
-    \SetKeys[babelbidi-lang]{#1}%
-}
 
 
 \makeatletter
@@ -42,44 +38,44 @@
 % ------------------------------------------
 
 \define@key{bbd}{bidi}{%
-    \gdef\bbd@bidi{#1}%
+  \gdef\bbd@bidi{#1}%
 }
 
 
 \define@key{bbd}{layout}{%
-    \edef\bbd@layout{#1}%
+  \edef\bbd@layout{#1}%
 }
 
 
 \def\bbd@layout{}
 
 \ifPDFTeX
-    \setkeys{bbd}{bidi=default}
+  \setkeys{bbd}{bidi=default}
 \fi
 
 \ifXeTeX
-    \setkeys{bbd}{bidi=bidi-r}
+  \setkeys{bbd}{bidi=bidi-r}
 \fi
 
 \ifLuaTeX
-    \setkeys{bbd}{%
-        bidi=basic,
-        layout=counters graphics footnotes lists
-    }
+  \setkeys{bbd}{%
+    bidi=basic,
+    layout=counters graphics footnotes lists
+  }
 \fi
 
 \DeclareOptionX{bidi}{%
-    \setkeys{bbd}{bidi=#1}%
+  \setkeys{bbd}{bidi=#1}%
 }
 
 \DeclareOptionX{layout}{%
-    \setkeys{bbd}{layout=#1}%
+  \setkeys{bbd}{layout=#1}%
 }
 
 \DeclareOptionX*{%
-    \edef\bbd@options{%
-        \bbd@options,\CurrentOption
-    }%
+  \edef\bbd@options{%
+    \bbd@options,\CurrentOption
+  }%
 }
 
 \def\bbd@options{}
@@ -89,36 +85,36 @@
 \bbd@font@cachetrue
 
 \DeclareOptionX{fontcache}[true]{%
-    \edef\bbd@fontcache@option{#1}%
-    \def\bbd@fontcache@true{true}%
-    \def\bbd@fontcache@false{false}%
-    \ifx\bbd@fontcache@option\bbd@fontcache@true
-        \bbd@font@cachetrue
-    \else\ifx\bbd@fontcache@option\bbd@fontcache@false
-            \bbd@font@cachefalse
-        \else
-            \PackageError{babelbidi}{Invalid fontcache value '#1'}%
-            {Use fontcache=true or fontcache=false.}%
-        \fi\fi
+  \edef\bbd@fontcache@option{#1}%
+  \def\bbd@fontcache@true{true}%
+  \def\bbd@fontcache@false{false}%
+  \ifx\bbd@fontcache@option\bbd@fontcache@true
+    \bbd@font@cachetrue
+  \else\ifx\bbd@fontcache@option\bbd@fontcache@false
+      \bbd@font@cachefalse
+    \else
+      \PackageError{babelbidi}{Invalid fontcache value '#1'}%
+      {Use fontcache=true or fontcache=false.}%
+    \fi\fi
 }
 
 
 
 
 \DeclareOptionX{code}{%
-    \SetKeys[babelbidi-lang]{code=#1}%
+  \PassOptionsToPackage{code=#1}{babelbidi-lang}%
 }
 
 \DeclareOptionX{latin}{%
-    \SetKeys[babelbidi-lang]{latin=#1}%
+  \PassOptionsToPackage{latin=#1}{babelbidi-lang}%
 }
 
 \DeclareOptionX{ltr}{%
-    \SetKeys[babelbidi-lang]{ltr=#1}%
+  \PassOptionsToPackage{ltr=#1}{babelbidi-lang}%
 }
 
 \DeclareOptionX{rtl}{%
-    \SetKeys[babelbidi-lang]{rtl=#1}%
+  \PassOptionsToPackage{rtl=#1}{babelbidi-lang}%
 }
 
 \ProcessOptionsX\relax
@@ -138,44 +134,44 @@
 % ------------------------------------------
 
 \@ifundefined{if@rl}{%
-    \newif\if@rl
+  \newif\if@rl
 }{}
 
 \ifPDFTeX
-    \ifbbd@beamer
-        % \addto\extraarabic{
-        \providecommand{\labelitemiv}
-        {\if@rl\protect $-$ %
-            \else\protect\textperiodcentred\fi}
-        \providecommand{\labelitemi}
-        {\if@rl\protect\textLR{$\bullet$}
-            \else\protect\textbullet\fi}
+  \ifbbd@beamer
+    % \addto\extraarabic{
+    \providecommand{\labelitemiv}
+    {\if@rl\protect $-$ %
+      \else\protect\textperiodcentred\fi}
+    \providecommand{\labelitemi}
+    {\if@rl\protect\textLR{$\bullet$}
+      \else\protect\textbullet\fi}
 
-        \providecommand{\labelitemii}
-        {\if@rl\protect\textLR{$\circ$} %
-            \else\protect\textLR{ \normalfont\bfseries\textendash}\fi}
+    \providecommand{\labelitemii}
+    {\if@rl\protect\textLR{$\circ$} %
+      \else\protect\textLR{ \normalfont\bfseries\textendash}\fi}
 
-        \providecommand{\labelitemiii}
-        {\if@rl\protect\textLR{$*$} %
-            \else\protect\textasteriskcentered\fi}
+    \providecommand{\labelitemiii}
+    {\if@rl\protect\textLR{$*$} %
+      \else\protect\textasteriskcentered\fi}
 
-        \providecommand{\labelenumi}
-        {\if@rl(\I{\number\c@enumi}).%
-            \else{\number\c@enumi}.\fi}
+    \providecommand{\labelenumi}
+    {\if@rl(\I{\number\c@enumi}).%
+      \else{\number\c@enumi}.\fi}
 
-        \providecommand{\labelenumii}
-        {\if@rl\abjadnumeral{\number\c@enumii}. %
-            \else({\number\c@enumii})\fi}
+    \providecommand{\labelenumii}
+    {\if@rl\abjadnumeral{\number\c@enumii}. %
+      \else({\number\c@enumii})\fi}
 
-        \providecommand{\labelenumiii}
-        {\if@rl\I{\number\c@enumiii}$\space-\space$ %
-            \else({\number\c@enumiii})\fi}
+    \providecommand{\labelenumiii}
+    {\if@rl\I{\number\c@enumiii}$\space-\space$ %
+      \else({\number\c@enumiii})\fi}
 
-        \providecommand{\labelenumiv}
-        {\if@rl\abjadnumeral{\number\c@enumiv}$\space-\space$ %
-            \else({\number\c@enumiv})\fi}
-        % }
-    \fi \fi
+    \providecommand{\labelenumiv}
+    {\if@rl\abjadnumeral{\number\c@enumiv}$\space-\space$ %
+      \else({\number\c@enumiv})\fi}
+    % }
+  \fi \fi
 
 % ------------------------------------------
 % Engine setup
@@ -183,26 +179,29 @@
 
 \ifPDFTeX
 
-    \RequirePackage[bidi=\bbd@bidi,\bbd@options]{babel}
+  \RequirePackage[bidi=\bbd@bidi,\bbd@options]{babel}
 \fi
 
 \ifXeTeX
-    \RequirePackage[
-        bidi=\bbd@bidi,
-        \bbd@options
-    ]{babel}
+  \RequirePackage[
+    bidi=\bbd@bidi,
+    \bbd@options
+  ]{babel}
 \fi
 
 \ifLuaTeX
-    \ifbbd@beamerrl
-    \else
-        \RequirePackage[
-            bidi=\bbd@bidi,
-            layout=\bbd@layout,
-            \bbd@options
-        ]{babel}
-    \fi
+  \ifbbd@beamerrl
+  \else
+    \RequirePackage[
+      bidi=\bbd@bidi,
+      layout=\bbd@layout,
+      \bbd@options
+    ]{babel}
+  \fi
 \fi
+
+% Babel's language metadata must be ready before selecting the four aliases.
+\RequirePackage{babelbidi-lang}
 
 
 % ------------------------------------------
@@ -211,10 +210,10 @@
 
 \makeatletter
 \ifbbd@beamer
-    \ifbbd@beamerrl
-    \else
-        \ifLuaTeX \input{babelbidi-beamer.def} \fi
-    \fi
+  \ifbbd@beamerrl
+  \else
+    \ifLuaTeX \input{babelbidi-beamer.def} \fi
+  \fi
 \fi
 \makeatother
 
@@ -229,24 +228,24 @@
 \let\bbd@label\label
 
 \AddToHook{begindocument/before}{%
-    \@ifundefined{babelsublr}{}{%
-        \protected\def\label#1{%
-            \ifnum\@enumdepth>\z@
-                \if@inlabel
-                    \begingroup
-                    \let\babelsublr\bbd@firstofone
-                    \let\babelsubrl\bbd@firstofone
-                    \edef\bbd@tmp{#1}%
-                    \expandafter\bbd@label\expandafter{\bbd@tmp}%
-                    \endgroup
-                \else
-                    \bbd@label{#1}%
-                \fi
-            \else
-                \bbd@label{#1}%
-            \fi
-        }
+  \@ifundefined{babelsublr}{}{%
+    \protected\def\label#1{%
+      \ifnum\@enumdepth>\z@
+        \if@inlabel
+          \begingroup
+          \let\babelsublr\bbd@firstofone
+          \let\babelsubrl\bbd@firstofone
+          \edef\bbd@tmp{#1}%
+          \expandafter\bbd@label\expandafter{\bbd@tmp}%
+          \endgroup
+        \else
+          \bbd@label{#1}%
+        \fi
+      \else
+        \bbd@label{#1}%
+      \fi
     }
+  }
 }
 \makeatother
 
@@ -257,37 +256,45 @@
 
 \input{babelbidi-api.def}
 \ifLuaTeX  \input{babelbidi-onchar.def} \fi
+\ifLuaTeX
+  \input{babelbidi-fontfallback.def}
+\else
+  \NewDocumentCommand{\fontfallback}{m m}{%
+    \PackageWarning{babelbidi}{Font fallback requires LuaLaTeX; declaration ignored}%
+  }
+\fi
+\ifTUTeX
+  \input{babelbidi-fonts.def}
+\fi
 
 \makeatletter
 \AddToHook{begindocument/before}{%
-    \ifXeTeX    \input{babelbidi-xetex.def}     \fi
-    \ifLuaTeX   \input{babelbidi-luatex.def}    \fi
+  \ifXeTeX    \input{babelbidi-xetex.def}     \fi
+  \ifLuaTeX   \input{babelbidi-luatex.def}    \fi
 
-    \edef\bbd@main{\bbl@main@language}%
-    \edef\bbd@main@script{\bbd@script{\bbd@main}}%
-    \ifx\bbd@main@script\bbd@script@latin
-        \let\latinttfamily\ttfamily
-    \else
-        \input{babelbidi-code.def}%
-    \fi
+  \bbd@if@latin{\bbl@main@language}%
+  \ifbbd@latin
+  \else
+    \input{babelbidi-code.def}%
+  \fi
 }
 
 
 \@ifundefined{bbl@latinarabic}{}{%
-    \let\bbd@arabic\@arabic
-    \AddToHook{env/minted/before}{%
-        \let\@arabic\bbl@latinarabic
-    }%
-    \AddToHook{env/minted/after}{%
-        \let\@arabic\bbd@arabic
-    }%
+  \let\bbd@arabic\@arabic
+  \AddToHook{env/minted/before}{%
+    \let\@arabic\bbl@latinarabic
+  }%
+  \AddToHook{env/minted/after}{%
+    \let\@arabic\bbd@arabic
+  }%
 }%
 
 
 \AddToHook{begindocument}{
-    \if@RTLmain
-        \input{babelbidi-layout.def}
-    \fi}
+  \if@RTLmain
+    \input{babelbidi-layout.def}
+  \fi}
 \makeatother
 
 

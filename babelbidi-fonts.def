@@ -1,0 +1,107 @@
+% babelbidi-fonts.def
+%
+% babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+
+\ProvidesFile{babelbidi-fonts.def}
+[2026/10/14 v0.3.0 Common definitions for fonts in XeTeX and LuaTeX]
+
+
+\makeatletter
+
+
+
+% --------------------------------------
+% Main fonts
+% --------------------------------------
+
+\NewDocumentCommand{\settextfont}{O{} m}{%
+    \babelfont[\bbl@main@language]{rm}[#1]{#2}%
+    \babelfont[\bbl@main@language]{sf}[#1]{#2}%
+    \babelfont[\bbl@main@language]{tt}[#1]{#2}%
+}
+
+\NewDocumentCommand{\setlatintextfont}{O{} m}{%
+    \babelfont[\bbd@main@latin]{rm}[#1]{#2}%
+    \babelfont[\bbd@main@latin]{sf}[#1]{#2}%
+    \babelfont[\bbd@main@latin]{tt}[#1]{#2}%
+}
+
+\DeclareDocumentCommand \deflatinfont { m o m }
+{
+    \newfontfamily#1{#3}[Script=Latin,#2]
+}
+
+
+% --------------------------------------
+% Latin sans and monospaced fonts
+% --------------------------------------
+
+\NewDocumentCommand{\setlatinsansfont}{O{} m}{%
+    \babelfont[\bbd@main@latin]{sf}[#1]{#2}%
+}
+
+\NewDocumentCommand{\setlatinmonofont}{O{} m}{%
+    \babelfont[\bbd@main@latin]{tt}[#1]{#2}%
+}
+
+% Resolve Babel's tt mapping with the main Latin language's font metadata.
+% Only the resulting family is applied outside this local context: language,
+% direction, hyphenation, and the ordinary tt default remain unchanged.
+\def\bbd@apply@latin@tt#1{%
+    \bbl@font@set#1\ttdefault\ttfamily
+}
+
+\DeclareRobustCommand\latinttfamily{%
+    \not@math@alphabet\latinttfamily\relax
+    \bbd@if@latin{\bbl@main@language}%
+    \ifbbd@latin
+        \ttfamily
+    \else
+        \begingroup
+        % Babel's metadata loader uses languagename when storing INI data.
+        % Set it locally so a fallback language cannot overwrite the current one.
+        \edef\languagename{\bbd@main@latin}%
+        \ifcsname bbl@ttdflt@\bbd@main@latin\endcsname
+            \bbl@ifunset{bbl@lsys@\bbd@main@latin}{%
+                \bbl@id@assign
+                \bbl@provide@lsys{\bbd@main@latin}%
+            }{}%
+            \def\bbl@cl##1{\csname bbl@##1@\bbd@main@latin\endcsname}%
+            \expandafter\bbd@apply@latin@tt
+            \csname bbl@ttdflt@\bbd@main@latin\endcsname
+        \fi
+        \edef\bbd@next{%
+            \endgroup
+            \noexpand\fontfamily{\ttdefault}\noexpand\selectfont
+        }%
+        \bbd@next
+    \fi
+}
+
+
+
+
+\makeatother
+
+\endinput
