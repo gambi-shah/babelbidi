@@ -1,4 +1,5 @@
-# The `babelbidi` package
+LaTeX Package: BabelBidi 2026-10-19 v0.3.1
+----------------------------------------
 
 An extension to babel’s bidirectional support
 
@@ -57,6 +58,7 @@ Compile with LuaLaTeX (recommended), XeLaTeX (fallback), or pdfTeX (last resort)
 
 The four auxiliary languages (Latin, LTR, RTL, and code) are available upon loading. Automatic selections update after each `\babelprovide` call, based on the main and loaded languages. The `latin`, `ltr`, `rtl`, and `code` options override these selections permanently. Declare languages before setting fonts. Babel's synthetic `nil` language is ignored; without a real language, Latin, LTR, and code fall back to `english`, and RTL to `arabic`.
 
+## Documentation
 See the [main manual](doc/babelbidi.pdf) for configuration and examples.
 
 ## License and maintainer

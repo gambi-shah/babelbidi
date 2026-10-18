@@ -40,3 +40,6 @@ _minted*/
 
 # Temporary consolidated report for AI review
 /babelbidi.txt
+
+# Root-level text files
+/*.txt

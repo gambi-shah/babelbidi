@@ -1,0 +1,63 @@
+% Run twice with LuaLaTeX. Frame padding must stay inside the text area.
+\documentclass{article}
+\usepackage[english,main=persian]{babelbidi}
+\babelprovide[onchar=ids fonts letters]{persian}
+\babelprovide[onchar=ids fonts letters]{english}
+\babelfont[persian]{rm}{Vazirmatn}
+\babelfont[persian]{tt}{Vazir Code}
+\babelfont[english]{rm}{Latin Modern Roman}
+\babelfont[english]{tt}{Latin Modern Mono}
+\usepackage[svgnames]{xcolor}
+\usepackage{minted}
+\setminted{bgcolor=Gold,bgcolorpadding=0.5em,breaklines=true}
+\setminted[php]{textlanguage=persian}
+\newcommand{\checktextlanguage}[1]{%
+  \edef\actualtextlanguage{\languagename}%
+  \ifdefstring{\actualtextlanguage}{#1}{}{%
+    \PackageError{minted-language-test}{Expected #1, got \languagename}{}%
+  }%
+}
+
+\begin{document}
+\lr{Default code language:}
+\begin{minted}[formatcom=\checktextlanguage{english}]{latex}
+\documentclass{article}
+\begin{document}
+Hello, world!
+\end{document}
+\end{minted}
+
+\lr{Persian code language, with padding and automatic line breaks:}
+\begin{minted}[textlanguage=persian,formatcom=\checktextlanguage{persian}]{latex}
+این متن با LaTeX نوشته شده است.
+معادل کتاب در انگلیسی book است.
+این یک جملهٔ بلند برای آزمودن شکست خودکار خط است. این یک جملهٔ بلند برای آزمودن شکست خودکار خط است. این یک جملهٔ بلند برای آزمودن شکست خودکار خط است.
+\end{minted}
+
+\lr{Persian code language, with a frame label and line numbers:}
+\begin{minted}[textlanguage=persian,linenos,label={Example},framerule=0.4pt,rulecolor=black,formatcom=\checktextlanguage{persian}]{latex}
+سلام دنیا!
+این خط دوم است.
+\end{minted}
+
+\lr{The following environment uses the default code language again:}
+\begin{minted}[formatcom=\checktextlanguage{english}]{latex}
+This is an English paragraph.
+\end{minted}
+
+\lr{The lexer and the text language are independent:}
+\begin{minted}[formatcom=\checktextlanguage{persian}]{php}
+<?php echo "سلام دنیا!"; ?>
+\end{minted}
+
+\lr{An environment option overrides the per-lexer default:}
+\begin{minted}[textlanguage=english,formatcom=\checktextlanguage{english}]{php}
+<?php echo "Hello, world!"; ?>
+\end{minted}
+
+\lr{The one-shot hook still works:}
+\AddToHookNext{env/minted/begin}{\selectlanguage{persian}}
+\begin{minted}[formatcom=\checktextlanguage{persian}]{latex}
+این متن فارسی است.
+\end{minted}
+\end{document}

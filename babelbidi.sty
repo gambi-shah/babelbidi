@@ -24,28 +24,22 @@
 \NeedsTeXFormat{LaTeX2e}
 
 \ProvidesPackage{babelbidi}
-[2026/10/14 v0.3.0 Bidi extensions for Babel]
-
+[2026/10/19 v0.3.1 Bidi extensions for Babel]
 
 \RequirePackage{iftex}
 \RequirePackage{xkeyval}
 
-
-\makeatletter
-
-% ------------------------------------------
+% ------------------------------------------------
 % Package options
-% ------------------------------------------
+% ------------------------------------------------
 
 \define@key{bbd}{bidi}{%
   \gdef\bbd@bidi{#1}%
 }
 
-
 \define@key{bbd}{layout}{%
   \edef\bbd@layout{#1}%
 }
-
 
 \def\bbd@layout{}
 
@@ -98,9 +92,6 @@
     \fi\fi
 }
 
-
-
-
 \DeclareOptionX{code}{%
   \PassOptionsToPackage{code=#1}{babelbidi-lang}%
 }
@@ -119,19 +110,19 @@
 
 \ProcessOptionsX\relax
 
+% ------------------------------------------------
+% Beamer class detection
+% ------------------------------------------------
 
-% ------------------------------------------
-% beamer conditionals
-% ------------------------------------------
 \newif\ifbbd@beamer
 \@ifclassloaded{beamer}{\bbd@beamertrue}{}
 
 \newif\ifbbd@beamerrl
 \@ifclassloaded{beamer-rl}{\bbd@beamerrltrue}{}
 
-% ------------------------------------------
-% Resolve Bug of arabiccore Package or beamer
-% ------------------------------------------
+% ------------------------------------------------
+% Arabic and Beamer compatibility
+% ------------------------------------------------
 
 \@ifundefined{if@rl}{%
   \newif\if@rl
@@ -173,9 +164,9 @@
     % }
   \fi \fi
 
-% ------------------------------------------
+% ------------------------------------------------
 % Engine setup
-% ------------------------------------------
+% ------------------------------------------------
 
 \ifPDFTeX
 
@@ -203,56 +194,43 @@
 % Babel's language metadata must be ready before selecting the four aliases.
 \RequirePackage{babelbidi-lang}
 
+% ------------------------------------------------
+% Keep counter direction markup out of label keys and link targets
+% ------------------------------------------------
 
-% ------------------------------------------
-% Beamer beamerbasebox from beamer-rl class
-% ------------------------------------------
+\long\def\bbd@firstofone#1{#1}
 
-\makeatletter
+\AddToHook{begindocument/before}{%
+  \@ifundefined{babelsublr}{}{%
+    \let\bbd@label\label
+    \protected\def\label#1{%
+      \begingroup
+      \let\babelsublr\bbd@firstofone
+      \let\babelsubrl\bbd@firstofone
+      \edef\bbd@tmp{#1}%
+      % Restore display formatting before writing the reference value.
+      \expandafter\endgroup
+      \expandafter\bbd@label\expandafter{\bbd@tmp}%
+    }
+    % Hyperref runs this hook inside its link-target group.
+    \AddToHook{makelinktarget}{%
+      \let\babelsublr\bbd@firstofone
+      \let\babelsubrl\bbd@firstofone
+    }%
+  }
+}
+
+% ------------------------------------------------
+% Load package components
+% ------------------------------------------------
+
+% Beamer box compatibility.
 \ifbbd@beamer
   \ifbbd@beamerrl
   \else
     \ifLuaTeX \input{babelbidi-beamer.def} \fi
   \fi
 \fi
-\makeatother
-
-
-% ------------------------------------------------
-% Fix for label errors caused by Babel's counters layout
-% ------------------------------------------------
-
-\makeatletter
-\long\def\bbd@firstofone#1{#1}
-
-\let\bbd@label\label
-
-\AddToHook{begindocument/before}{%
-  \@ifundefined{babelsublr}{}{%
-    \protected\def\label#1{%
-      \ifnum\@enumdepth>\z@
-        \if@inlabel
-          \begingroup
-          \let\babelsublr\bbd@firstofone
-          \let\babelsubrl\bbd@firstofone
-          \edef\bbd@tmp{#1}%
-          \expandafter\bbd@label\expandafter{\bbd@tmp}%
-          \endgroup
-        \else
-          \bbd@label{#1}%
-        \fi
-      \else
-        \bbd@label{#1}%
-      \fi
-    }
-  }
-}
-\makeatother
-
-
-% ------------------------------------------
-% Load package components
-% ------------------------------------------
 
 \input{babelbidi-api.def}
 \ifLuaTeX  \input{babelbidi-onchar.def} \fi
@@ -267,7 +245,10 @@
   \input{babelbidi-fonts.def}
 \fi
 
+% The .def files reset @; restore it before reading the remaining code.
 \makeatletter
+
+% Delay engine and code patches until the preamble is complete.
 \AddToHook{begindocument/before}{%
   \ifXeTeX    \input{babelbidi-xetex.def}     \fi
   \ifLuaTeX   \input{babelbidi-luatex.def}    \fi
@@ -279,7 +260,39 @@
   \fi
 }
 
+% Run after babelbidi-api.def has set the main direction.
+\AddToHook{begindocument}{
+  \if@RTLmain
+    \input{babelbidi-layout.def}
+  \fi}
 
+% ------------------------------------------------
+% Minted patches
+% ------------------------------------------------
+
+\AddToHook{package/minted/after}{%
+  \mintedpgfkeyscreate{tex}{textlanguage=}%
+  \AddToHook{cmd/minted@usefvopts/after}{%
+    \edef\bbd@minted@textlanguage{\mintedtexoptvalueof{textlanguage}}%
+    \ifx\bbd@minted@textlanguage\@empty\else
+      \selectlanguage{\bbd@minted@textlanguage}%
+    \fi
+  }%
+  \ifLuaTeX
+    \AddToHook{env/minted/begin}{%
+      % Frame overlays are zero-width boxes anchored at the left edge.
+      % Their geometry must stay LTR when the code language changes.
+      \patchcmd\FV@SingleFrameLine
+      {\hbox to\z@}{\hbox dir TLT to\z@}{}%
+      {\PackageWarning{babelbidi}{Could not patch minted frame lines}}%
+      \patchcmd\FV@SingleFrameSep
+      {\hbox to \z@}{\hbox dir TLT to\z@}{}%
+      {\PackageWarning{babelbidi}{Could not patch minted frame padding}}%
+    }%
+  \fi
+}
+
+% Keep code counters in Latin digits.
 \@ifundefined{bbl@latinarabic}{}{%
   \let\bbd@arabic\@arabic
   \AddToHook{env/minted/before}{%
@@ -289,18 +302,6 @@
     \let\@arabic\bbd@arabic
   }%
 }%
-
-
-\AddToHook{begindocument}{
-  \if@RTLmain
-    \input{babelbidi-layout.def}
-  \fi}
-\makeatother
-
-
-
-
-
 
 \makeatother
 

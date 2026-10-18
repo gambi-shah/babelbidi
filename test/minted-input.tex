@@ -1,0 +1,42 @@
+% Run twice with LuaLaTeX. ASCII digits in imported code must stay Latin.
+\documentclass{article}
+\usepackage{minted}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{minted}
+\usepackage[english,main=persian]{babelbidi}
+\babelprovide[mapdigits,onchar=ids fonts letters]{persian}
+\babelprovide[onchar=ids fonts letters]{english}
+\babelfont[persian]{rm}{Vazirmatn}
+\babelfont[persian]{tt}{Vazir Code}
+\babelfont[english]{rm}{Latin Modern Roman}
+\babelfont[english]{tt}{Latin Modern Mono}
+\newcommand{\checkinputlanguage}[1]{%
+  \edef\actualinputlanguage{\languagename}%
+  \ifdefstring{\actualinputlanguage}{#1}{}{%
+    \PackageError{minted-input-test}{Expected #1, got \languagename}{}%
+  }%
+}
+\begin{filecontents*}[overwrite]{\jobname.sh}
+touch file{1..5}.txt
+mkdir dir1 dir2 dir3
+# توضیح فارسی
+\end{filecontents*}
+
+\begin{document}
+متن فارسی قبل از کد 123
+\inputminted[linenos,firstnumber=12,formatcom=\checkinputlanguage{english}]{bash}{\jobname.sh}
+\checkinputlanguage{persian}
+
+\begin{tcblisting}{listing engine=minted,minted language=bash,listing only,
+  title={عنوان فارسی 123},
+  minted options={formatcom=\checkinputlanguage{english}}}
+touch file{1..5}.txt
+mkdir dir1 dir2 dir3
+# توضیح فارسی
+\end{tcblisting}
+\checkinputlanguage{persian}
+
+\inputminted[textlanguage=persian,formatcom=\checkinputlanguage{persian}]{bash}{\jobname.sh}
+\checkinputlanguage{persian}
+متن فارسی بعد از کد 123
+\end{document}

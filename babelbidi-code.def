@@ -23,7 +23,7 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-code.def}
-[2026/10/14 v0.3.0 Code support for Babelbidi]
+[2026/10/19 v0.3.1 Code support for Babelbidi]
 
 \makeatletter
 
@@ -103,6 +103,16 @@
 % ------------------------------------------------
 
 \@ifpackageloaded{minted}{%
+    % File input (also used by tcolorbox) bypasses the minted environment.
+    \NewCommandCopy{\bbd@RobustInputMintedProcess}{\RobustInputMintedProcess}
+
+    \RenewDocumentCommand{\RobustInputMintedProcess}{m m m}{%
+        \begingroup
+        \selectlanguage{\bbd@main@code}%
+        \bbd@RobustInputMintedProcess{#1}{#2}{#3}%
+        \endgroup
+    }
+
     \NewCommandCopy{\bbd@RobustMintProcess}{\RobustMintProcess}
 
     \RenewDocumentCommand{\RobustMintProcess}{m m m}{%

@@ -30,7 +30,8 @@
 
 \setminted{
     breaklines=true,
-    breakanywhere=true
+    breakanywhere=true,
+    escapeinside=||
 }
 \setminted[latex]{bgcolor=Gold, bgcolorpadding=0.5em}
 \setminted[bash]{bgcolor=Gainsboro}
@@ -369,6 +370,16 @@ Languages should be declared before their fonts are configured.
            environment, the \textsf{listings} package, and the \textsf{minted}
            environment and inline command. Documents with a Latin-script main
            language do not need these patches.
+           \item \textsf{minted}: \texttt{textlanguage} selects a declared Babel
+           language, including its direction and fonts, locally for the environment:
+\begin{minted}{latex}
+\begin{min||ted}
+    [textlanguage=arabic]{latex}
+    نص عربي
+\end{min||ted}
+\end{minted}
+           Here \texttt{latex} selects syntax highlighting. The option works
+           with any language of \texttt{babel} and can also be set with \verb|\setminted|.
            \item \texttt{\string\label}: prevents errors caused by Babel's
            direction commands in label keys derived from enumeration counters.
        \end{enumerate}
