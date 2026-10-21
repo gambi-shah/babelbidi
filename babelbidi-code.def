@@ -23,7 +23,7 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-code.def}
-[2026/10/19 v0.3.1 Code support for Babelbidi]
+[2026/10/21 v0.3.2 Code support for Babelbidi]
 
 \makeatletter
 
@@ -132,7 +132,7 @@
 
     \NewCommandCopy{\bbd@mintinline}{\mintinline}
 
-    \RenewDocumentCommand{\mintinline}{s O{} m m}{%
+    \RenewDocumentCommand{\mintinline}{s O{} m v}{%
         \lr{\unskip
             \IfBooleanTF{#1}
             {%

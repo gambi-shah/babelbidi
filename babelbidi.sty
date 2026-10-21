@@ -24,7 +24,7 @@
 \NeedsTeXFormat{LaTeX2e}
 
 \ProvidesPackage{babelbidi}
-[2026/10/19 v0.3.1 Bidi extensions for Babel]
+[2026/10/21 v0.3.2 Bidi extensions for Babel]
 
 \RequirePackage{iftex}
 \RequirePackage{xkeyval}
@@ -233,6 +233,8 @@
 \fi
 
 \input{babelbidi-api.def}
+\input{babelbidi-minted.def}
+
 \ifLuaTeX  \input{babelbidi-onchar.def} \fi
 \ifLuaTeX
   \input{babelbidi-fontfallback.def}
@@ -266,42 +268,7 @@
     \input{babelbidi-layout.def}
   \fi}
 
-% ------------------------------------------------
-% Minted patches
-% ------------------------------------------------
 
-\AddToHook{package/minted/after}{%
-  \mintedpgfkeyscreate{tex}{textlanguage=}%
-  \AddToHook{cmd/minted@usefvopts/after}{%
-    \edef\bbd@minted@textlanguage{\mintedtexoptvalueof{textlanguage}}%
-    \ifx\bbd@minted@textlanguage\@empty\else
-      \selectlanguage{\bbd@minted@textlanguage}%
-    \fi
-  }%
-  \ifLuaTeX
-    \AddToHook{env/minted/begin}{%
-      % Frame overlays are zero-width boxes anchored at the left edge.
-      % Their geometry must stay LTR when the code language changes.
-      \patchcmd\FV@SingleFrameLine
-      {\hbox to\z@}{\hbox dir TLT to\z@}{}%
-      {\PackageWarning{babelbidi}{Could not patch minted frame lines}}%
-      \patchcmd\FV@SingleFrameSep
-      {\hbox to \z@}{\hbox dir TLT to\z@}{}%
-      {\PackageWarning{babelbidi}{Could not patch minted frame padding}}%
-    }%
-  \fi
-}
-
-% Keep code counters in Latin digits.
-\@ifundefined{bbl@latinarabic}{}{%
-  \let\bbd@arabic\@arabic
-  \AddToHook{env/minted/before}{%
-    \let\@arabic\bbl@latinarabic
-  }%
-  \AddToHook{env/minted/after}{%
-    \let\@arabic\bbd@arabic
-  }%
-}%
 
 \makeatother
 

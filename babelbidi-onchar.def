@@ -17,7 +17,7 @@
 % https://www.latex-project.org/lppl/
 
 \ProvidesFile{babelbidi-onchar.def}
-[2026/10/11 v0.2.0 Cache for Babel font mappings]
+[2026/10/21 v0.3.2 Cache for Babel font mappings]
 
 \makeatletter
 
@@ -90,18 +90,20 @@
   \endgroup
 }
 
-% Install after font/language setup; preamble font configuration is untouched.
-% This only wraps Babel's mapper; it does not enable onchar processing.
+% Install only when Babel's font mapper is available.
 \AddToHook{begindocument/end}[babelbidi/font-cache]{%
   \ifbbd@font@cache
-    \ifx\bbl@mapdir\bbd@fontcache@expected@mapdir
-      \let\bbl@mapdir\bbd@fontcache@mapdir
-    \else
-      \PackageWarningNoLine{babelbidi}{%
-        Unsupported Babel font mapper; font cache disabled}%
+    \ifdefined\bbl@mapdir
+      \ifx\bbl@mapdir\bbd@fontcache@expected@mapdir
+        \let\bbl@mapdir\bbd@fontcache@mapdir
+      \else
+        \PackageWarningNoLine{babelbidi}{%
+          Unsupported Babel font mapper; font cache disabled}%
+      \fi
     \fi
   \fi
 }
+
 
 \makeatother
 \endinput

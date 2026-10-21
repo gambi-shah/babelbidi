@@ -1,0 +1,201 @@
+% babelbidi-minted.def
+%
+% BabelBidi: bidirectional support for LaTeX.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the BabelBidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-minted.def}%
+[2026/10/21 v0.3.2 Minted patches for BabelBidi]
+
+\makeatletter
+
+% ==========================================================================
+% Character direction
+% ==========================================================================
+
+\newif\ifbbd@minted@chardir@active
+\bbd@minted@chardir@activefalse
+
+\def\bbd@minted@setchardir#1#2{%
+    \directlua{%
+        babelbidiMintedCharDir = babelbidiMintedCharDir or {}
+        local char = \number`#1;
+        local data = Babel.characters[char]
+        table.insert(babelbidiMintedCharDir, {
+                char = char,
+                existed = not (data == nil),
+                olddir = data and data.d,
+            })
+    }%
+    \babelcharproperty{`#1}{direction}{#2}%
+}
+
+\def\bbd@minted@applychardir{%
+    \ifbbd@minted@chardir@active
+    \else
+        % Preserve character commands without expanding them.
+        \edef\bbd@minted@chardir{%
+            \unexpanded\expandafter{%
+                \expanded{\mintedtexoptvalueof{chardir}}%
+            }%
+        }%
+        \ifx\bbd@minted@chardir\@empty
+        \else
+            \ifLuaTeX
+                \global\bbd@minted@chardir@activetrue
+                \@for\bbd@minted@pair:=\bbd@minted@chardir\do{%
+                    \expandafter\bbd@minted@setchardir
+                    \bbd@minted@pair
+                }%
+            \else
+                \PackageError{babelbidi}%
+                {The minted chardir option requires LuaTeX}%
+                {Compile this document with LuaLaTeX.}%
+            \fi
+        \fi
+    \fi
+}
+
+\def\bbd@minted@restorechardir{%
+    \ifbbd@minted@chardir@active
+        \directlua{%
+            local stack = babelbidiMintedCharDir
+            if stack then
+            local item = table.remove(stack)
+            while item do
+            if item.existed then
+            local data = Babel.characters[item.char]
+            if data then
+            data.d = item.olddir
+            end
+            else
+            Babel.characters[item.char] = nil
+            end
+            item = table.remove(stack)
+            end
+            babelbidiMintedCharDir = nil
+            end
+        }%
+        \global\bbd@minted@chardir@activefalse
+    \fi
+}
+
+% ==========================================================================
+% Text language and direction
+% ==========================================================================
+
+\def\bbd@minted@applytextlang{%
+    \edef\bbd@minted@textlang{%
+        \mintedtexoptvalueof{textlang}%
+    }%
+    \ifx\bbd@minted@textlang\@empty
+    \else
+        \selectlanguage{\bbd@minted@textlang}%
+    \fi
+}
+
+\def\bbd@minted@applytextdir{%
+    \edef\bbd@minted@textdir{%
+        \mintedtexoptvalueof{textdir}%
+    }%
+    \ifx\bbd@minted@textdir\@empty
+    \else
+        \def\bbd@minted@rtl{rtl}%
+        \def\bbd@minted@ltr{ltr}%
+        \ifx\bbd@minted@textdir\bbd@minted@rtl
+            \bbl@pardir{1}%
+            \bbl@textdir{1}%
+            \bbl@bodydir{1}%
+        \else
+            \ifx\bbd@minted@textdir\bbd@minted@ltr
+                \bbl@pardir{0}%
+                \bbl@textdir{0}%
+                \bbl@bodydir{0}%
+            \else
+                \PackageError{babelbidi}%
+                {Invalid minted textdir value '\bbd@minted@textdir'}%
+                {Use textdir=rtl or textdir=ltr.}%
+            \fi
+        \fi
+    \fi
+}
+
+
+% ==========================================================================
+% Latin counter digits
+% ==========================================================================
+
+\def\bbd@minted@latinarabic#1{\number#1}
+
+% ==========================================================================
+% Minted setup
+% ==========================================================================
+
+\AddToHook{package/minted/after}[babelbidi/minted/setup]{%
+    \mintedpgfkeyscreate{tex}{textlang=}%
+    \mintedpgfkeyscreate{tex}{textdir=}%
+    \mintedpgfkeyscreate{tex}{chardir=}%
+
+    \AddToHook{cmd/minted@usefvopts/after}%
+    [babelbidi/minted/options]{%
+        \bbd@minted@applytextlang
+        \bbd@minted@applytextdir
+        \bbd@minted@applychardir
+    }%
+
+    \AddToHook{env/minted/after}%
+    [babelbidi/minted/restore]{%
+        \bbd@minted@restorechardir
+    }%
+
+    % This assignment is local to the minted environment.
+    \AddToHook{env/minted/begin}%
+    [babelbidi/minted/digits]{%
+        \let\@arabic\bbd@minted@latinarabic
+    }%
+
+    \ifLuaTeX
+        \AddToHook{env/minted/begin}%
+        [babelbidi/minted/frame]{%
+            \patchcmd\FV@SingleFrameLine
+            {\hbox to\z@}%
+            {\hbox dir TLT to\z@}%
+            {}%
+            {%
+                \PackageWarning{babelbidi}%
+                {Could not patch minted frame lines}%
+            }%
+
+            \patchcmd\FV@SingleFrameSep
+            {\hbox to \z@}%
+            {\hbox dir TLT to \z@}%
+            {}%
+            {%
+                \PackageWarning{babelbidi}%
+                {Could not patch minted frame padding}%
+            }%
+        }%
+    \fi
+}% End of package/minted/after.
+
+\makeatother
+
+\endinput

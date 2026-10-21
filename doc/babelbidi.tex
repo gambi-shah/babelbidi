@@ -2,6 +2,7 @@
 
 \documentclass{ltxdoc}
 
+\usepackage{minted}
 
 \usepackage[arabic,persian,english]{babelbidi}
 
@@ -23,14 +24,14 @@
 \dmcset{babelbidi}{\pkgmeta[year]{babelbidi}}{\pkgmeta[month]{babelbidi}}{\pkgmeta[day]{babelbidi}}
 
 \usepackage[svgnames]{xcolor}
-\usepackage{minted}
+
 \usepackage{booktabs}
 
 \usepackage{hyperref}
 
 \setminted{
     breaklines=true,
-    breakanywhere=true,
+   % breakanywhere=true,
     escapeinside=||
 }
 \setminted[latex]{bgcolor=Gold, bgcolorpadding=0.5em}
@@ -54,39 +55,39 @@
 
 
 \begin{document}
-    \maketitle
+\maketitle
 
-  \begin{abstract}
-       \textsf{babelbidi} extends Babel's bidirectional support by fixing direction-sensitive behaviour and providing interfaces for explicit text direction, language selection, and font configuration, including glyph fallback with LuaTeX. It supports languages available through Babel and works with LuaTeX (recommended), XeTeX, or pdfTeX, with either an LTR or RTL main language.
-  \end{abstract}
+\begin{abstract}
+    \textsf{babelbidi} extends Babel's bidirectional support by fixing direction-sensitive behaviour and providing interfaces for explicit text direction, language selection, and font configuration, including glyph fallback with Lua\TeX. It supports languages available through Babel and works with \LuaTeX~(recommended), Xe\TeX, or pdf\TeX, with either an LTR or RTL main language.
+\end{abstract}
 
-    \section{Introduction}
+\section{Introduction}
 
-    Babel provides the infrastructure for typesetting documents containing
-    both left-to-right (LTR) and right-to-left (RTL) languages. Some layout
-    components, however, do not always behave correctly in RTL contexts,
-    and Babel does not provide all the basic direction interfaces that may
-    be useful in a document.
+Babel provides the infrastructure for typesetting documents containing
+both left-to-right (LTR) and right-to-left (RTL) languages. Some layout
+components, however, do not always behave correctly in RTL contexts,
+and Babel does not provide all the basic direction interfaces that may
+be useful in a document.
 
-    \textsf{babelbidi} addresses these gaps in two ways:
-    \begin{enumerate}
-        \item
-        it patches
-        direction-sensitive layout behaviour
-        \item
-        and provides a small set of bidi
-        and language-selection APIs.
-    \end{enumerate}
+\textsf{babelbidi} addresses these gaps in two ways:
+\begin{enumerate}
+    \item
+          it patches
+          direction-sensitive layout behaviour
+    \item
+          and provides a small set of bidi
+          and language-selection APIs.
+\end{enumerate}
 
-   Most layout patches concern LuaLaTeX. For documents whose main language
-   does not use the Latin script, code-related direction handling is provided
-   with LuaLaTeX, XeLaTeX, and pdfLaTeX.
+Most layout patches concern Lua\LaTeX. For documents whose main language
+does not use the Latin script, code-related direction handling is provided
+with Lua\LaTeX, Xe\LaTeX, and pdf\LaTeX.
 
 
-    The basic direction commands follow interfaces found in bidi
-    implementations such as \textsf{luabidi}. The commands \verb|\lr|,
-    \verb|\rl|, and the \texttt{latin} environment are inspired in part by
-    interfaces familiar to users of \textsf{xepersian}.
+The basic direction commands follow interfaces found in bidi
+implementations such as \textsf{luabidi}. The commands \verb|\lr|,
+\verb|\rl|, and the \texttt{latin} environment are inspired in part by
+interfaces familiar to users of \textsf{xepersian}.
 
 
 \section{Obtaining and Installing}
@@ -105,52 +106,52 @@ installed with the following command:
 \end{minted}
 
 
- \section{Loading}
+\section{Loading}
 
- The package is loaded as follows:
+The package is loaded as follows:
 
- \begin{minted}{latex}
+\begin{minted}{latex}
      \usepackage[<options>]{babelbidi}
  \end{minted}
 
- The package accepts options for both Babel and
+The package accepts options for both Babel and
 \textsf{babelbidi}. Options not defined by
 \textsf{babelbidi} are passed to Babel. The \texttt{bidi} and
 \texttt{layout} options are Babel options for which
 \textsf{babelbidi} provides engine-dependent defaults.
 
 
- If \texttt{bidi} is not specified, \textsf{babelbidi} selects
+If \texttt{bidi} is not specified, \textsf{babelbidi} selects
 its default value according to the engine:
 
- \begin{center}
-     \begin{tabular}{ll}
-         \toprule
-         Engine   & Default value of \texttt{bidi} \\
-         \midrule
-         Lua\TeX  & \texttt{basic}                  \\
-         Xe\TeX   & \texttt{bidi-r}                 \\
-         Pdf\TeX  & \texttt{default}                \\
-         \bottomrule
-     \end{tabular}
- \end{center}
+\begin{center}
+    \begin{tabular}{ll}
+        \toprule
+        Engine  & Default value of \texttt{bidi} \\
+        \midrule
+        Lua\TeX & \texttt{basic}                 \\
+        Xe\TeX  & \texttt{bidi-r}                \\
+        Pdf\TeX & \texttt{default}               \\
+        \bottomrule
+    \end{tabular}
+\end{center}
 
- With \LuaTeX, \textsf{babelbidi} selects the following default
+With \LuaTeX, \textsf{babelbidi} selects the following default
 value for \texttt{layout}:
 
 
- \begin{minted}{latex}
+\begin{minted}{latex}
      counters graphics footnotes lists
  \end{minted}
 
- Specifying \texttt{layout} replaces this default; it does not
- add to it. For example:
+Specifying \texttt{layout} replaces this default; it does not
+add to it. For example:
 
- \begin{minted}{latex}
+\begin{minted}{latex}
      layout={counters footnotes}
  \end{minted}
 
- This selects only \texttt{counters} and \texttt{footnotes}
+This selects only \texttt{counters} and \texttt{footnotes}
 for the \texttt{layout} option. To retain \texttt{graphics}
 and \texttt{lists}, include them explicitly in the value.
 When the value contains multiple selectors, the value must be
@@ -160,23 +161,23 @@ enclosed in \textbf{braces}.
 For best results, consider the following recommendations:
 \begin{enumerate}
     \item For slides with an RTL main language, \textsf{beamer-rl} is
-    recommended over \textsf{beamer}, though it is not required.
+          recommended over \textsf{beamer}, though it is not required.
 
-    \item LuaLaTeX is recommended for its broader capabilities and
-    Lua\footnote{Lua is a lightweight programming language designed
-        to be embedded in applications.} extensibility. Separately,
-    Babel's \texttt{onchar} option can automatically select a language
-    based on the characters in the text. For Arabic:
-    \begin{minted}{latex}
+    \item Lua\LaTeX~is recommended for its broader capabilities and
+          Lua\footnote{Lua is a lightweight programming language designed
+              to be embedded in applications.} extensibility. Separately,
+          Babel's \texttt{onchar} option can automatically select a language
+          based on the characters in the text. For Arabic:
+          \begin{minted}{latex}
         \babelprovide[import, mapdigits, onchar=ids fonts letters]{arabic}
     \end{minted}
-    Punctuation such as parentheses may still require explicit
-    language selection.
+          Punctuation such as parentheses may still require explicit
+          language selection.
 \end{enumerate}
 
 
 
- With \LuaTeX, the \texttt{fontcache} option controls caching of
+With \LuaTeX, the \texttt{fontcache} option controls caching of
 font mappings used by Babel's \texttt{onchar=fonts} option.
 It is a boolean option and is enabled by default to improve
 compilation speed. In special cases, such as font changes made
@@ -194,7 +195,7 @@ when necessary:
 
 \section{Font fallback}
 
-With LuaLaTeX, \textsf{babelbidi} can use fonts from other Babel languages
+With Lua\LaTeX, \textsf{babelbidi} can use fonts from other Babel languages
 when the current font lacks a required glyph. Declare an ordered fallback
 chain in the preamble:
 
@@ -219,8 +220,8 @@ disables fallback:
 
 Unknown languages, repeated candidates, and self-references are ignored with
 a warning where appropriate. Fallback is not recursive and is applied per
-glyph before shaping. It is available only with LuaLaTeX; XeLaTeX and
-pdfLaTeX warn and ignore explicit fallback declarations.
+glyph before shaping. It is available only with Lua\LaTeX; Xe\LaTeX~and
+pdf\LaTeX~warn and ignore explicit fallback declarations.
 
 \section{Direction and Language APIs}
 
@@ -230,27 +231,27 @@ for controlling text direction, selecting languages, and setting fonts.
 
 \subsection{Font Selection}
 
-When running under XeLaTeX or LuaLaTeX, \textsf{babelbidi} provides the
+When running under Xe\LaTeX~or Lua\LaTeX, \textsf{babelbidi} provides the
 following commands:
 
 \begin{itemize}
     \item \cmd{\settextfont}\oarg{options}\marg{font}:
-    Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
-    main language.
+          Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
+          main language.
 
     \item \cmd{\setlatintextfont}\oarg{options}\marg{font}:
-    Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
-    selected Latin language.
+          Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
+          selected Latin language.
 
     \item \cmd{\deflatinfont}\marg{command}\oarg{options}\marg{font}:
-    Defines a Latin font family command.
+          Defines a Latin font family command.
 
     \item \cmd{\setlatinsansfont}\oarg{options}\marg{font}:
-    Sets the sans-serif font for the selected Latin language.
+          Sets the sans-serif font for the selected Latin language.
 
     \item \cmd{\setlatinmonofont}\oarg{options}\marg{font}:
-    Sets the monospaced font for the selected Latin language and
-    configures it for use by \cmd{\latinttfamily}.
+          Sets the monospaced font for the selected Latin language and
+          configures it for use by \cmd{\latinttfamily}.
 \end{itemize}
 
 \subsection{Commands}
@@ -258,24 +259,24 @@ following commands:
 \begin{center}
     \begin{tabular}{@{}ll@{}}
         \toprule
-        Command & Description \\
+        Command & Description                                                  \\
         \midrule
         \verb|\LRE|
-        & Typesets its argument from left to right \\
+                & Typesets its argument from left to right                     \\
         \verb|\RLE|
-        & Typesets its argument from right to left \\
+                & Typesets its argument from right to left                     \\
         \verb|\LR|
-        & Alias for \verb|\LRE| \\
+                & Alias for \verb|\LRE|                                        \\
         \verb|\RL|
-        & Alias for \verb|\RLE| \\
+                & Alias for \verb|\RLE|                                        \\
         \verb|\lr|
-        & Typesets its argument in the selected left-to-right language \\
+                & Typesets its argument in the selected left-to-right language \\
         \verb|\rl|
-        & Typesets its argument in the selected right-to-left language \\
+                & Typesets its argument in the selected right-to-left language \\
         \verb|\latintoday|
-        & Prints today's date in the selected Latin language \\
+                & Prints today's date in the selected Latin language           \\
         \verb|\latinttfamily|
-        & Selects the configured Latin monospaced font family \\
+                & Selects the configured Latin monospaced font family          \\
         \bottomrule
     \end{tabular}
 \end{center}
@@ -285,14 +286,14 @@ following commands:
 \begin{center}
     \begin{tabular}{@{}ll@{}}
         \toprule
-        Environment & Description \\
+        Environment & Description                                          \\
         \midrule
         \texttt{RTL}
-        & Typesets its contents from right to left \\
+                    & Typesets its contents from right to left             \\
         \texttt{LTR}
-        & Typesets its contents from left to right \\
+                    & Typesets its contents from left to right             \\
         \texttt{latin}
-        & Typesets its contents in the selected Latin language \\
+                    & Typesets its contents in the selected Latin language \\
         \bottomrule
     \end{tabular}
 \end{center}
@@ -306,16 +307,16 @@ directional text, and code-related material:
 \begin{center}
     \begin{tabular}{@{}ll@{}}
         \toprule
-        Key & Used for \\
+        Key & Used for                                               \\
         \midrule
         \texttt{latin}
-        & The \texttt{latin} environment and Latin font commands \\
+            & The \texttt{latin} environment and Latin font commands \\
         \texttt{ltr}
-        & The \verb|\lr| command \\
+            & The \verb|\lr| command                                 \\
         \texttt{rtl}
-        & The \verb|\rl| command \\
+            & The \verb|\rl| command                                 \\
         \texttt{code}
-        & Code-related material \\
+            & Code-related material                                  \\
         \bottomrule
     \end{tabular}
 \end{center}
@@ -334,85 +335,125 @@ The automatic selections are determined as follows:
 
 \begin{description}
     \item[\texttt{latin}:]
-    The main language if it uses the Latin script; otherwise, the first
-    loaded Latin-script language; otherwise, \texttt{english}.
+          The main language if it uses the Latin script; otherwise, the first
+          loaded Latin-script language; otherwise, \texttt{english}.
 
     \item[\texttt{ltr}:]
-    The main language if it is left to right; otherwise, the first loaded
-    left-to-right language; otherwise, \texttt{english}.
+          The main language if it is left to right; otherwise, the first loaded
+          left-to-right language; otherwise, \texttt{english}.
 
     \item[\texttt{rtl}:]
-    The main language if it is right to left; otherwise, the first loaded
-    right-to-left language; otherwise, \texttt{arabic}.
+          The main language if it is right to left; otherwise, the first loaded
+          right-to-left language; otherwise, \texttt{arabic}.
 
     \item[\texttt{code}:]
-    The main Latin-script language, if available; otherwise,
-    \texttt{english}, if loaded; otherwise, the first loaded
-    Latin-script language; otherwise, the main or first loaded
-    left-to-right language; finally, the main language.
+          The main Latin-script language, if available; otherwise,
+          \texttt{english}, if loaded; otherwise, the first loaded
+          Latin-script language; otherwise, the main or first loaded
+          left-to-right language; finally, the main language.
 \end{description}
 
 Languages should be declared before their fonts are configured.
 
 
 
-   \section{Patches}
+\section{Patches}
 
-   The package applies the following patches automatically when the
-   corresponding engine or package is in use.
+The package applies the following patches automatically when the
+corresponding engine or package is in use.
 
-   \begin{enumerate}
-       \item \textbf{Common patches}
-       \begin{enumerate}
-           \item Code language selection: when the main language does not use
-           the Latin script, the code-related patches use the language selected
-           by the \texttt{code} key. These patches cover the \texttt{verbatim}
-           environment, the \textsf{listings} package, and the \textsf{minted}
-           environment and inline command. Documents with a Latin-script main
-           language do not need these patches.
-           \item \textsf{minted}: \texttt{textlanguage} selects a declared Babel
-           language, including its direction and fonts, locally for the environment:
+\begin{enumerate}
+    \item \textbf{Common patches}
+          \begin{enumerate}
+              \item Code language selection: when the main language does not use
+                    the Latin script, the code-related patches use the language selected
+                    by the \texttt{code} key. These patches cover the \texttt{verbatim}
+                    environment, the \textsf{listings} package, and the \textsf{minted}
+                    environment and inline command. Documents with a Latin-script main
+                    language do not need these patches.
+              \item \texttt{\string\label}: prevents errors caused by Babel's
+                    direction commands in label keys derived from enumeration counters.
+          \end{enumerate}
+
+    \item \textbf{Xe\LaTeX~patches}
+          \begin{enumerate}
+              \item \textsf{natbib}: corrects citation links in RTL text with
+                    recent \textsf{hyperref} versions.
+              \item \textsf{fontspec}: disables its math-mode handling when
+                    Babel bidi mode is active.
+          \end{enumerate}
+
+    \item \textbf{Lua\LaTeX~patches}
+          \begin{enumerate}
+              \item \texttt{\string\makebox} and tables: adjust the positions
+                    of \texttt{l} and \texttt{r} material and swap table-column
+                    alignment in RTL text.
+              \item Footnotes: adjust footnote paragraph direction in RTL contexts;
+                    footnotes issued in math mode in RTL-main documents are treated as RTL.
+              \item TikZ: use LTR paragraph direction inside
+                    \texttt{tikzpicture}, except with \textsf{beamer-rl}.
+              \item \textsf{fancyhdr}: increase the head height and typeset
+                    headers and footers in LTR direction.
+              \item \textsf{beamer}: correct the layout of rounded boxes, except
+                    when \textsf{beamer-rl} is loaded.
+          \end{enumerate}
+
+    \item \textbf{RTL-main footnote-rule patch}
+          \begin{enumerate}
+              \item With Xe\LaTeX~and Lua\LaTeX, typeset the footnote rule
+                    in a stable LTR direction when the main language is RTL.
+          \end{enumerate}
+\end{enumerate}
+
+\section{Minted}
+
+BabelBidi supports the \textsf{minted} package:
+
 \begin{minted}{latex}
-\begin{min||ted}
-    [textlanguage=arabic]{latex}
-    نص عربي
-\end{min||ted}
+    \usepackage{minted}
 \end{minted}
-           Here \texttt{latex} selects syntax highlighting. The option works
-           with any language of \texttt{babel} and can also be set with \verb|\setminted|.
-           \item \texttt{\string\label}: prevents errors caused by Babel's
-           direction commands in label keys derived from enumeration counters.
-       \end{enumerate}
 
-       \item \textbf{XeLaTeX patches}
-       \begin{enumerate}
-           \item \textsf{natbib}: corrects citation links in RTL text with
-           recent \textsf{hyperref} versions.
-           \item \textsf{fontspec}: disables its math-mode handling when
-           Babel bidi mode is active.
-       \end{enumerate}
+The \texttt{textlang} option selects a Babel language already declared
+with \verb|\babelprovide| or loaded as a Babel package option:
 
-       \item \textbf{LuaLaTeX patches}
-       \begin{enumerate}
-           \item \texttt{\string\makebox} and tables: adjust the positions
-           of \texttt{l} and \texttt{r} material and swap table-column
-           alignment in RTL text.
-          \item Footnotes: adjust footnote paragraph direction in RTL contexts;
-          footnotes issued in math mode in RTL-main documents are treated as RTL.
-           \item TikZ: use LTR paragraph direction inside
-           \texttt{tikzpicture}, except with \textsf{beamer-rl}.
-           \item \textsf{fancyhdr}: increase the head height and typeset
-           headers and footers in LTR direction.
-           \item \textsf{beamer}: correct the layout of rounded boxes, except
-           when \textsf{beamer-rl} is loaded.
-       \end{enumerate}
+\begin{minted}{latex}
+    \begin{minted}[textlang=persian]{latex}
+        متن فارسی
+    \end{min||ted}
+\end{minted}
 
-       \item \textbf{RTL-main footnote-rule patch}
-       \begin{enumerate}
-           \item With XeLaTeX and LuaLaTeX, typeset the footnote rule
-           in a stable LTR direction when the main language is RTL.
-       \end{enumerate}
-   \end{enumerate}
+It can also be set with \verb|\setminted|:
+
+\begin{minted}{latex}
+    \setminted{textlang=persian}
+\end{minted}
+
+The \texttt{textdir} option sets the code direction:
+\texttt{rtl} (right-to-left) or \texttt{ltr} (left-to-right).
+
+\sloppy
+With Lua\LaTeX, \texttt{chardir} uses Babel's
+\verb|\babelcharproperty| to temporarily set character directions.
+It takes comma-separated \texttt{\{character\}\{direction\}} pairs.
+Direction values include \texttt{l}, \texttt{al}, \texttt{r},
+\texttt{en}, \texttt{an}, \texttt{on}, \texttt{et}, and \texttt{cs}.
+Previous values are restored after the environment ends.
+
+This example sets right-to-left code with the backslash and closing
+brace assigned direction \texttt{l}:
+
+\begin{minted}[chardir={{.}{r}}]{latex}
+    \begin{min||ted}[textdir=rtl,
+        chardir={{\\}{l},{\}}{l}}]{latex}
+        این روش در
+        \lr{Chapter 2 (Examples)}
+        توضیح داده شده است.
+    \end{min||ted}
+\end{minted}
+
+With Lua\LaTeX, frames retain left-to-right geometry.
+Line numbers use Latin digits.
+
 
 
 
@@ -420,21 +461,21 @@ Languages should be declared before their fonts are configured.
 
 \begin{enumerate}
     \item \textbf{Incomplete API coverage.}
-    Several APIs provided by \textsf{luabidi} are not yet defined by
-    \textsf{babelbidi}. Extending this API coverage is a priority for
-    the next release.
+          Several APIs provided by \textsf{luabidi} are not yet defined by
+          \textsf{babelbidi}. Extending this API coverage is a priority for
+          the next release.
 
     \item \textbf{Limited compatibility testing.}
-    The package has not been tested with every combination of
-    document class and third-party package. Broader testing may help
-    identify interactions that require further work.
+          The package has not been tested with every combination of
+          document class and third-party package. Broader testing may help
+          identify interactions that require further work.
 \end{enumerate}
 
 
 \section{License}
 
 The \texttt{BabelBidi} package is released under the
-\lr{LaTeX Project Public License (LPPL)},
+\lr{\LaTeX~Project Public License (LPPL)},
 version \lr{1.3c} or later.
 The full text of the license is available in the \texttt{LICENSE} file.
 
