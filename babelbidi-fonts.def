@@ -24,10 +24,21 @@
 
 
 \ProvidesFile{babelbidi-fonts.def}
-[2026/10/14 v0.3.0 Common definitions for fonts in XeTeX and LuaTeX]
+[2026/10/26 v0.4.0 Common definitions for fonts in XeTeX and LuaTeX]
 
 
 \makeatletter
+
+% Keep fontspec's main monospaced font visible to Babel's locale resolver.
+\AddToHook{package/fontspec/after}{%
+    \NewCommandCopy\bbd@setmonofont\setmonofont
+    \RenewDocumentCommand\setmonofont{O{} m O{}}{%
+        \bbd@setmonofont[#1]{#2}[#3]%
+        \ifx\babelfont\@notprerr\else
+            \babelfont[\bbl@main@language]{tt}[#1,#3]{#2}%
+        \fi
+    }%
+}
 
 
 
@@ -90,6 +101,9 @@
             \def\bbl@cl##1{\csname bbl@##1@\bbd@main@latin\endcsname}%
             \expandafter\bbd@apply@latin@tt
             \csname bbl@ttdflt@\bbd@main@latin\endcsname
+            % Remember the origin without changing the text's locale or tt default.
+            \expandafter\xdef\csname bbd@latin@tt@\ttdefault\endcsname
+            {\bbd@main@latin}%
         \fi
         \edef\bbd@next{%
             \endgroup

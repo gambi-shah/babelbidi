@@ -1,0 +1,179 @@
+% Compile from the package root. Optional command-line definitions:
+% \TestMain = persian/english, \TestCode = french/empty,
+% \TestExtra = none/verbatim/minted/tabularx. Define \TestHighlight for real highlighting;
+% otherwise minted's verbatim mode needs no highlighter.
+\documentclass{article}
+\providecommand\TestMain{persian}
+\providecommand\TestCode{french}
+\providecommand\TestExtra{none}
+\edef\testoptions{latin=english,ltr=german}
+\ifx\TestCode\empty\else
+  \edef\testoptions{\testoptions,code=\TestCode}
+\fi
+\expandafter\usepackage\expandafter[\testoptions]{babelbidi}
+\def\testenglish{english}
+\ifx\TestMain\testenglish
+  \babelprovide[main,import]{english}
+  \babelprovide[import]{persian}
+\else
+  \babelprovide[main,import]{persian}
+  \babelprovide[import]{english}
+\fi
+\babelprovide[import]{french}
+\babelprovide[import]{german}
+\babelfont[persian]{rm}{HM XNiloofar}
+\babelfont[english,french,german]{rm}{TeX Gyre Termes}
+\babelfont[persian]{tt}{Vazir Code}
+\babelfont[english]{tt}{JetBrains Mono}
+\babelfont[french]{tt}{Source Code Pro}
+\babelfont[german]{tt}{TeX Gyre Cursor}
+\fontfallback{english}{persian}
+\fontfallback{french}{persian}
+\def\testverbatim{verbatim}
+\def\testminted{minted}
+\def\testtabularx{tabularx}
+\ifx\TestExtra\testverbatim\usepackage{verbatim}\fi
+\ifx\TestExtra\testtabularx\usepackage{tabularx}\fi
+\ifx\TestExtra\testminted
+  \ifdefined\TestHighlight\usepackage[highlightmode=immediate]{minted}\else
+    \usepackage[verbatim]{minted}
+  \fi
+  \newmintinline[aliasinline]{text}{}
+\fi
+\tracinglostchars=3
+
+\ifLuaTeX
+\directlua{
+  function latinverbatim_check(locale, family, starred)
+    local letters, spaces = 0, 0
+    local function walk(head)
+      for n in node.traverse(head) do
+        if n.id == node.id('glyph') then
+          assert(font.getfont(n.font).characters[n.char], 'Missing glyph')
+          if n.char == 65 then
+            letters = letters + 1
+            assert(node.get_attribute(n, Babel.attr_locale) == locale,
+              'Wrong verbatim text locale: ' .. tostring(node.get_attribute(n, Babel.attr_locale)) .. ' expected ' .. locale)
+            assert(string.find(font.getfont(n.font).fullname, family, 1, true),
+              'Wrong verbatim font: ' .. font.getfont(n.font).fullname)
+          elseif n.char == 32 or n.char == 0x2423 then
+            spaces = spaces + 1
+          end
+        elseif n.id == node.id('hlist') or n.id == node.id('vlist') then
+          walk(n.head)
+        end
+      end
+    end
+    walk(tex.box[0].head)
+    assert(letters > 0, 'Missing literal test text')
+    if starred then assert(spaces > 0, 'Starred form lost visible spaces') end
+  end
+}
+\fi
+\makeatletter
+\newcommand\testcheck[3]{%
+  \ifLuaTeX
+    \directlua{latinverbatim_check(\the\csname bbl@id@@#1\endcsname,
+      '\luaescapestring{#2}', #3)}%
+  \fi
+  \copy0\par
+}
+\newcommand\testsave{%
+  \edef\teststate{\languagename/\the\localeid/\the\language/\f@family/%
+    \ifLuaTeX\the\textdir/\the\pardir\fi}%
+}
+\newcommand\testrestore{%
+  \edef\testnow{\languagename/\the\localeid/\the\language/\f@family/%
+    \ifLuaTeX\the\textdir/\the\pardir\fi}%
+  \ifx\teststate\testnow\else\errmessage{Literal text leaked its context}\fi
+}
+\newdimen\testliteralwidth
+\ifx\TestCode\empty
+  \def\testlocale{english}\def\testfont{JetBrains}
+\else
+  \def\testlocale{french}\def\testfont{Source}
+\fi
+\let\testliterallocale\testlocale\let\testliteralfont\testfont
+\makeatother
+\begin{document}
+\testsave
+\setbox0=\hbox{\verb|A original|\testrestore}\testrestore
+\testcheck{\TestMain}{JetBrains}{false}
+\setbox0=\hbox{\verb*+A original+\testrestore}\testrestore
+\testcheck{\TestMain}{JetBrains}{true}
+\setbox0=\hbox{\latinverb|A # $ % { } \ foo_bar|\testrestore}\testrestore
+\testcheck{\testliterallocale}{\testliteralfont}{false}
+\setbox0=\hbox{\latinverb*+A starred+\testrestore}\testrestore
+\testcheck{\testliterallocale}{\testliteralfont}{true}
+\setbox0=\hbox{$\latinverb|A|$\testrestore}\testrestore
+\testcheck{\testliterallocale}{\testliteralfont}{false}
+\setbox0=\vbox{\hsize=25em
+\begin{verbatim}
+A original
+\end{verbatim}
+\testrestore}\testrestore\testcheck{\TestMain}{JetBrains}{false}
+\setbox0=\vbox{\hsize=25em
+\begin{verbatim*}
+A original
+\end{verbatim*}
+\testrestore}\testrestore\testcheck{\TestMain}{JetBrains}{true}
+\setbox0=\vbox{\hsize=25em
+\begin{latinverbatim}
+A # $ % { } \ foo_bar
+\end{verbatim} is literal here
+\end{latinverbatim}
+\testrestore}\testrestore\testcheck{\testliterallocale}{\testliteralfont}{false}
+\setbox0=\vbox{\hsize=25em
+\begin{latinverbatim*}
+A starred
+\end{latinverbatim*}
+\testrestore}\testrestore\testcheck{\testliterallocale}{\testliteralfont}{true}
+\ifx\TestExtra\testtabularx
+  % Both main-script variants preserve the same literal spacing in tables.
+  \setbox0=\hbox{\latinverb|A \settextfont[...]{...} {x} #1 a_b $ \% \\ \{ \}|}%
+  \testliteralwidth=\wd0
+  \setbox0=\vbox{\hsize=40em\noindent
+\begin{tabularx}{\hsize}{@{}lX@{}}
+\setbox2=\hbox{\latinverb|A \settextfont[...]{...} {x} #1 a_b $ \% \\ \{ \}|}%
+\ifdim\wd2=\testliteralwidth\else\errmessage{Table reader changed literal spacing}\fi
+\copy2 & Context \\
+\end{tabularx}
+  }\testrestore
+  % Preamble-only commands must be printed, never executed. Check restoration
+  % in the same cell, before the alignment's own group can hide a leak.
+  \setbox0=\vbox{\hsize=25em\noindent
+\begin{tabularx}{\hsize}{@{}lX@{}}
+\testsave\latinverb|A \settextfont[...]{...}|\testrestore & Context \\
+\testsave\latinverb+\setlatintextfont{A} #1+\testrestore & Context \\
+\end{tabularx}
+  }\testrestore\testcheck{\testliterallocale}{\testliteralfont}{false}
+  \setbox0=\vbox{\hsize=25em\noindent
+\begin{tabularx}{\hsize}{@{}lX@{}}
+\testsave\latinverb*+A starred+\testrestore & Context \\
+\end{tabularx}
+  }\testrestore\testcheck{\testliterallocale}{\testliteralfont}{true}
+  % A table must not leave the special reader or font override active.
+  \setbox0=\hbox{\latinverb|A after table|\testrestore}\testrestore
+  \testcheck{\testliterallocale}{\testliteralfont}{false}
+\fi
+\ifx\TestExtra\testminted
+  \setbox0=\hbox{\mintinline{text}|A # $ % { } \ foo_bar|\testrestore}\testrestore
+  \testcheck{\testlocale}{\testfont}{false}
+  \setbox0=\hbox{\mintinline{text}{A braced}\testrestore}\testrestore
+  \testcheck{\testlocale}{\testfont}{false}
+  \setbox0=\hbox{\aliasinline|A generated|\testrestore}\testrestore
+  \testcheck{\testlocale}{\testfont}{false}
+  \setbox0=\hbox{\mintinline[textlang=german]{text}{A override}\testrestore}\testrestore
+  \testcheck{german}{Cursor}{false}
+  \setbox0=\vbox{\hsize=25em
+\begin{minted}{text}
+A block
+\end{minted}
+  \testrestore}\testrestore\testcheck{\testlocale}{\testfont}{false}
+  \Verb|Fancy verbatim stays available|
+  \begin{Verbatim}
+Fancy verbatim stays available
+  \end{Verbatim}
+\fi
+\typeout{LATIN VERBATIM REGRESSION PASSED}
+\end{document}

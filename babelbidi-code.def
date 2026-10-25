@@ -23,11 +23,12 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-code.def}
-[2026/10/21 v0.3.2 Code support for Babelbidi]
+[2026/10/26 v0.4.0 Code support for Babelbidi]
 
 \makeatletter
 
 
+% Loaded after the preamble, only for a non-Latin main script.
 % ------------------------------------------------
 % Verbatim
 % ------------------------------------------------
@@ -128,20 +129,6 @@
                 \vspace{\topsep}%
             \fi
         \end{otherlanguage}%
-    }
-
-    \NewCommandCopy{\bbd@mintinline}{\mintinline}
-
-    \RenewDocumentCommand{\mintinline}{s O{} m v}{%
-        \lr{\unskip
-            \IfBooleanTF{#1}
-            {%
-                \bbd@mintinline*[#2]{#3}{#4}%
-            }
-            {%
-                \bbd@mintinline[#2]{#3}{#4}%
-            }%
-        }\unskip
     }
 
     \AddToHook{env/minted/before}{%

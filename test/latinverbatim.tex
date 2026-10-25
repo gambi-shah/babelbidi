@@ -1,0 +1,66 @@
+% !TeX program = lualatex
+\documentclass[12pt]{article}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage[latin=english,ltr=german,code=french]{babelbidi}
+\babelprovide[main,import]{persian}
+\babelprovide[import]{english}
+\babelprovide[import]{french}
+\babelprovide[import]{german}
+% Register the default families as well as the language-specific fonts.
+\babelfont{rm}{Latin Modern Roman}
+\babelfont{sf}{Latin Modern Sans}
+\babelfont{tt}{Vazir Code}
+\settextfont{HM XNiloofar}
+\babelfont[english,french,german]{rm}{TeX Gyre Termes}
+\setlatinmonofont{JetBrains Mono}
+\setmonofont{Vazir Code}
+\babelfont[french]{tt}{Source Code Pro}
+\babelfont[german]{tt}{TeX Gyre Cursor}
+\fontfallback{english}{persian}
+\fontfallback{french}{persian}
+\usepackage[highlightmode=immediate]{minted}
+\newmintinline[generatedinline]{text}{}
+\tracinglostchars=3
+\setlength\parindent{0pt}
+\setlength\parskip{6pt}
+\begin{document}
+\section*{آزمون رابط‌های لاتین برای متن کد}
+در این نمونه، زبان لاتین انگلیسی، زبان چپ‌به‌راست آلمانی و زبان کد
+فرانسوی است تا تفاوت انتخاب‌ها دیده شود.
+
+\subsection*{رابط‌های فعلی}
+زبان متن حفظ می‌شود و قلم لاتین از انگلیسی انتخاب می‌شود:
+
+\verb|print("سلام") # JetBrains Mono|
+
+\verb*|a = 1|
+
+\begin{verbatim}
+print("سلام") # JetBrains Mono
+\end{verbatim}
+
+\subsection*{رابط‌های جدید با پیشوند لاتین}
+زبان کد و قلم تک‌عرض آن از فرانسوی انتخاب می‌شوند:
+
+\latinverb|print("سلام") # Source Code Pro|
+
+\latinverb*|a = 1|
+
+\begin{latinverbatim}
+print("سلام") # Source Code Pro
+\end{latinverbatim}
+\begin{latinverbatim*}
+a = 1
+\end{latinverbatim*}
+
+\subsection*{هماهنگی با سایر رابط‌های کد}
+\mintinline{text}|print("سلام") # Source Code Pro|
+
+\generatedinline|x = 1 # Source Code Pro|
+
+\begin{minted}{text}
+print("سلام") # Source Code Pro
+\end{minted}
+
+این متن پس از پایان کد، دوباره فارسی و راست‌به‌چپ است.
+\end{document}

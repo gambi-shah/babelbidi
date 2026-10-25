@@ -1,0 +1,84 @@
+% Compile from the package root; TestOrder = before/after, TestMain = a locale.
+% TestFinal optionally changes the main language at the end of the preamble.
+% TestLoads is the expected number of inputs of babelbidi-code.def (0 or 1).
+% All engines check loading and classic readers; Unicode engines also typeset minted.
+\documentclass{article}
+\providecommand\TestOrder{after}
+\providecommand\TestMain{persian}
+\providecommand\TestFinal{}
+\providecommand\TestLoads{1}
+\usepackage{iftex}
+\ifPDFTeX\usepackage[T1]{fontenc}\fi
+\usepackage{etoolbox}
+\newcount\testcodeloads
+\newcount\testlatinverbatimloads
+\AddToHook{file/babelbidi-code.def/before}{\global\advance\testcodeloads by 1}
+\AddToHook{file/babelbidi-latinverbatim.def/before}{\global\advance\testlatinverbatimloads by 1}
+\def\testbefore{before}
+\def\testextras{%
+  \usepackage{verbatim,listings,tabularx}%
+  \usepackage[verbatim]{minted}%
+}
+\ifx\TestOrder\testbefore\testextras\fi
+\def\testoptions{code=english}
+\ifPDFTeX\edef\testoptions{\testoptions,english,french,greek,main=\TestMain}\fi
+\expandafter\usepackage\expandafter[\testoptions]{babelbidi}
+\babelprovide[import]{english}
+\expandafter\babelprovide\expandafter[main,import]{\TestMain}
+\ifTUTeX\babelfont{rm}{TeX Gyre Termes}\babelfont{tt}{TeX Gyre Cursor}\fi
+\ifx\TestOrder\testbefore\else\testextras\fi
+\ifx\TestFinal\empty\else
+  \AtEndPreamble{\babelprovide[main,import]{\TestFinal}}%
+\fi
+\makeatletter
+\ifnum\testcodeloads=0\else\errmessage{Code patches loaded in preamble}\fi
+\let\testverbatimfont\verbatim@font
+\let\testmintprocess\RobustMintProcess
+\newcommand\testloading{%
+  \ifnum\testlatinverbatimloads=1\else
+    \errmessage{Latin literal interfaces must be loaded exactly once}%
+  \fi
+  \ifnum\testcodeloads=\TestLoads\relax\else
+    \errmessage{Wrong code input count: \the\testcodeloads; expected \TestLoads}%
+  \fi
+  \ifnum\TestLoads=0
+    \ifx\testverbatimfont\verbatim@font\else
+      \errmessage{Latin main language received legacy verbatim patches}%
+    \fi
+    \ifx\testmintprocess\RobustMintProcess\else
+      \errmessage{Latin main language received legacy minted block patches}%
+    \fi
+  \else
+    \ifx\testverbatimfont\verbatim@font
+      \errmessage{Non-Latin main language missed verbatim patches}%
+    \fi
+    \ifx\testmintprocess\RobustMintProcess
+      \errmessage{Non-Latin main language missed minted block patches}%
+    \fi
+  \fi
+}
+\makeatother
+\begin{document}
+\testloading
+\verb|A original| \latinverb|A Latin| \latinverb*+A star+
+\begin{tabularx}{\linewidth}{lX}
+\latinverb|\usepackage[...]{x}| & A \\
+\end{tabularx}
+\begin{verbatim}
+A original block
+\end{verbatim}
+\begin{latinverbatim}
+A Latin block
+\end{latinverbatim}
+\lstinline|A listing|
+\begin{lstlisting}
+A listing block
+\end{lstlisting}
+\ifTUTeX
+\mintinline{text}{A minted}
+\begin{minted}{text}
+A minted block
+\end{minted}
+\fi
+\typeout{CONDITIONAL CODE LOADING REGRESSION PASSED}
+\end{document}

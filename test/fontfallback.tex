@@ -1,0 +1,33 @@
+% !TeX program = lualatex
+\documentclass{article}
+
+\usepackage{babelbidi}
+\babelprovide[main,import]{persian}
+\babelprovide[import]{english}
+
+\settextfont{HM XNiloofar}
+\setlatinmonofont{JetBrains Mono}
+\setmonofont{Vazir Code}
+
+\fontfallback{english}{persian}
+%\fontfallback{persian}{english}
+
+
+\begin{document}
+
+    سلام دنیا
+
+    Hey
+
+  {  \latinttfamily
+
+    سلام
+
+    A
+}
+
+ادامه
+\verb|کد|
+
+\verb*|text|
+\end{document}

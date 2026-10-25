@@ -1,0 +1,85 @@
+% Run from test with TEXINPUTS=..: and LuaLaTeX.
+% Override \FallbackCache (true/false) and \FallbackOnchar (empty/fonts)
+% on the command line to exercise all four mapper configurations.
+\documentclass{article}
+\providecommand\FallbackCache{true}
+\providecommand\FallbackOnchar{}
+\edef\fallbackoptions{fontcache=\FallbackCache}
+\expandafter\usepackage\expandafter[\fallbackoptions]{babelbidi}
+\babelprovide[main,import]{persian}
+\ifx\FallbackOnchar\empty
+  \babelprovide[import]{english}
+\else
+  \babelprovide[import,onchar=fonts]{english}
+  \babelprovide[onchar=fonts]{persian}
+\fi
+\settextfont{HM XNiloofar}
+\babelfont[english]{rm}{HM XNiloofar}
+\setlatinmonofont{JetBrains Mono}
+% Exercise both positions for fontspec's optional font features.
+\setmonofont[Ligatures=TeX]{Vazir Code}[Scale=1]
+\fontfallback{english}{persian}
+\fontfallback{persian}{english}
+\tracinglostchars=3
+
+\directlua{
+  function fallback_check_box(latin, persian)
+    local seen_latin, seen_persian = false, false
+    for n in node.traverse_id(node.id('glyph'), tex.box[0].head) do
+      local f = font.getfont(n.font)
+      assert(f.characters[n.char], 'Missing glyph after fallback')
+      local expected
+      if n.char == 65 then
+        expected, seen_latin = latin, true
+      elseif n.char > 127 then
+        expected, seen_persian = persian, true
+      end
+      if expected then
+        assert(string.find(f.fullname, expected, 1, true),
+          'Expected ' .. expected .. ', got ' .. f.fullname)
+      end
+    end
+    assert(seen_latin and seen_persian, 'Expected mixed Persian/Latin text')
+  end
+}
+\makeatletter
+\newcommand\fallbackcheck[3]{%
+  \setbox0=\hbox{#1سلام A}%
+  \directlua{fallback_check_box('#2', '#3')}%
+  \copy0\par
+}
+\newcommand\fallbackstate{%
+  \edef\fallbacktt{\ttdefault}%
+  \edef\fallbacklanguage{\languagename/\the\localeid/\the\language/%
+    \the\textdir/\the\pardir}%
+  \latinttfamily
+  \edef\fallbacknow{\ttdefault}%
+  \ifx\fallbacktt\fallbacknow\else
+    \errmessage{latinttfamily changed ttdefault}%
+  \fi
+  \edef\fallbacknow{\languagename/\the\localeid/\the\language/%
+    \the\textdir/\the\pardir}%
+  \ifx\fallbacklanguage\fallbacknow\else
+    \errmessage{latinttfamily changed language or direction}%
+  \fi
+}
+\makeatother
+\begin{document}
+\fallbackcheck{\fallbackstate}{JetBrains}{Vazir}
+\fallbackcheck{\latinttfamily\bfseries}{JetBrains}{Vazir}
+\fallbackcheck{\latinttfamily\itshape}{JetBrains}{Vazir}
+\fallbackcheck{\latinttfamily\bfseries\itshape\Large}{JetBrains}{Vazir}
+\fallbackcheck{\latinttfamily\small}{JetBrains}{Vazir}
+\ifx\FallbackOnchar\empty
+  \def\FallbackTTLatin{Vazir}
+\else
+  \def\FallbackTTLatin{JetBrains}
+\fi
+\fallbackcheck{\ttfamily}{\FallbackTTLatin}{Vazir}
+\fallbackcheck{\rmfamily}{HM XNiloofar}{HM XNiloofar}
+{\latinttfamily\fallbackcheck{}{JetBrains}{Vazir}}
+\fallbackcheck{\ttfamily}{\FallbackTTLatin}{Vazir}
+\selectlanguage{english}
+\fallbackcheck{\ttfamily}{JetBrains}{Vazir}
+\typeout{FONTFALLBACK REGRESSION PASSED}
+\end{document}

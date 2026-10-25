@@ -1,0 +1,144 @@
+% babelbidi-latinverbatim.def
+%
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-latinverbatim.def}
+[2026/10/26 v0.4.0 Latin literal-text interfaces for Babelbidi]
+
+\makeatletter
+
+% ------------------------------------------------
+% Shared readers for Latin literal-text interfaces
+% ------------------------------------------------
+
+% Kernel scanners need the new environment's literal end delimiter. The
+% tools/verbatim scanner instead recognizes the current environment itself.
+\begingroup
+\catcode`|=0 \catcode`[=1 \catcode`]=2
+\catcode`\{=12 \catcode`\}=12 \catcode`\\=12
+|gdef|bbd@xlatinverbatim#1\end{latinverbatim}[#1|end[latinverbatim]]
+|gdef|bbd@sxlatinverbatim#1\end{latinverbatim*}[#1|end[latinverbatim*]]
+|endgroup
+
+% The kernel reader has a literal end delimiter; tools/verbatim uses @currenvir.
+% Set the environment's reader inside its own group.
+\AddToHook{env/latinverbatim/begin}{\let\@xverbatim\bbd@xlatinverbatim}
+\AddToHook{env/latinverbatim*/begin}{\let\@sxverbatim\bbd@sxlatinverbatim}
+
+% Loaded after the preamble for every main script.
+% ------------------------------------------------
+% Latin Verbatim
+% ------------------------------------------------
+
+% Save the native closing action before the optional legacy code patches.
+\let\bbd@latinverb@egroup\verb@egroup
+
+\def\bbd@latinverbatim@font{%
+    \normalfont\ttfamily
+    \ifPDFTeX\fontencoding{T1}\selectfont\fi
+}
+
+\NewDocumentCommand{\latinverb}{}{%
+    \ifx\verb\TX@verb
+        \expandafter\bbd@latinverb@tabularx
+    \else
+        \expandafter\bbd@latinverb
+    \fi
+}
+
+% tabularx has already tokenized its body; use its own literal-text reader.
+% Its font selection runs inside the reader's group, so language and font
+% changes stay local. Close our font-override group after the reader closes.
+\def\bbd@latinverb@tabularx{%
+    \begingroup
+    \let\TX@vb\bbd@latinverb@tabularx@read
+    \let\bbd@latinverb@ttfamily\ttfamily
+    \def\ttfamily{%
+        \let\ttfamily\bbd@latinverb@ttfamily
+        \selectlanguage{\bbd@main@code}%
+        \bbd@latinverbatim@font
+        \aftergroup\endgroup}%
+    \verb
+}
+
+\def\bbd@latinverb@tabularx@read#1{%
+    % Use tabularx's literal closing brace to balance TeX's alignment scanner.
+    \def\@tempa##1#1{\bbd@latinverb@tokens{##1}\ifnum0=`{\fi}}%
+    \@tempa
+}
+\def\bbd@latinverb@space{~}
+
+% Stringify tokens individually: \meaning would insert a synthetic space
+% after every control word. Keep actual space tokens and balanced braces.
+\ExplSyntaxOn
+\cs_new_protected:Npn \bbd@latinverb@tokens #1
+{
+    \tl_analysis_map_inline:nn {#1}
+    {
+        \int_compare:nNnTF {##2} = {-1}
+        { \exp_after:wN \token_to_str:N ##1 }
+        {
+            \int_compare:nNnTF {##2} = {32}
+            { \bbd@latinverb@space }
+            { \char_generate:nn {##2} {12} }
+        }
+    }
+}
+\ExplSyntaxOff
+
+% Keep LaTeX's delimiter/star readers. Select the language inside the native
+% group, before changing catcodes or disabling hyphenation.
+\def\bbd@latinverb{%
+    \relax\ifmmode\hbox\else\leavevmode\null\fi
+    \bgroup
+    % Restore Babel's language while still inside the text box in math mode.
+    \begingroup
+    \selectlanguage{\bbd@main@code}%
+    \def\verb@egroup{%
+        \global\let\verb@balance@group\@empty
+        \endgroup\bbd@latinverb@egroup}%
+    \verb@eol@error\let\do\@makeother\dospecials
+    \bbd@latinverbatim@font\@noligs
+    \language\l@nohyphenation
+    \@ifstar\@sverb\@verb
+}
+
+\def\bbd@latinverbatim@setup{%
+    \par
+    \selectlanguage{\bbd@main@code}%
+    \let\verbatim@font\bbd@latinverbatim@font
+}
+
+\NewDocumentEnvironment{latinverbatim}{}{%
+    \bbd@latinverbatim@setup
+    \verbatim
+}{\endverbatim}
+
+\NewDocumentEnvironment{latinverbatim*}{}{%
+    \bbd@latinverbatim@setup
+    \csname verbatim*\endcsname
+}{\csname endverbatim*\endcsname}
+
+\makeatother
+
+\endinput

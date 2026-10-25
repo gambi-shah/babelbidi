@@ -23,7 +23,7 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-minted.def}%
-[2026/10/21 v0.3.2 Minted patches for BabelBidi]
+[2026/10/26 v0.4.0 Minted patches for BabelBidi]
 
 \makeatletter
 
@@ -107,6 +107,7 @@
         \mintedtexoptvalueof{textlang}%
     }%
     \ifx\bbd@minted@textlang\@empty
+        \selectlanguage{\bbd@main@code}%
     \else
         \selectlanguage{\bbd@minted@textlang}%
     \fi
@@ -153,6 +154,15 @@
     \mintedpgfkeyscreate{tex}{textlang=}%
     \mintedpgfkeyscreate{tex}{textdir=}%
     \mintedpgfkeyscreate{tex}{chardir=}%
+
+    % Keep minted's verbatim reader, including commands from newmintinline.
+    % Inline language selection must follow code, independently of ltr.
+    \NewCommandCopy{\bbd@RobustMintInlineProcess}{\RobustMintInlineProcess}
+    \RenewDocumentCommand{\RobustMintInlineProcess}{m m m}{%
+        \foreignlanguage[captions]{\bbd@main@code}{%
+            \bbd@RobustMintInlineProcess{#1}{#2}{#3}%
+        }%
+    }
 
     \AddToHook{cmd/minted@usefvopts/after}%
     [babelbidi/minted/options]{%

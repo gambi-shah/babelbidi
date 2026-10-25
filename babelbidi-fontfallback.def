@@ -23,7 +23,7 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-fontfallback.def}
-[2026/10/14 v0.3.0 Language-aware font fallbacks for Babelbidi]
+[2026/10/26 v0.4.0 Language-aware font fallbacks for Babelbidi]
 
 
 \directlua{babelbidi_font_fallback = dofile(kpse.find_file('babelbidi-fontfallback.lua'))}
@@ -105,6 +105,10 @@
 % Reuse Babel's mapper, including babelbidi's cache once it is installed.
 \def\bbd@fontfallback@maptarget#1{%
     \begingroup
+    % An explicit Latin tt family can differ from the current locale's default.
+    \ifcsname bbd@latin@tt@\f@family\endcsname
+        \edef\ttdefault{\f@family}% Let Babel recognize its logical family.
+    \fi
     \edef\bbl@prefontid{\bbd@fontfallback@sourcefont}%
     \bbl@mapdir{#1}%
     \endgroup
@@ -119,7 +123,10 @@
             \let\bbl@mapselect\relax
             \csname bbd_fontfallback_maptargets:\endcsname
             \endgroup
-            \directlua{babelbidi_font_fallback.capture(\bbd@fontfallback@sourcefont)}%
+            \directlua{babelbidi_font_fallback.capture(\bbd@fontfallback@sourcefont,
+                \ifcsname bbd@latin@tt@\f@family\endcsname
+                    \the\csname bbl@id@@\csname bbd@latin@tt@\f@family\endcsname\endcsname
+                \else 0\fi)}%
         \fi
     \fi
 }

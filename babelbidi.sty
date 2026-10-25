@@ -24,7 +24,7 @@
 \NeedsTeXFormat{LaTeX2e}
 
 \ProvidesPackage{babelbidi}
-[2026/10/21 v0.3.2 Bidi extensions for Babel]
+[2026/10/26 v0.4.0 Bidi extensions for Babel]
 
 \RequirePackage{iftex}
 \RequirePackage{xkeyval}
@@ -34,42 +34,42 @@
 % ------------------------------------------------
 
 \define@key{bbd}{bidi}{%
-  \gdef\bbd@bidi{#1}%
+    \gdef\bbd@bidi{#1}%
 }
 
 \define@key{bbd}{layout}{%
-  \edef\bbd@layout{#1}%
+    \edef\bbd@layout{#1}%
 }
 
 \def\bbd@layout{}
 
 \ifPDFTeX
-  \setkeys{bbd}{bidi=default}
+    \setkeys{bbd}{bidi=default}
 \fi
 
 \ifXeTeX
-  \setkeys{bbd}{bidi=bidi-r}
+    \setkeys{bbd}{bidi=bidi-r}
 \fi
 
 \ifLuaTeX
-  \setkeys{bbd}{%
-    bidi=basic,
-    layout=counters graphics footnotes lists
-  }
+    \setkeys{bbd}{%
+        bidi=basic,
+        layout=counters graphics footnotes lists
+    }
 \fi
 
 \DeclareOptionX{bidi}{%
-  \setkeys{bbd}{bidi=#1}%
+    \setkeys{bbd}{bidi=#1}%
 }
 
 \DeclareOptionX{layout}{%
-  \setkeys{bbd}{layout=#1}%
+    \setkeys{bbd}{layout=#1}%
 }
 
 \DeclareOptionX*{%
-  \edef\bbd@options{%
-    \bbd@options,\CurrentOption
-  }%
+    \edef\bbd@options{%
+        \bbd@options,\CurrentOption
+    }%
 }
 
 \def\bbd@options{}
@@ -79,33 +79,33 @@
 \bbd@font@cachetrue
 
 \DeclareOptionX{fontcache}[true]{%
-  \edef\bbd@fontcache@option{#1}%
-  \def\bbd@fontcache@true{true}%
-  \def\bbd@fontcache@false{false}%
-  \ifx\bbd@fontcache@option\bbd@fontcache@true
-    \bbd@font@cachetrue
-  \else\ifx\bbd@fontcache@option\bbd@fontcache@false
-      \bbd@font@cachefalse
-    \else
-      \PackageError{babelbidi}{Invalid fontcache value '#1'}%
-      {Use fontcache=true or fontcache=false.}%
-    \fi\fi
+    \edef\bbd@fontcache@option{#1}%
+    \def\bbd@fontcache@true{true}%
+    \def\bbd@fontcache@false{false}%
+    \ifx\bbd@fontcache@option\bbd@fontcache@true
+        \bbd@font@cachetrue
+    \else\ifx\bbd@fontcache@option\bbd@fontcache@false
+            \bbd@font@cachefalse
+        \else
+            \PackageError{babelbidi}{Invalid fontcache value '#1'}%
+            {Use fontcache=true or fontcache=false.}%
+        \fi\fi
 }
 
 \DeclareOptionX{code}{%
-  \PassOptionsToPackage{code=#1}{babelbidi-lang}%
+    \PassOptionsToPackage{code=#1}{babelbidi-lang}%
 }
 
 \DeclareOptionX{latin}{%
-  \PassOptionsToPackage{latin=#1}{babelbidi-lang}%
+    \PassOptionsToPackage{latin=#1}{babelbidi-lang}%
 }
 
 \DeclareOptionX{ltr}{%
-  \PassOptionsToPackage{ltr=#1}{babelbidi-lang}%
+    \PassOptionsToPackage{ltr=#1}{babelbidi-lang}%
 }
 
 \DeclareOptionX{rtl}{%
-  \PassOptionsToPackage{rtl=#1}{babelbidi-lang}%
+    \PassOptionsToPackage{rtl=#1}{babelbidi-lang}%
 }
 
 \ProcessOptionsX\relax
@@ -125,44 +125,44 @@
 % ------------------------------------------------
 
 \@ifundefined{if@rl}{%
-  \newif\if@rl
+    \newif\if@rl
 }{}
 
 \ifPDFTeX
-  \ifbbd@beamer
-    % \addto\extraarabic{
-    \providecommand{\labelitemiv}
-    {\if@rl\protect $-$ %
-      \else\protect\textperiodcentred\fi}
-    \providecommand{\labelitemi}
-    {\if@rl\protect\textLR{$\bullet$}
-      \else\protect\textbullet\fi}
+    \ifbbd@beamer
+        % \addto\extraarabic{
+        \providecommand{\labelitemiv}
+        {\if@rl\protect $-$ %
+            \else\protect\textperiodcentred\fi}
+        \providecommand{\labelitemi}
+        {\if@rl\protect\textLR{$\bullet$}
+            \else\protect\textbullet\fi}
 
-    \providecommand{\labelitemii}
-    {\if@rl\protect\textLR{$\circ$} %
-      \else\protect\textLR{ \normalfont\bfseries\textendash}\fi}
+        \providecommand{\labelitemii}
+        {\if@rl\protect\textLR{$\circ$} %
+            \else\protect\textLR{ \normalfont\bfseries\textendash}\fi}
 
-    \providecommand{\labelitemiii}
-    {\if@rl\protect\textLR{$*$} %
-      \else\protect\textasteriskcentered\fi}
+        \providecommand{\labelitemiii}
+        {\if@rl\protect\textLR{$*$} %
+            \else\protect\textasteriskcentered\fi}
 
-    \providecommand{\labelenumi}
-    {\if@rl(\I{\number\c@enumi}).%
-      \else{\number\c@enumi}.\fi}
+        \providecommand{\labelenumi}
+        {\if@rl(\I{\number\c@enumi}).%
+            \else{\number\c@enumi}.\fi}
 
-    \providecommand{\labelenumii}
-    {\if@rl\abjadnumeral{\number\c@enumii}. %
-      \else({\number\c@enumii})\fi}
+        \providecommand{\labelenumii}
+        {\if@rl\abjadnumeral{\number\c@enumii}. %
+            \else({\number\c@enumii})\fi}
 
-    \providecommand{\labelenumiii}
-    {\if@rl\I{\number\c@enumiii}$\space-\space$ %
-      \else({\number\c@enumiii})\fi}
+        \providecommand{\labelenumiii}
+        {\if@rl\I{\number\c@enumiii}$\space-\space$ %
+            \else({\number\c@enumiii})\fi}
 
-    \providecommand{\labelenumiv}
-    {\if@rl\abjadnumeral{\number\c@enumiv}$\space-\space$ %
-      \else({\number\c@enumiv})\fi}
-    % }
-  \fi \fi
+        \providecommand{\labelenumiv}
+        {\if@rl\abjadnumeral{\number\c@enumiv}$\space-\space$ %
+            \else({\number\c@enumiv})\fi}
+        % }
+    \fi \fi
 
 % ------------------------------------------------
 % Engine setup
@@ -170,25 +170,25 @@
 
 \ifPDFTeX
 
-  \RequirePackage[bidi=\bbd@bidi,\bbd@options]{babel}
+    \RequirePackage[bidi=\bbd@bidi,\bbd@options]{babel}
 \fi
 
 \ifXeTeX
-  \RequirePackage[
-    bidi=\bbd@bidi,
-    \bbd@options
-  ]{babel}
+    \RequirePackage[
+        bidi=\bbd@bidi,
+        \bbd@options
+    ]{babel}
 \fi
 
 \ifLuaTeX
-  \ifbbd@beamerrl
-  \else
-    \RequirePackage[
-      bidi=\bbd@bidi,
-      layout=\bbd@layout,
-      \bbd@options
-    ]{babel}
-  \fi
+    \ifbbd@beamerrl
+    \else
+        \RequirePackage[
+            bidi=\bbd@bidi,
+            layout=\bbd@layout,
+            \bbd@options
+        ]{babel}
+    \fi
 \fi
 
 % Babel's language metadata must be ready before selecting the four aliases.
@@ -201,24 +201,25 @@
 \long\def\bbd@firstofone#1{#1}
 
 \AddToHook{begindocument/before}{%
-  \@ifundefined{babelsublr}{}{%
-    \let\bbd@label\label
-    \protected\def\label#1{%
-      \begingroup
-      \let\babelsublr\bbd@firstofone
-      \let\babelsubrl\bbd@firstofone
-      \edef\bbd@tmp{#1}%
-      % Restore display formatting before writing the reference value.
-      \expandafter\endgroup
-      \expandafter\bbd@label\expandafter{\bbd@tmp}%
+    \@ifundefined{babelsublr}{}{%
+        \let\bbd@label\label
+        \protected\def\label#1{%
+            \begingroup
+            \let\babelsublr\bbd@firstofone
+            \let\babelsubrl\bbd@firstofone
+            \edef\bbd@tmp{#1}%
+            % Restore display formatting before writing the reference value.
+            \expandafter\endgroup
+            \expandafter\bbd@label\expandafter{\bbd@tmp}%
+        }
+        % Hyperref runs this hook inside its link-target group.
+        \AddToHook{makelinktarget}{%
+            \let\babelsublr\bbd@firstofone
+            \let\babelsubrl\bbd@firstofone
+        }%
     }
-    % Hyperref runs this hook inside its link-target group.
-    \AddToHook{makelinktarget}{%
-      \let\babelsublr\bbd@firstofone
-      \let\babelsubrl\bbd@firstofone
-    }%
-  }
 }
+
 
 % ------------------------------------------------
 % Load package components
@@ -226,10 +227,10 @@
 
 % Beamer box compatibility.
 \ifbbd@beamer
-  \ifbbd@beamerrl
-  \else
-    \ifLuaTeX \input{babelbidi-beamer.def} \fi
-  \fi
+    \ifbbd@beamerrl
+    \else
+        \ifLuaTeX \input{babelbidi-beamer.def} \fi
+    \fi
 \fi
 
 \input{babelbidi-api.def}
@@ -237,36 +238,42 @@
 
 \ifLuaTeX  \input{babelbidi-onchar.def} \fi
 \ifLuaTeX
-  \input{babelbidi-fontfallback.def}
+    \input{babelbidi-fontfallback.def}
 \else
-  \NewDocumentCommand{\fontfallback}{m m}{%
-    \PackageWarning{babelbidi}{Font fallback requires LuaLaTeX; declaration ignored}%
-  }
+    \NewDocumentCommand{\fontfallback}{m m}{%
+        \PackageWarning{babelbidi}{Font fallback requires LuaLaTeX; declaration ignored}%
+    }
 \fi
 \ifTUTeX
-  \input{babelbidi-fonts.def}
+    \input{babelbidi-fonts.def}
 \fi
 
 % The .def files reset @; restore it before reading the remaining code.
 \makeatletter
 
-% Delay engine and code patches until the preamble is complete.
+% Delay engine patches until the preamble is complete.
 \AddToHook{begindocument/before}{%
-  \ifXeTeX    \input{babelbidi-xetex.def}     \fi
-  \ifLuaTeX   \input{babelbidi-luatex.def}    \fi
-
-  \bbd@if@latin{\bbl@main@language}%
-  \ifbbd@latin
-  \else
-    \input{babelbidi-code.def}%
-  \fi
+    \ifXeTeX    \input{babelbidi-xetex.def}     \fi
+    \ifLuaTeX   \input{babelbidi-luatex.def}    \fi
 }
+
+% Inspect the main language after all preamble packages, end-of-preamble hooks,
+% and engine setup. Keep the public interfaces ready before document hooks.
+% Register the ordering here, before this one-time hook starts running.
+\AddToHook{begindocument}[babelbidi/code]{%
+    \input{babelbidi-latinverbatim.def}%
+    \bbd@if@latin{\bbl@main@language}%
+    \ifbbd@latin\else
+        \input{babelbidi-code.def}%
+    \fi
+}
+\DeclareHookRule{begindocument}{babelbidi/code}{after}{babelbidi}
 
 % Run after babelbidi-api.def has set the main direction.
 \AddToHook{begindocument}{
-  \if@RTLmain
-    \input{babelbidi-layout.def}
-  \fi}
+    \if@RTLmain
+        \input{babelbidi-layout.def}
+    \fi}
 
 
 

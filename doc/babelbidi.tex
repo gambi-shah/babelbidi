@@ -210,6 +210,8 @@ order, while the text language, direction, font family, series, shape, and
 size are preserved. Fallback applies to text fonts, including custom
 families, but not to math fonts. It works with or without
 \texttt{onchar=fonts} and also uses the \texttt{fontcache} setting.
+An explicit \cmd{\latinttfamily} selection uses the selected Latin language's
+fallback chain without changing the text language or direction.
 
 A later declaration replaces the previous chain; an empty candidate list
 disables fallback:
@@ -252,6 +254,10 @@ following commands:
     \item \cmd{\setlatinmonofont}\oarg{options}\marg{font}:
           Sets the monospaced font for the selected Latin language and
           configures it for use by \cmd{\latinttfamily}.
+
+    \item \cmd{\setmonofont}\oarg{options}\marg{font}:
+          In the preamble, also sets Babel's monospaced font for the main
+          language, so it is available to font fallback.
 \end{itemize}
 
 \subsection{Commands}
@@ -277,6 +283,10 @@ following commands:
                 & Prints today's date in the selected Latin language           \\
         \verb|\latinttfamily|
                 & Selects the configured Latin monospaced font family          \\
+                        \verb|\latinverb|
+                & Typesets literal text in the \texttt{code} language                         \\
+                \verb|\latinverb*|
+                & Same, displaying spaces                                \\
         \bottomrule
     \end{tabular}
 \end{center}
@@ -294,6 +304,10 @@ following commands:
                     & Typesets its contents from left to right             \\
         \texttt{latin}
                     & Typesets its contents in the selected Latin language \\
+                            \texttt{latinverbatim}
+                    & Typesets a verbatim block in the \texttt{code} language           \\
+                    \texttt{latinverbatim*}
+                    & Same, displaying spaces                            \\
         \bottomrule
     \end{tabular}
 \end{center}
@@ -364,46 +378,65 @@ corresponding engine or package is in use.
 
 \begin{enumerate}
     \item \textbf{Common patches}
-          \begin{enumerate}
-              \item Code language selection: when the main language does not use
-                    the Latin script, the code-related patches use the language selected
-                    by the \texttt{code} key. These patches cover the \texttt{verbatim}
-                    environment, the \textsf{listings} package, and the \textsf{minted}
-                    environment and inline command. Documents with a Latin-script main
-                    language do not need these patches.
-              \item \texttt{\string\label}: prevents errors caused by Babel's
-                    direction commands in label keys derived from enumeration counters.
-          \end{enumerate}
+    \begin{enumerate}
+        \item \textbf{Code support}
+        \begin{enumerate}
+            \item \textbf{LaTeX verbatim interfaces:}
+            With a non-Latin main language, adjusts the
+            font and direction handling of \cmd{\verb},
+            \cmd{\verb*}, \texttt{verbatim}, and
+            \texttt{verbatim*}. With Unicode engines, the
+            font patch selects \cmd{\latinttfamily} without
+            changing the text language.
+
+            \item \textsf{listings}: With a non-Latin main
+            language, selects the \texttt{code} language
+            for display and inline listings, with direction
+            handling for inline listings.
+
+            \item \textsf{minted}: With a non-Latin main
+            language, applies the \texttt{code} language
+            and direction handling to the
+            \texttt{minted} environment and its processing
+            commands. Lua\LaTeX~also receives the required
+            layout adjustments.
+        \end{enumerate}
+
+        \item \texttt{\string\label}: prevents errors caused by Babel's
+        direction commands in label keys derived from enumeration counters.
+    \end{enumerate}
 
     \item \textbf{Xe\LaTeX~patches}
-          \begin{enumerate}
-              \item \textsf{natbib}: corrects citation links in RTL text with
-                    recent \textsf{hyperref} versions.
-              \item \textsf{fontspec}: disables its math-mode handling when
-                    Babel bidi mode is active.
-          \end{enumerate}
+    \begin{enumerate}
+        \item \textsf{natbib}: corrects citation links in RTL text with
+        recent \textsf{hyperref} versions.
+        \item \textsf{fontspec}: disables its math-mode handling when
+        Babel bidi mode is active.
+    \end{enumerate}
 
     \item \textbf{Lua\LaTeX~patches}
-          \begin{enumerate}
-              \item \texttt{\string\makebox} and tables: adjust the positions
-                    of \texttt{l} and \texttt{r} material and swap table-column
-                    alignment in RTL text.
-              \item Footnotes: adjust footnote paragraph direction in RTL contexts;
-                    footnotes issued in math mode in RTL-main documents are treated as RTL.
-              \item TikZ: use LTR paragraph direction inside
-                    \texttt{tikzpicture}, except with \textsf{beamer-rl}.
-              \item \textsf{fancyhdr}: increase the head height and typeset
-                    headers and footers in LTR direction.
-              \item \textsf{beamer}: correct the layout of rounded boxes, except
-                    when \textsf{beamer-rl} is loaded.
-          \end{enumerate}
+    \begin{enumerate}
+        \item \texttt{\string\makebox} and tables: adjust the positions
+        of \texttt{l} and \texttt{r} material and swap table-column
+        alignment in RTL text.
+        \item Footnotes: adjust footnote paragraph direction in RTL contexts;
+        footnotes issued in math mode in RTL-main documents are treated as RTL.
+        \item TikZ: use LTR paragraph direction inside
+        \texttt{tikzpicture}, except with \textsf{beamer-rl}.
+        \item \textsf{fancyhdr}: increase the head height and typeset
+        headers and footers in LTR direction.
+        \item \textsf{beamer}: correct the layout of rounded boxes, except
+        when \textsf{beamer-rl} is loaded.
+    \end{enumerate}
 
     \item \textbf{RTL-main footnote-rule patch}
-          \begin{enumerate}
-              \item With Xe\LaTeX~and Lua\LaTeX, typeset the footnote rule
-                    in a stable LTR direction when the main language is RTL.
-          \end{enumerate}
+    \begin{enumerate}
+        \item With Xe\LaTeX~and Lua\LaTeX, typesets the footnote rule
+        in a stable LTR direction when the main language is RTL.
+    \end{enumerate}
 \end{enumerate}
+
+
 
 \section{Minted}
 

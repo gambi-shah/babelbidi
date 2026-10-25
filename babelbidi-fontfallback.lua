@@ -19,8 +19,8 @@
 --
 -- This work is maintained by Amer Amikhteh.
 --
--- Version: 0.3.0
--- Date: 2026-10-14
+-- Version: 0.4.0
+-- Date: 2026-10-26
 
 
 
@@ -46,8 +46,8 @@ end
 -- attribute keeps selections distinct even if NFSS substitutes the same
 -- physical source font for different requested weights or sizes. It also
 -- follows the effective font after Babel's automatic onchar mapping.
-function F.capture(source)
-  local routes, key = {}, {source}
+function F.capture(source, source_locale)
+  local routes, key = {source_locale = source_locale}, {source, source_locale or 0}
   for locale, targets in pairs(F.relations) do
     local route = {source = mapped_font(locale, source) or source, targets = {}}
     key[#key + 1], key[#key + 2] = locale, route.source
@@ -83,6 +83,9 @@ function F.process(head)
       local context = F.contexts[node.get_attribute(item, F.attribute)]
       local locale = node.get_attribute(item, Babel.attr_locale)
       local route = context and context[locale]
+      -- Explicit Latin fonts retain the text locale, but use their own chain.
+      local explicit = context and context[context.source_locale]
+      if explicit and item.font == explicit.source then route = explicit end
       if route and item.font == route.source then
         local current = font.getfont(item.font)
         if current and not current.characters[item.char] then
