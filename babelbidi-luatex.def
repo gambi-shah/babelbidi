@@ -21,7 +21,7 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-luatex.def}
-[2026/10/11 v0.2.0 LuaTeX support for Babelbidi]
+[2026/10/26 v0.2.1 LuaTeX support for Babelbidi]
 
 \makeatletter
 
@@ -50,7 +50,7 @@
 }%
 
 \let\bbd@fn@makefntext\@makefntext
-\def\@makefntext#1{%
+\long\def\@makefntext#1{%
     \bbd@fn@dir
     \bbd@fn@makefntext{#1}%
 }%
@@ -58,7 +58,7 @@
 \let\bbd@orig@footnotetext\@footnotetext
 
 
-\def\bbd@fn@deferred@footnotetext#1{%
+\long\def\bbd@fn@deferred@footnotetext#1{%
     \global\let\bbd@fn@dir\setparRTL
     \bbd@orig@footnotetext{#1}%
 }%
@@ -71,22 +71,27 @@
     \fi
 }%
 
-\def\@footnotetext#1{%
+% Leave normal footnotes unread: fancyvrb may need to scan them verbatim.
+\def\@footnotetext{%
     \ifmmode
-        \global\bbd@fn@pendingtrue
-        \global\bbd@fn@pending@toks\expandafter{%
-            \the\bbd@fn@pending@toks
-            \bbd@fn@deferred@footnotetext{#1}%
-        }%
-        \aftergroup\bbd@fn@flush
+        \expandafter\bbd@fn@save@footnotetext
     \else
-        \bbd@orig@footnotetext{#1}%
+        \expandafter\bbd@orig@footnotetext
     \fi
+}%
+
+\long\def\bbd@fn@save@footnotetext#1{%
+    \global\bbd@fn@pendingtrue
+    \global\bbd@fn@pending@toks\expandafter{%
+        \the\bbd@fn@pending@toks
+        \bbd@fn@deferred@footnotetext{#1}%
+    }%
+    \aftergroup\bbd@fn@flush
 }%
 
 \let\bbd@orig@fn@fntext\fn@fntext
 
-\def\fn@fntext#1{%
+\long\def\fn@fntext#1{%
     \ifmmode
         \global\let\bbd@fn@dir\setparRTL
     \fi

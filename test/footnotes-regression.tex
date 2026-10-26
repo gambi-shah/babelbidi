@@ -1,0 +1,41 @@
+% Compile with LuaLaTeX. Define \VerbatimBeforeDocument to also test
+% \VerbatimFootnotes in the preamble. No external highlighter is needed.
+\documentclass{article}
+\usepackage[verbatim]{minted}
+\usepackage{hyperref}
+\usepackage{babelbidi}
+\babelprovide[main,import]{persian}
+\babelprovide[import]{english}
+\babelfont[persian]{rm}{HM XNiloofar}
+\babelfont[english]{rm}{Latin Modern Roman}
+\babelfont{tt}{Latin Modern Mono}
+\ifdefined\VerbatimBeforeDocument\VerbatimFootnotes\fi
+
+\begin{document}
+\ifdefined\VerbatimBeforeDocument\else
+متن فارسی\footnote{بند نخست.
+
+بند دوم.}
+\begin{otherlanguage}{english}
+English text\footnote{First paragraph.
+
+Second paragraph.}
+\end{otherlanguage}
+ریاضی $x\footnote{پانویس اول ریاضی.}+y\footnote{پانویس دوم ریاضی.}$.
+\fi
+
+\begingroup
+\VerbatimFootnotes
+نمونه\footnote{کد زیر باید عیناً نمایش داده شود:
+\begin{minted}{latex}
+\documentclass{article}
+\usepackage{unipersian}
+
+\begin{document}
+A\footnote{text}
+\end{document}
+\end{minted}
+}
+\endgroup
+متن پس از نمونه\footnote{این پانویس معمولی است.}
+\end{document}

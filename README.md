@@ -1,4 +1,4 @@
-LaTeX Package: BabelBidi v0.4.0 2026-10-26
+LaTeX Package: BabelBidi v0.4.1 2026-10-26
 ----------------------------------------
 
 An extension to babel’s bidirectional support
