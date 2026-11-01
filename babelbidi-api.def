@@ -20,8 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-api.def}
-[2026/10/09 v0.1.0 Bidi API for Babelbidi]
+\ProvidesFile{babelbidi-api.def}[2026/11/01 v0.2.0 Bidi API for Babelbidi]
 
 \makeatletter
 
@@ -60,33 +59,30 @@
 % basic bidi commands
 % ------------------------------------------
 
+\def\bbd@setdir#1{%
+    \bbl@bodydir{#1}%
+    \bbl@pardir{#1}% Must precede the text direction.
+    \bbl@textdir{#1}%
+}
+
+\ProvideDocumentCommand{\setLTR}{}{\bbd@setdir{0}}
+\ProvideDocumentCommand{\setRTL}{}{\bbd@setdir{1}}
+
+
+% On TeXXeT engines beginL/R are primitives used by Babel itself.
 \ifLuaTeX
-    \providecommand{\setparLTR}{%
-        \@RTLfalse
-        \pardir TLT\relax
-        \textdir TLT\relax
-    }%
-
-    \providecommand{\setparRTL}{%
-        \@RTLtrue
-        \pardir TRT\relax
-        \textdir TRT\relax
-    }%
-
-    \providecommand{\beginR}{%
-        \@RTLtrue
+    \ProvideDocumentCommand{\beginR}{}{%
         \begingroup
-        \textdir TRT\relax
+        \bbl@textdir{1}%
     }%
 
-    \providecommand{\beginL}{%
-        \@RTLfalse
+    \ProvideDocumentCommand{\beginL}{}{%
         \begingroup
-        \textdir TLT\relax
+        \bbl@textdir{0}%
     }%
 
-    \def\endR{\endgroup}
-    \def\endL{\endgroup}
+    \ProvideDocumentCommand{\endR}{}{\endgroup}
+    \ProvideDocumentCommand{\endL}{}{\endgroup}
 \fi
 
 
@@ -94,21 +90,15 @@
 % Core APIs
 % ------------------------------------------
 
-\providecommand{\RLE}[1]{%
+\long\def\bbd@inline#1#2{%
     \leavevmode
     {%
-        \bbl@textdir{1}%
-        #1%
+        \bbl@textdir{#1}%
+        #2%
     }%
-}%
-
-\providecommand{\LRE}[1]{%
-    \leavevmode
-    {%
-        \bbl@textdir{0}%
-        #1%
-    }%
-}%
+}
+\ProvideDocumentCommand{\RLE}{+m}{\bbd@inline{1}{#1}}
+\ProvideDocumentCommand{\LRE}{+m}{\bbd@inline{0}{#1}}
 
 \ProvideDocumentEnvironment{RTL}{}
 {%
@@ -137,8 +127,253 @@
     \endgroup
 }%
 
-\let\LR\LRE
-\let\RL\RLE
+
+% ------------------------------------------
+% Aliases
+% ------------------------------------------
+
+\DeclareCommandCopy{\RL}{\RLE}
+\DeclareCommandCopy{\LR}{\LRE}
+\DeclareCommandCopy{\setRL}{\setRTL}
+\DeclareCommandCopy{\unsetLTR}{\setRTL}
+\DeclareCommandCopy{\setLR}{\setLTR}
+\DeclareCommandCopy{\unsetRTL}{\setLTR}
+
+
+% ------------------------------------------
+% Primitive-style boxes: retain to/spread, \setbox and verbatim scanning.
+% The content must not be read as a macro argument.
+% ------------------------------------------
+
+\def\bbd@box#1#2#3#{%
+    % Babel has no box-direction setter. Set the box's own direction
+    % while scanning it, then synchronize its content through Babel.
+    #1\ifLuaTeX bdir #2 \fi#3\bgroup
+    \bbd@setdir{#2}\let\bbd@box@brace
+}
+\ProvideDocumentCommand{\hboxL}{}{\bbd@box\hbox{0}}
+\ProvideDocumentCommand{\hboxR}{}{\bbd@box\hbox{1}}
+\ProvideDocumentCommand{\vboxL}{}{\bbd@box\vbox{0}}
+\ProvideDocumentCommand{\vboxR}{}{\bbd@box\vbox{1}}
+\ProvideDocumentCommand{\vtopL}{}{\bbd@box\vtop{0}}
+\ProvideDocumentCommand{\vtopR}{}{\bbd@box\vtop{1}}
+
+% ------------------------------------------
+% Explicit footnote direction, independent of the surrounding language.
+% Resolve footnotemark/text at use time, including later hyperref patches.
+% ------------------------------------------
+
+% luabidi's Polyglossia compatibility fallback; preserve any real formatter.
+\ProvideDocumentCommand{\localnumeral}{s m}{%
+    \IfBooleanTF{#1}%
+    {\expandafter\@arabic\csname c@#2\endcsname}%
+    {#2}%
+}
+
+\def\bbd@footnotemark#1{%
+    \IfNoValueTF{#1}%
+    {\footnotemark}%
+    {\footnotemark[#1]}%
+}
+
+\ProvideDocumentCommand{\bbd@fn@mark@lr}{o}{%
+    \bbd@footnotemark{#1}%
+}
+
+\ProvideDocumentCommand{\bbd@fn@mark@rl}{o}{%
+    \bbd@footnotemark{#1}%
+}
+
+
+\def\bbd@footnote@dir#1{%
+    \ifPDFTeX
+        % The paragraph direction is set before \@makefntext starts it.
+        % Do not open a TeXXeT run spanning several footnote paragraphs.
+        \bbl@pardir{#1}%
+        \ifnum#1=\z@
+            \@RTLfalse
+        \else
+            \@RTLtrue
+        \fi
+    \else
+        \bbd@setdir{#1}%
+    \fi
+}
+
+
+\long\def\bbd@footnote#1#2#3{%
+    \begingroup
+    % Remember the first explicit footnote direction in pdfTeX.
+    \ifPDFTeX
+        \bbd@pdf@remember@fn@dir{#1}%
+    \fi
+    % Select the footnote mark.
+    \ifnum#1=\z@
+        \let\bbd@mark\bbd@fn@mark@lr
+    \else
+        \let\bbd@mark\bbd@fn@mark@rl
+    \fi
+    \IfNoValueTF{#2}%
+    {\bbd@mark}%
+    {\bbd@mark[#2]}%
+    % Apply the requested direction to the footnote text.
+    \let\bbd@explicit@makefntext\@makefntext
+    \long\def\@makefntext##1{%
+        \bbd@setdir{#1}%
+        \bbd@explicit@makefntext{##1}%
+    }%
+    \IfNoValueTF{#2}%
+    {\footnotetext{{\bbd@footnote@dir{#1}#3}}}%
+    {\footnotetext[#2]{{\bbd@footnote@dir{#1}#3}}}%
+    \endgroup
+}
+
+
+\ProvideDocumentCommand{\LTRfootnote}{o +m}{%
+    \bbd@footnote{0}{#1}{#2}%
+}
+
+\ProvideDocumentCommand{\RTLfootnote}{o +m}{%
+    \bbd@footnote{1}{#1}{#2}%
+}
+
+
+% ------------------------------------------
+% Footnote rules
+% ------------------------------------------
+
+\let\bbd@default@footnoterule\footnoterule
+
+\newlength\bbd@fn@rulewidth
+\setlength\bbd@fn@rulewidth{.4\columnwidth}
+
+% An expandable register alias also supports \the and direct assignment.
+\providecommand{\footnoterulewidth}{\bbd@fn@rulewidth}
+
+
+\def\bbd@fn@rule#1{%
+    \kern-3\p@
+    \nointerlineskip
+    \hboxL to \columnwidth{%
+        \ifnum#1=\@ne
+            \hfil
+        \fi
+        \vrule
+        width \footnoterulewidth
+        height .4\p@
+        depth \z@
+        \ifnum#1=\z@
+            \hfil
+        \fi
+    }%
+    \kern2.6\p@
+}
+
+
+\def\bbd@fn@rule@left{%
+    \bbd@fn@rule{0}%
+}
+
+\def\bbd@fn@rule@right{%
+    \bbd@fn@rule{1}%
+}
+
+\def\bbd@fn@rule@full{%
+    \kern-3\p@
+    \hrule\@width\textwidth
+    \kern2.6\p@
+}
+
+
+\ProvideDocumentCommand{\leftfootnoterule}{}{%
+    \global\let\footnoterule\bbd@fn@rule@left
+}
+
+\ProvideDocumentCommand{\rightfootnoterule}{}{%
+    \global\let\footnoterule\bbd@fn@rule@right
+}
+
+\ProvideDocumentCommand{\textwidthfootnoterule}{}{%
+    \global\let\footnoterule\bbd@fn@rule@full
+}
+
+
+% ------------------------------------------
+% Automatic footnote rule
+% ------------------------------------------
+
+% pdfTeX fallback:
+% remember the first explicitly directed footnote inserted for the page.
+\ifPDFTeX
+
+    % -1 means that no explicitly directed footnote has been seen yet.
+    \newcount\bbd@pdf@fn@dir
+    \bbd@pdf@fn@dir=-1
+
+    \def\bbd@pdf@remember@fn@dir#1{%
+        \ifnum\bbd@pdf@fn@dir<\z@
+            \global\bbd@pdf@fn@dir=#1\relax
+        \fi
+    }
+
+    \def\bbd@pdf@reset@fn@dir{%
+        \global\bbd@pdf@fn@dir=-1\relax
+    }
+
+    % Reset after the current page has been shipped out.
+    \AddToHook{shipout/after}{%
+        \bbd@pdf@reset@fn@dir
+    }
+
+    \def\bbd@fn@rule@auto{%
+        \ifnum\bbd@pdf@fn@dir=\@ne
+            \bbd@fn@rule{1}%
+        \else
+            \bbd@fn@rule{0}%
+        \fi
+    }
+
+    \ProvideDocumentCommand{\autofootnoterule}{}{%
+        \global\let\footnoterule\bbd@fn@rule@auto
+    }
+
+\fi
+
+
+% LuaTeX:
+% inspect the first hlist line in the footins node list.
+\ifLuaTeX
+
+    \newcount\bbd@fn@rule@dir
+
+    \def\bbd@fn@rule@auto{%
+        \bbd@fn@rule@dir=\z@
+        \directlua{
+            local box = tex.box['footins']
+            local line = table.swapped(node.subtypes('hlist')).line
+
+            if box and box.list then
+            for n in node.traverse(box.list) do
+            if n.id == node.id('hlist')
+            and n.subtype == line then
+            tex.count['bbd@fn@rule@dir'] = n.direction
+            break
+            end
+            end
+            end
+        }%
+        \bbd@fn@rule{\the\bbd@fn@rule@dir}%
+    }
+
+    \ProvideDocumentCommand{\autofootnoterule}{}{%
+        \global\let\footnoterule\bbd@fn@rule@auto
+    }
+
+\fi
+
+% XeTeX deliberately has no definition here.
+% \autofootnoterule is supplied by bidi.
+
 
 
 \makeatother

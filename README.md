@@ -1,37 +1,28 @@
-LaTeX Package: BabelBidi v0.4.1 2026-10-26
+LaTeX Package: BabelBidi v0.5.0 2026-11-01
 ----------------------------------------
 
-An extension to babel’s bidirectional support
+An extension to Babel’s bidirectional support.
 
 ## Description
 
-`babelbidi` extends Babel's bidirectional support with direction-sensitive fixes, explicit direction and language selection, and font configuration with LuaTeX glyph fallback. It supports Babel languages, LTR and RTL main languages, and LuaTeX (recommended), XeTeX, or pdfTeX.
+`babelbidi` extends Babel with bidirectional typesetting, direction-sensitive layout fixes, language selection, and font configuration. It supports LuaTeX (recommended), XeTeX, and pdfTeX.
 
 ## Features
 
-- Explicit text-direction control.
-- Language-aware inline text and block environments.
-- Automatic selection of auxiliary Babel languages.
-- Font configuration, including LuaTeX glyph fallback.
-- Layout patches for direction-sensitive elements and common packages.
+- Luabidi-compatible public API across all three engines.
+- Direction commands, inline text, environments, and directional boxes.
+- Explicitly directed footnotes and configurable footnote rules.
+- Automatic auxiliary-language selection.
+- Font configuration and LuaTeX glyph fallback.
+- Layout patches for common packages.
 
 ## Installation
 
-### From CTAN
+**CTAN:** `tlmgr install babelbidi` — [Package page](https://ctan.org/pkg/babelbidi)
 
-Latest release: https://ctan.org/pkg/babelbidi
+**GitHub:** `git clone https://github.com/gambi-shah/babelbidi.git`
 
-~~~bash
-tlmgr install babelbidi
-~~~
-
-### Manual installation from GitHub
-
-~~~bash
-git clone https://github.com/gambi-shah/babelbidi.git
-~~~
-
-Copy the files into a TeX-searchable directory (run `mktexlsr` if needed) or keep them beside your document.
+Copy the files into a TeX-searchable directory or keep them beside your document.
 
 ## Usage
 
@@ -44,24 +35,22 @@ Hey world!
 \end{document}
 ~~~
 
-Compile with LuaLaTeX (recommended), XeLaTeX (fallback), or pdfTeX (last resort). Babel language options are supported; see the Babel manual for the complete list.
+Compile with LuaLaTeX (recommended), XeLaTeX, or pdfTeX. Babel language options are supported; see the Babel manual.
 
 ## Interfaces
 
-- `\LRE{...}` and `\RLE{...}` — typeset text with explicit direction.
-- `\lr{...}` and `\rl{...}` — switch to the configured LTR and RTL languages for inline text.
-- `LTR`, `RTL`, and `latin` environments — typeset longer text blocks.
-- `\latinverb`, `\latinverb*`, `latinverbatim`, and `latinverbatim*` — use the code language and its monospaced font for every main script; starred forms show spaces. Base interfaces retain their behaviour.
-- `\settextfont`, `\setlatintextfont`, `\setlatinsansfont`, `\setlatinmonofont`, and `\deflatinfont` — configure fonts with Unicode engines.
-- `\fontfallback` — configure font fallback with LuaLaTeX.
+BabelBidi provides LuaBidi’s public `luabidi` interfaces across LuaTeX, XeTeX, and pdfTeX: direction commands and environments, `\LRE`, `\RLE`, `\LR`, `\RL`, directional boxes, and directed footnotes with configurable rules.
 
-Code layout patches apply to non-Latin main scripts. Related packages can be loaded before or after `babelbidi`.
+Additional interfaces include `\lr{...}` and `\rl{...}` for language-aware inline text; `\latinverb` and `latinverbatim` (including starred forms); font commands such as `\settextfont` and `\deflatinfont`; and LuaTeX’s `\fontfallback`.
 
-## Language selection
+Code layout patches apply to non-Latin main scripts. Related packages may be loaded before or after BabelBidi.
 
-Auxiliary languages (Latin, LTR, RTL, and code) are selected automatically and updated after each `\babelprovide` call. The `latin`, `ltr`, `rtl`, and `code` options fix these choices explicitly. Declare languages before setting fonts. Babel's `nil` is ignored; without a real language, Latin, LTR, and code default to `english`, and RTL to `arabic`.
+## Language Selection
+
+Auxiliary Latin, LTR, RTL, and code languages are selected automatically and updated after each `\babelprovide` call. The `latin`, `ltr`, `rtl`, and `code` options override these choices. Declare languages before setting fonts. Babel’s `nil` is ignored; defaults are `english` for Latin, LTR, and code, and `arabic` for RTL.
 
 ## Documentation
+
 See the [main manual](doc/babelbidi.pdf) for configuration and examples.
 
 ## License and maintainer

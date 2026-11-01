@@ -20,8 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-luatex.def}
-[2026/10/26 v0.2.1 LuaTeX support for Babelbidi]
+\ProvidesFile{babelbidi-luatex.def}[2026/11/01 v0.2.1 LuaTeX support for Babelbidi]
 
 \makeatletter
 
@@ -38,9 +37,10 @@
     \if@RTL
         \global\let\bbd@fn@dir\relax
     \else
-        \global\let\bbd@fn@dir\setparLTR
+        \gdef\bbd@fn@dir{\bbl@pardir{0}\bbl@textdir{0}}%
     \fi
 }%
+
 
 \@ifundefined{bbl@footnote}{}{%
     \let\bbd@orig@bbl@footnote\bbl@footnote
@@ -59,9 +59,10 @@
 
 
 \long\def\bbd@fn@deferred@footnotetext#1{%
-    \global\let\bbd@fn@dir\setparRTL
+    \gdef\bbd@fn@dir{\bbl@pardir{1}\bbl@textdir{1}}%
     \bbd@orig@footnotetext{#1}%
 }%
+
 
 \def\bbd@fn@flush{%
     \ifbbd@fn@pending
@@ -93,10 +94,11 @@
 
 \long\def\fn@fntext#1{%
     \ifmmode
-        \global\let\bbd@fn@dir\setparRTL
+        \gdef\bbd@fn@dir{\bbl@pardir{1}\bbl@textdir{1}}%
     \fi
     \bbd@orig@fn@fntext{#1}%
 }
+
 
 
 % ------------------------------------------

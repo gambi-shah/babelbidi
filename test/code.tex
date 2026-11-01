@@ -1,4 +1,3 @@
-
 \documentclass{article}
 
 
@@ -26,8 +25,8 @@
 
     \begin{otherlanguage}{french}
         French:
-    \ttfamily code font 123
-   \end{otherlanguage}
+        \ttfamily code font 123
+    \end{otherlanguage}
 
 
 
@@ -46,11 +45,11 @@
 
 
 
-\bgroup    {\latinttfamily code font 123} \egroup
+    \bgroup    {\latinttfamily code font 123} \egroup
 
 
 
-Before \textbf{Verbatim}
+    Before \textbf{Verbatim}
     \begin{verbatim}
         # Print a simple message
         print("code font 123")
@@ -60,11 +59,11 @@ Before \textbf{Verbatim}
 
 
 
-\definecolor{pycomment}{HTML}{3D7B7B}
-\definecolor{pykeyword}{HTML}{008000}
-\definecolor{pystring}{HTML}{BA2121}
+    \definecolor{pycomment}{HTML}{3D7B7B}
+    \definecolor{pykeyword}{HTML}{008000}
+    \definecolor{pystring}{HTML}{BA2121}
 
-Before \textbf{Listings}
+    Before \textbf{Listings}
     \begin{lstlisting}[language=Python,
         basicstyle=\ttfamily,
         commentstyle=\itshape\color{pycomment},
@@ -79,7 +78,7 @@ Before \textbf{Listings}
 
 
 
-Before \textbf{Minted}
+    Before \textbf{Minted}
     \begin{minted}{python}
         # Print a simple message
         print("code font 123")

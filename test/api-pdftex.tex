@@ -1,0 +1,113 @@
+% !TeX program = pdflatex
+\documentclass{article}
+
+\usepackage[LAE,LFE,T1]{fontenc}
+\usepackage[main=english]{babelbidi}
+
+\newcommand{\FA}[1]{\foreignlanguage{farsi}{#1}}
+
+\makeatletter
+\newcommand{\AssertRTL}{%
+    \if@RTL\else
+    \PackageError{api-pdftex}{Expected RTL direction}{}
+    \fi
+}
+\newcommand{\AssertLTR}{%
+    \if@RTL
+    \PackageError{api-pdftex}{Expected LTR direction}{}
+    \fi
+}
+\makeatother
+
+\begin{document}
+
+    \section*{Direction}
+
+    Default LTR text.
+    \AssertLTR
+
+    \setRTL
+    \AssertRTL
+    RTL paragraph.
+
+    \setLTR
+    \AssertLTR
+    LTR paragraph.
+
+    \setRL
+    \AssertRTL
+    RTL paragraph.
+
+    \unsetLTR
+    \AssertRTL
+
+    \setLR
+    \AssertLTR
+    LTR paragraph.
+
+    \unsetRTL
+    \AssertLTR
+
+    \begin{RTL}
+        \AssertRTL
+        RTL environment.
+    \end{RTL}
+    \AssertLTR
+
+    \begin{LTR}
+        \AssertLTR
+        LTR environment.
+    \end{LTR}
+    \AssertLTR
+
+    \section*{Inline Direction}
+
+    \LRE{LTR text} \LR{LTR text}
+
+    \RLE{\FA{متن فارسی}} \RL{\FA{متن فارسی}}
+
+    \section*{Directional Boxes}
+
+    \fbox{\hboxL{English — \FA{متن فارسی}}}
+    \fbox{\hboxR{English — \FA{متن فارسی}}}
+
+    \medskip
+
+    \fbox{\hboxL to 6cm{Left\hfil Right}}
+    \fbox{\hboxR spread 1cm{\FA{راست}\hfil\FA{چپ}}}
+
+    \medskip
+
+    \fbox{\vboxL{\hsize=4cm\parindent=0pt
+            This English paragraph is long enough to wrap
+            automatically onto several lines.\par}}
+
+    \medskip
+
+    \fbox{\vtopR to 3cm{\hsize=4cm\parindent=0pt
+            \FA{سطر نخست}\par
+            \vfil
+            \FA{سطر آخر}\par}}
+
+    \medskip
+
+    \fbox{\vboxR{\hsize=4cm\parindent=0pt
+            English line\\
+            \FA{خط فارسی}\\
+            English line\par}}
+
+    \medskip
+
+    \begingroup
+    \setbox0=\hboxL to 6cm{English\hfil\FA{فارسی}}
+    \fbox{\box0}
+    \endgroup
+
+    \section*{Footnotes}
+
+    LTR footnote.\LTRfootnote[3]{LTR footnote text.}
+
+    \RL{\FA{پانوشت راست‌به‌چپ.}}%
+    \RTLfootnote[4]{\FA{متن پانوشت فارسی.}}
+
+\end{document}

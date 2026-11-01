@@ -20,8 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-layout.def}
-[2026/10/09 v0.1.0 Layout fixes for Babelbidi]
+\ProvidesFile{babelbidi-layout.def}[2026/11/01 v0.1.1 Layout fixes for Babelbidi]
 
 
 \makeatletter
@@ -30,30 +29,18 @@
 % ------------------------------------------
 % Footnote rule
 % ------------------------------------------
-\ifXeTeX
-    \def\footnoterule{%
-        \kern-3\p@
-        \hbox to \columnwidth{\hfill\rule{.4\columnwidth}{0.4\p@}}%
-        \kern 2.6\p@
-    }
+
+% Do not replace a rule selected by the user or another package.
+\ifx\footnoterule\bbd@default@footnoterule
+    \let\footnoterule\bbd@fn@rule@right
 \fi
 
 
+% ------------------------------------------
+%   Tikz
+% ------------------------------------------
+
 \ifLuaTeX
-    \def\footnoterule{%
-        \kern-3\p@
-        \hbox dir TLT to \columnwidth{%
-            \hss
-            \vrule width .4\columnwidth height 0.4\p@ depth 0pt%
-        }%
-        \kern 2.6\p@
-    }
-
-
-    % ------------------------------------------
-    %   Tikz
-    % ------------------------------------------
-
     \ifbbd@beamerrl
     \else
         \AtBeginEnvironment{tikzpicture}{%

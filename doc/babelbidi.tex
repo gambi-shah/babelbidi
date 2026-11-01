@@ -25,7 +25,14 @@
 
 \usepackage[svgnames]{xcolor}
 
+
+\usepackage{tabularx}
+\usepackage{xltabular}
 \usepackage{booktabs}
+
+
+
+
 
 \usepackage{hyperref}
 
@@ -225,11 +232,114 @@ a warning where appropriate. Fallback is not recursive and is applied per
 glyph before shaping. It is available only with Lua\LaTeX; Xe\LaTeX~and
 pdf\LaTeX~warn and ignore explicit fallback declarations.
 
-\section{Direction and Language APIs}
+\section{Direction APIs}
+
+\textsf{babelbidi} provides commands and environments for controlling
+text direction without switching the language context, matching the
+traditional \textsf{bidi} and \textsf{luabidi} approach.
+
+\subsection{Commands}
+
+\subsubsection*{Direction commands without arguments}
+
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    Command & Description \\
+    \midrule
+    \verb|\beginL|, \verb|\endL| & Begin and end an explicit LTR text group \\
+    \verb|\beginR|, \verb|\endR| & Begin and end an explicit RTL text group \\
+    \verb|\setRTL|, \verb|\setRL|, \verb|\unsetLTR| & Set paragraph direction to RTL \\
+    \verb|\setLTR|, \verb|\setLR|, \verb|\unsetRTL| & Set paragraph direction to LTR \\
+    \bottomrule
+\end{tabularx}
+
+\subsubsection*{Footnote-rule controls}
+
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    Command & Description \\
+    \midrule
+    \verb|\leftfootnoterule| & Left-aligned footnote rule \\
+    \verb|\rightfootnoterule| & Right-aligned footnote rule \\
+    \verb|\textwidthfootnoterule| & Full-width footnote rule \\
+    \verb|\footnoterulewidth| & Length controlling the width of short footnote rules \\
+    \verb|\autofootnoterule| & Automatically selects the rule alignment based on footnote direction \\
+    \bottomrule
+\end{tabularx}
+
+\subsubsection*{Commands taking text argument: \mdseries\texttt{\char`\{text\char`\}}}
+
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    Command & Description \\
+    \midrule
+    \verb|\LRE|, \verb|\LR| & Inline LTR embedding \\
+    \verb|\RLE|, \verb|\RL| & Inline RTL embedding \\
+    \bottomrule
+\end{tabularx}
+
+\subsubsection*{Footnote commands: \mdseries\texttt{[num]\{text\}}}
+
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    Command & Description \\
+    \midrule
+    \verb|\LTRfootnote| & Typeset footnote in LTR direction \\
+    \verb|\RTLfootnote| & Typeset footnote in RTL direction \\
+    \bottomrule
+\end{tabularx}
+
+\subsubsection*{Directional boxes}
+
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    Command & Description \\
+    \midrule
+    \verb|\hboxL|, \verb|\hboxR| & Horizontal box with LTR or RTL direction \\
+    \verb|\vboxL|, \verb|\vboxR| & Vertical box with LTR or RTL direction \\
+    \verb|\vtopL|, \verb|\vtopR| & Top-aligned vertical box with LTR or RTL direction \\
+    \bottomrule
+\end{tabularx}
+
+The commands \cmd{\hbox}, \cmd{\vbox}, and \cmd{\vtop} construct
+boxes containing the material enclosed in braces. An \cmd{\hbox}
+arranges its contents horizontally, without line breaking.
+A \cmd{\vbox} arranges its contents vertically; text inside it
+is broken into lines according to \cmd{\hsize}. A \cmd{\vtop}
+works like \cmd{\vbox}, but aligns with surrounding material
+at its top rather than its bottom: for boxes containing lines
+of text, the reference point is on the first line's baseline
+for \cmd{\vtop} and the last line's baseline for \cmd{\vbox}.
+
+The directional variants listed above set the box direction
+to LTR or RTL without changing the language. Before the opening
+brace, an optional \texttt{to <dimension>} specifies the final
+width of a horizontal box or height of a vertical box;
+\texttt{spread <dimension>} adds the given amount to its natural
+width or height. These sizes are achieved by adjusting stretchable
+or shrinkable space within the box. A box can also be stored
+with \cmd{\setbox} and later inserted with \cmd{\box}.
+
+\subsection{Environments}
+
+\begin{center}
+    \begin{tabular}{@{}ll@{}}
+        \toprule
+        Environment & Description \\
+        \midrule
+        \texttt{RTL}
+        & Typesets its contents from right to left \\
+        \texttt{LTR}
+        & Typesets its contents from left to right \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+
+\section{Language and Font APIs}
 
 \textsf{babelbidi} provides commands, environments, and package options
-for controlling text direction, selecting languages, and setting fonts.
-
+for selecting languages and setting fonts.
 
 \subsection{Font Selection}
 
@@ -238,76 +348,62 @@ following commands:
 
 \begin{itemize}
     \item \cmd{\settextfont}\oarg{options}\marg{font}:
-          Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
-          main language.
+    Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
+    main language.
 
     \item \cmd{\setlatintextfont}\oarg{options}\marg{font}:
-          Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
-          selected Latin language.
+    Sets the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
+    selected Latin language.
 
     \item \cmd{\deflatinfont}\marg{command}\oarg{options}\marg{font}:
-          Defines a Latin font family command.
+    Defines a Latin font family command.
 
     \item \cmd{\setlatinsansfont}\oarg{options}\marg{font}:
-          Sets the sans-serif font for the selected Latin language.
+    Sets the sans-serif font for the selected Latin language.
 
-    \item \cmd{\setlatinmonofont}\oarg{options}\marg{font}:
-          Sets the monospaced font for the selected Latin language and
-          configures it for use by \cmd{\latinttfamily}.
+    \item \sloppy \cmd{\setlatinmonofont}\oarg{options}\marg{font}:
+    Sets the monospaced font for the selected Latin language and
+    configures it for use by \cmd{\latinttfamily}.
 
     \item \cmd{\setmonofont}\oarg{options}\marg{font}:
-          In the preamble, also sets Babel's monospaced font for the main
-          language, so it is available to font fallback.
+    In the preamble, also sets Babel's monospaced font for the main
+    language, so it is available to font fallback.
 \end{itemize}
 
 \subsection{Commands}
 
-\begin{center}
-    \begin{tabular}{@{}ll@{}}
-        \toprule
-        Command & Description                                                  \\
-        \midrule
-        \verb|\LRE|
-                & Typesets its argument from left to right                     \\
-        \verb|\RLE|
-                & Typesets its argument from right to left                     \\
-        \verb|\LR|
-                & Alias for \verb|\LRE|                                        \\
-        \verb|\RL|
-                & Alias for \verb|\RLE|                                        \\
-        \verb|\lr|
-                & Typesets its argument in the selected left-to-right language \\
-        \verb|\rl|
-                & Typesets its argument in the selected right-to-left language \\
-        \verb|\latintoday|
-                & Prints today's date in the selected Latin language           \\
-        \verb|\latinttfamily|
-                & Selects the configured Latin monospaced font family          \\
-                        \verb|\latinverb|
-                & Typesets literal text in the \texttt{code} language                         \\
-                \verb|\latinverb*|
-                & Same, displaying spaces                                \\
-        \bottomrule
-    \end{tabular}
-\end{center}
+These commands provide language selection, Latin-script dates,
+and Latin monospaced or verbatim text. The commands \cmd{\lr}
+and \cmd{\rl} switch the active language context in addition
+to setting the script direction, and are not part of the
+standard \textsf{bidi} package.
+
+\begin{tabularx}{\linewidth}{@{}llX@{}}
+    \toprule
+    Command & Arguments & Description \\
+    \midrule
+    \verb|\lr| & \verb|{text}| & Typeset text using LTR language \\
+    \verb|\rl| & \verb|{text}| & Typeset text using RTL language \\
+    \verb|\latintoday| & -- & Print current date in Latin script \\
+    \verb|\latinttfamily| & -- & Select Latin monospaced font family \\
+    \verb|\latinverb| & \textsl{verb} & Typeset verbatim code in Latin \\
+    \verb|\latinverb*| & \textsl{verb} & Typeset verbatim with visible spaces \\
+    \bottomrule
+\end{tabularx}
 
 \subsection{Environments}
 
 \begin{center}
     \begin{tabular}{@{}ll@{}}
         \toprule
-        Environment & Description                                          \\
+        Environment & Description \\
         \midrule
-        \texttt{RTL}
-                    & Typesets its contents from right to left             \\
-        \texttt{LTR}
-                    & Typesets its contents from left to right             \\
         \texttt{latin}
-                    & Typesets its contents in the selected Latin language \\
-                            \texttt{latinverbatim}
-                    & Typesets a verbatim block in the \texttt{code} language           \\
-                    \texttt{latinverbatim*}
-                    & Same, displaying spaces                            \\
+        & Typesets its contents in the selected Latin language \\
+        \texttt{latinverbatim}
+        & Typesets a verbatim block in the \texttt{code} language \\
+        \texttt{latinverbatim*}
+        & Same, displaying spaces \\
         \bottomrule
     \end{tabular}
 \end{center}
@@ -321,16 +417,16 @@ directional text, and code-related material:
 \begin{center}
     \begin{tabular}{@{}ll@{}}
         \toprule
-        Key & Used for                                               \\
+        Key & Used for \\
         \midrule
         \texttt{latin}
-            & The \texttt{latin} environment and Latin font commands \\
+        & The \texttt{latin} environment and Latin font commands \\
         \texttt{ltr}
-            & The \verb|\lr| command                                 \\
+        & The \verb|\lr| command \\
         \texttt{rtl}
-            & The \verb|\rl| command                                 \\
+        & The \verb|\rl| command \\
         \texttt{code}
-            & Code-related material                                  \\
+        & Code-related material \\
         \bottomrule
     \end{tabular}
 \end{center}
@@ -349,26 +445,25 @@ The automatic selections are determined as follows:
 
 \begin{description}
     \item[\texttt{latin}:]
-          The main language if it uses the Latin script; otherwise, the first
-          loaded Latin-script language; otherwise, \texttt{english}.
+    The main language if it uses the Latin script; otherwise, the first
+    loaded Latin-script language; otherwise, \texttt{english}.
 
     \item[\texttt{ltr}:]
-          The main language if it is left to right; otherwise, the first loaded
-          left-to-right language; otherwise, \texttt{english}.
+    The main language if it is left to right; otherwise, the first loaded
+    left-to-right language; otherwise, \texttt{english}.
 
     \item[\texttt{rtl}:]
-          The main language if it is right to left; otherwise, the first loaded
-          right-to-left language; otherwise, \texttt{arabic}.
+    The main language if it is right to left; otherwise, the first loaded
+    right-to-left language; otherwise, \texttt{arabic}.
 
     \item[\texttt{code}:]
-          The main Latin-script language, if available; otherwise,
-          \texttt{english}, if loaded; otherwise, the first loaded
-          Latin-script language; otherwise, the main or first loaded
-          left-to-right language; finally, the main language.
+    The main Latin-script language, if available; otherwise,
+    \texttt{english}, if loaded; otherwise, the first loaded
+    Latin-script language; otherwise, the main or first loaded
+    left-to-right language; finally, the main language.
 \end{description}
 
 Languages should be declared before their fonts are configured.
-
 
 
 \section{Patches}
@@ -431,14 +526,14 @@ corresponding engine or package is in use.
 
     \item \textbf{RTL-main footnote-rule patch}
     \begin{enumerate}
-        \item With Xe\LaTeX~and Lua\LaTeX, typesets the footnote rule
-        in a stable LTR direction when the main language is RTL.
+        \item Typesets the default rule on the right in RTL-main documents,
+        with stable LTR geometry, preserving explicit rule selections.
     \end{enumerate}
 \end{enumerate}
 
 
 
-\section{Minted}
+\section{Minted package}
 
 BabelBidi supports the \textsf{minted} package:
 
@@ -489,20 +584,6 @@ Line numbers use Latin digits.
 
 
 
-
-\section{Current Limitations and Possible Directions}
-
-\begin{enumerate}
-    \item \textbf{Incomplete API coverage.}
-          Several APIs provided by \textsf{luabidi} are not yet defined by
-          \textsf{babelbidi}. Extending this API coverage is a priority for
-          the next release.
-
-    \item \textbf{Limited compatibility testing.}
-          The package has not been tested with every combination of
-          document class and third-party package. Broader testing may help
-          identify interactions that require further work.
-\end{enumerate}
 
 
 \section{License}
