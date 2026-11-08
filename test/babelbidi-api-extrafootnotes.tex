@@ -1,0 +1,66 @@
+% Test babelbidi-api-extrafootnotes.def; compile twice with any engine.
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage[main=english,extrafootnotefeatures]{babelbidi}
+% bidi requires paragraph layout initialization in the preamble.
+\paragraphfootnotes
+
+\begin{document}
+\section{Paragraph footnotes}
+A\footnote{Alpha note.\label{note:alpha}}
+B\footnote{Bravo note.} C\footnote{Charlie note.}
+D\footnote{Delta note.}
+RTL A\RTLfootnote{\LR{RTL alpha.}}
+RTL B\RTLfootnote{\LR{RTL bravo.}}
+Reference to note~\ref{note:alpha}.
+
+\medskip
+\begin{minipage}{.8\linewidth}
+    A\footnote{Mini alpha.} B\footnote{Mini bravo.}
+    C\footnote{Mini charlie.} D\footnote{Mini delta.}
+\end{minipage}
+
+\clearpage
+\normalfootnotes*
+Normal layout restored.\footnote{Normal note without reserved mark space.}
+\clearpage
+\section{Column footnotes}
+
+\twocolumnfootnotes
+Two columns: A\footnote{Alpha.} B\footnote{Bravo.}
+C\footnote{Charlie.} D\footnote{Delta.}
+RTL notes: A\RTLfootnote{\LR{RTL alpha.}} B\RTLfootnote{\LR{RTL bravo.}}
+
+\medskip
+{\threecolumnfootnotes
+\noindent\begin{minipage}{\linewidth}
+    Three columns in a minipage:
+    A\footnote{Alpha.} B\footnote{Bravo.} C\footnote{Charlie.}
+    D\footnote{Delta.} E\footnote{Echo.} F\footnote{Foxtrot.}
+\end{minipage}}
+
+% Starred forms remove the reserved space for the footnote mark.
+\newcommand{\ColumnNoteSample}[2]{%
+    \par\medskip
+    {#1*\relax
+    \noindent\begin{minipage}{\linewidth}
+        #2 columns:
+        A\footnote{A.} B\footnote{B.} C\footnote{C.} D\footnote{D.}
+        E\footnote{E.} F\footnote{F.} G\footnote{G.} H\footnote{H.}
+        I\footnote{I.} J\footnote{J.}
+    \end{minipage}}%
+}
+\ColumnNoteSample{\fourcolumnfootnotes}{4}
+\ColumnNoteSample{\fivecolumnfootnotes}{5}
+\ColumnNoteSample{\sixcolumnfootnotes}{6}
+\ColumnNoteSample{\sevencolumnfootnotes}{7}
+\ColumnNoteSample{\eightcolumnfootnotes}{8}
+\ColumnNoteSample{\ninecolumnfootnotes}{9}
+\ColumnNoteSample{\tencolumnfootnotes}{10}
+
+\clearpage
+\normalfootnotes
+Normal layout restored.\footnote{A normal footnote.}
+
+
+\end{document}

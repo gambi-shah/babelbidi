@@ -1,28 +1,25 @@
-LaTeX Package: BabelBidi v0.5.0 2026-11-01
-----------------------------------------
+# LaTeX Package: BabelBidi v0.6.0 (2026-11-08)
 
 An extension to Babel’s bidirectional support.
 
 ## Description
 
-`babelbidi` extends Babel with bidirectional typesetting, direction-sensitive layout fixes, language selection, and font configuration. It supports LuaTeX (recommended), XeTeX, and pdfTeX.
+This package extends [Babel](https://ctan.org/pkg/babel)’s bidirectional support by correcting direction-sensitive behaviour, providing text-direction and layout controls, and adding interfaces for language selection and font configuration, including glyph fallback with LuaTeX. It supports Babel languages and works with LuaTeX (recommended), XeTeX, or pdfTeX, with either an LTR or RTL main language.
 
 ## Features
 
-- Luabidi-compatible public API across all three engines.
-- Direction commands, inline text, environments, and directional boxes.
-- Explicitly directed footnotes and configurable footnote rules.
+- BabelBidi uses `bidi`'s native interfaces on XeTeX and provides the corresponding user-level interfaces through Babel on LuaTeX and pdfTeX.
+- Direction commands, environments, directional boxes, and overlapping text.
+- Directed footnotes and title notes, configurable footnote rules, and optional extra footnote layouts.
+- Direction controls for lists, bibliographies, cases, margin notes, and columns.
 - Automatic auxiliary-language selection.
-- Font configuration and LuaTeX glyph fallback.
-- Layout patches for common packages.
+- Font configuration, LuaTeX glyph fallback, and layout patches for commonly used packages.
 
 ## Installation
 
 **CTAN:** `tlmgr install babelbidi` — [Package page](https://ctan.org/pkg/babelbidi)
 
 **GitHub:** `git clone https://github.com/gambi-shah/babelbidi.git`
-
-Copy the files into a TeX-searchable directory or keep them beside your document.
 
 ## Usage
 
@@ -35,25 +32,27 @@ Hey world!
 \end{document}
 ~~~
 
-Compile with LuaLaTeX (recommended), XeLaTeX, or pdfTeX. Babel language options are supported; see the Babel manual.
+Compile with LuaLaTeX (recommended), XeLaTeX, or pdfLaTeX. Babel language options are supported.
 
 ## Interfaces
 
-BabelBidi provides LuaBidi’s public `luabidi` interfaces across LuaTeX, XeTeX, and pdfTeX: direction commands and environments, `\LRE`, `\RLE`, `\LR`, `\RL`, directional boxes, and directed footnotes with configurable rules.
+BabelBidi provides the complete user-level interfaces of `bidi` and `luabidi`, including direction commands and environments, directional boxes, footnote controls, list and bibliography direction, the `RTLcases` environment, counter separators, margin notes, and column-order controls.
 
-Additional interfaces include `\lr{...}` and `\rl{...}` for language-aware inline text; `\latinverb` and `latinverbatim` (including starred forms); font commands such as `\settextfont` and `\deflatinfont`; and LuaTeX’s `\fontfallback`.
+The optional `extrafootnotefeatures` package option enables paragraph and two- to ten-column footnote layouts.
 
-Code layout patches apply to non-Latin main scripts. Related packages may be loaded before or after BabelBidi.
+Additional interfaces include language-aware `\lr{...}` and `\rl{...}`, `\latinverb` and `\latinverbatim`, font commands such as `\settextfont` and `\deflatinfont`, and LuaTeX's `\fontfallback`.
+
+Layout patches apply to non-Latin main scripts. Related packages may be loaded before or after BabelBidi.
 
 ## Language Selection
 
-Auxiliary Latin, LTR, RTL, and code languages are selected automatically and updated after each `\babelprovide` call. The `latin`, `ltr`, `rtl`, and `code` options override these choices. Declare languages before setting fonts. Babel’s `nil` is ignored; defaults are `english` for Latin, LTR, and code, and `arabic` for RTL.
+Auxiliary Latin, LTR, RTL, and code languages are selected automatically and updated after each `\babelprovide` call. The `latin`, `ltr`, `rtl`, and `code` options override these choices. Declare languages before configuring fonts.
 
 ## Documentation
 
-See the [main manual](doc/babelbidi.pdf) for configuration and examples.
+See the [main manual](doc/babelbidi.pdf) for configuration details and examples.
 
-## License and maintainer
+## License and Maintainer
 
 - License: LPPL 1.3c or later.
 - Maintainer: Amer Amikhteh.

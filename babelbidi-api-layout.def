@@ -1,0 +1,516 @@
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-api-layout.def}[2026/11/08 v0.1.0 Additional Bidi API for Babelbidi]
+
+\makeatletter
+
+% XeTeX uses bidi's original interfaces, including its footnote machinery.
+\ifXeTeX
+    \makeatother
+    \expandafter\endinput
+\fi
+
+
+% ------------------------------------------
+% Footnote direction policy
+% ------------------------------------------
+
+% Keep Babel's default until the user explicitly selects a direction.
+% Assignments are local, as are bidi's footnote direction switches.
+\def\bbd@fn@policy{-1}
+\def\bbd@fn@explicit{-1}
+
+\ProvideDocumentCommand{\setfootnoteRL}{}{\def\bbd@fn@policy{1}}
+\ProvideDocumentCommand{\setfootnoteLR}{}{\def\bbd@fn@policy{0}}
+\DeclareCommandCopy{\unsetfootnoteRL}{\setfootnoteLR}
+\DeclareCommandCopy{\unsetfootnoteLR}{\setfootnoteRL}
+
+
+
+% The existing directed footnotes take precedence over the policy.
+\let\bbd@bidi@footnote\bbd@footnote
+\long\def\bbd@footnote#1#2#3{%
+    \begingroup
+    \def\bbd@fn@explicit{#1}%
+    \bbd@bidi@footnote{#1}{#2}{#3}%
+    \endgroup
+}
+
+% Resolve the formatter at insertion time: titles and minipages may replace it.
+\long\def\bbd@fn@insert#1#2{%
+    \begingroup
+    \ifnum\bbd@fn@explicit<\z@
+        \let\bbd@fn@selected\bbd@fn@policy
+    \else
+        \let\bbd@fn@selected\bbd@fn@explicit
+    \fi
+    \ifPDFTeX
+        \bbd@pdf@remember@fn@dir{\bbd@fn@selected}%
+    \fi
+    \let\bbd@bidi@makefntext\@makefntext
+    % Also synchronize the existing LuaTeX footnote formatter.
+    \def\bbd@fn@dir{\bbd@footnote@dir{\bbd@fn@selected}}%
+    \long\def\@makefntext##1{%
+        \bbd@fn@dir
+        \bbd@bidi@makefntext{{\bbd@fn@dir##1}}%
+    }%
+    #1{#2}%
+    \endgroup
+}
+
+% Leave unconfigured footnotes unread, including verbatim-aware scanners.
+\def\bbd@fn@dispatch#1{%
+    \ifnum\bbd@fn@explicit<\z@
+        \ifnum\bbd@fn@policy<\z@
+            \let\bbd@fn@next#1%
+        \else
+            \def\bbd@fn@next{\bbd@fn@insert#1}%
+        \fi
+    \else
+        \def\bbd@fn@next{\bbd@fn@insert#1}%
+    \fi
+    \bbd@fn@next
+}
+
+% Babel wraps ordinary footnotes in their source language. Apply the policy
+% inside that wrapper, so language selection cannot reset the text direction.
+\long\def\bbd@fn@language#1#2{%
+    #1{\bbd@footnote@dir{\bbd@fn@policy}#2}%
+}
+
+% Install after BabelBidi's engine patches and preamble package patches.
+\AddToHook{begindocument/before}[babelbidi/bidi-api]{%
+    \ifLuaTeX
+        \let\bbd@bidi@babel@footnote\bbl@footnote
+        \def\bbl@footnote#1#2#3{%
+            \ifnum\bbd@fn@policy<\z@
+                \def\bbd@fn@next{\bbd@bidi@babel@footnote{#1}{#2}{#3}}%
+            \else
+                \def\bbd@fn@next{\bbd@bidi@babel@footnote{\bbd@fn@language{#1}}{#2}{#3}}%
+            \fi
+            \bbd@fn@next
+        }%
+    \fi
+    \let\bbd@bidi@footnotetext\@footnotetext
+    \def\@footnotetext{\bbd@fn@dispatch\bbd@bidi@footnotetext}%
+    \let\bbd@bidi@mpfootnotetext\@mpfootnotetext
+    \def\@mpfootnotetext{\bbd@fn@dispatch\bbd@bidi@mpfootnotetext}%
+}
+
+
+\DeclareHookRule{begindocument/before}{babelbidi/bidi-api}{after}{babelbidi}
+
+
+% ------------------------------------------
+% Directed footnote text and title thanks
+% ------------------------------------------
+
+\long\def\bbd@footnotetext#1#2#3{%
+    \begingroup
+    \def\bbd@fn@explicit{#1}%
+    \IfNoValueTF{#2}%
+    {\footnotetext{{\bbd@footnote@dir{#1}#3}}}%
+    {\footnotetext[#2]{{\bbd@footnote@dir{#1}#3}}}%
+    \endgroup
+}
+
+\ProvideDocumentCommand{\LTRfootnotetext}{o +m}{%
+    \bbd@footnotetext{0}{#1}{#2}%
+}
+
+\ProvideDocumentCommand{\RTLfootnotetext}{o +m}{%
+    \bbd@footnotetext{1}{#1}{#2}%
+}
+
+\ProvideDocumentCommand{\LTRthanks}{m}{%
+    \footnotemark
+    \protected@xdef\@thanks{\@thanks
+        \protect\LTRfootnotetext[\the\c@footnote]{#1}}%
+}
+
+\ProvideDocumentCommand{\RTLthanks}{m}{%
+    \footnotemark
+    \protected@xdef\@thanks{\@thanks
+        \protect\RTLfootnotetext[\the\c@footnote]{#1}}%
+}
+
+
+% ------------------------------------------
+% Footnote rule alias
+% ------------------------------------------
+
+\DeclareCommandCopy{\LRfootnoterule}{\leftfootnoterule}
+\DeclareCommandCopy{\RLfootnoterule}{\rightfootnoterule}
+
+
+
+% ------------------------------------------
+% Direction-sensitive overlaps
+% ------------------------------------------
+
+\ProvideDocumentCommand{\bidillap}{m}{%
+    \if@RTL
+        \hboxL to \z@{\RLE{#1}\hss}%
+    \else
+        \hboxL to \z@{\hss#1}%
+    \fi
+}
+
+\ProvideDocumentCommand{\bidirlap}{m}{%
+    \if@RTL
+        \hboxL to \z@{\hss\RLE{#1}}%
+    \else
+        \hboxL to \z@{#1\hss}%
+    \fi
+}
+
+
+% ------------------------------------------
+% Directional list items
+% ------------------------------------------
+
+\def\bbd@items@shape{%
+    \ifLuaTeX
+        % Babel sets shapemode on a direction mismatch but does not reset it.
+        \shapemode\z@
+        \@ifundefined{bbl@listparshape}%
+        {\parshape\@ne\@totalleftmargin\linewidth}%
+        {\bbl@listparshape\@ne\@totalleftmargin\linewidth}%
+    \else
+        \ifnum\bbl@thetextdir>\z@
+            \parshape\@ne
+            \dimexpr\hsize-\@totalleftmargin-\linewidth\relax\linewidth
+        \else
+            \parshape\@ne\@totalleftmargin\linewidth
+        \fi
+    \fi
+}
+
+% Nested lists must recompute their shape in the selected direction too.
+\long\def\bbd@items@list#1#2{%
+    \bbd@items@original@list{#1}{#2}%
+    \bbd@items@shape
+    \ignorespaces
+}
+
+\def\bbd@items#1{%
+    \par
+    \bbd@setdir{#1}%
+    \bbd@items@shape
+    \ifx\list\bbd@items@list\else
+        \let\bbd@items@original@list\list
+        \let\list\bbd@items@list
+    \fi
+    \ignorespaces
+}
+
+\ProvideDocumentEnvironment{LTRitems}{}
+{\bbd@items{0}}
+{\par}
+
+\ProvideDocumentEnvironment{RTLitems}{}
+{\bbd@items{1}}
+{\par}
+
+% bidi gives bibliography groups the same layout as ordinary item groups.
+\DeclareCommandCopy{\LTRbibitems}{\LTRitems}
+\DeclareCommandCopy{\endLTRbibitems}{\endLTRitems}
+\DeclareCommandCopy{\RTLbibitems}{\RTLitems}
+\DeclareCommandCopy{\endRTLbibitems}{\endRTLitems}
+
+
+% ------------------------------------------
+% Bibliography item direction, independent of the heading
+% ------------------------------------------
+
+\def\bbd@bib@dir{-1}
+
+\ProvideDocumentCommand{\setLTRbibitems}{}{\def\bbd@bib@dir{0}}
+\ProvideDocumentCommand{\setRTLbibitems}{}{\def\bbd@bib@dir{1}}
+\ProvideDocumentCommand{\setdefaultbibitems}{}{\def\bbd@bib@dir{-1}}
+
+% Delay the switch until the bibliography opens its list: the heading and
+% running marks retain the surrounding direction. Restore \list immediately.
+\AddToHook{env/thebibliography/begin}{%
+    \ifPDFTeX
+        % Keep brackets and multi-digit labels intact in TeXXeT paragraphs.
+        \let\bbd@bib@label\@biblabel
+        \def\@biblabel#1{\hboxL{\bbd@bib@label{#1}}}%
+    \fi
+    \ifnum\bbd@bib@dir<\z@\else
+        \let\bbd@bib@list\list
+        \long\def\list#1#2{%
+            \let\list\bbd@bib@list
+            \bbd@setdir{\bbd@bib@dir}%
+            \list{#1}{#2}%
+            \bbd@items@shape
+            \ignorespaces
+        }%
+    \fi
+}
+
+
+% ------------------------------------------
+% Cases with a right-hand brace
+% ------------------------------------------
+
+% Like bidi, cells use text mode; mathematics is entered explicitly with $.
+\ProvideDocumentEnvironment{RTLcases}{+b}
+{%
+    \leavevmode
+    \hboxL{%
+        $\left.\hboxR{%
+                \def\arraystretch{1.2}%
+                % Physical left alignment becomes right alignment in this box.
+                % Disable our LuaTeX table swap locally, so both engines agree.
+                \let\bbd@swap@lr@chnum\relax
+                \begin{tabular}{@{}l@{\quad}l@{}}%
+                    #1%
+                \end{tabular}%
+            }\right\rbrace$%
+    }%
+}
+{}
+
+
+% ------------------------------------------
+% Separator in compound counter representations
+% ------------------------------------------
+
+\def\@SepMark{.}
+\ProvideDocumentCommand{\SepMark}{m}{\gdef\@SepMark{#1}}
+\def\@thmcountersep{\@SepMark}
+
+% Replace only a separator following the named parent counter. Keep the
+% rest of the formatter, including Babel's localized digits, unchanged.
+\def\bbd@sep@counter#1#2{%
+    \@ifundefined{the#1}{}{%
+        \expandafter\bbd@sep@counter@i\csname the#2\endcsname{#1}%
+    }%
+}
+
+\def\bbd@sep@counter@i#1#2{%
+    \expandafter\bbl@sreplace\csname the#2\endcsname
+    {#1.}{#1\@SepMark}%
+}
+
+\def\bbd@sep@counters{%
+    \bbd@sep@counter{section}{chapter}%
+    \bbd@sep@counter{subsection}{section}%
+    \bbd@sep@counter{subsubsection}{subsection}%
+    \bbd@sep@counter{paragraph}{subsubsection}%
+    \bbd@sep@counter{subparagraph}{paragraph}%
+    \bbd@sep@counter{equation}{chapter}%
+    \bbd@sep@counter{figure}{chapter}%
+    \bbd@sep@counter{table}{chapter}%
+}
+
+% Support preamble use too, then incorporate later package/class changes.
+\bbd@sep@counters
+\AddToHook{begindocument/before}{\bbd@sep@counters}
+
+% amsmath's \numberwithin creates a new formatter at the point of use.
+\AddToHook{package/amsmath/after}{%
+    \DeclareCommandCopy{\bbd@numberwithin}{\numberwithin}%
+    \RenewDocumentCommand{\numberwithin}{s O{\arabic} m m}{%
+        \IfBooleanTF{#1}%
+        {\bbd@numberwithin*[#2]{#3}{#4}}%
+        {%
+            \bbd@numberwithin[#2]{#3}{#4}%
+            \bbd@sep@counter{#3}{#4}%
+        }%
+    }%
+}
+
+\AddToHook{package/amsthm/after}{%
+    \def\@thmcountersep{\@SepMark}%
+}
+
+
+% ------------------------------------------
+% Margin note direction and placement
+% ------------------------------------------
+
+\def\bbd@margin@policy{-1}
+
+\ProvideDocumentCommand{\setRTLmarginpar}{}{\def\bbd@margin@policy{1}}
+\ProvideDocumentCommand{\setLTRmarginpar}{}{\def\bbd@margin@policy{0}}
+\ProvideDocumentCommand{\setdefaultmarginpar}{}{\def\bbd@margin@policy{-1}}
+
+\def\bbd@margin@direction{%
+    \ifnum\bbd@margin@policy<\z@
+        \the\bbl@thetextdir
+    \else
+        \bbd@margin@policy
+    \fi
+}
+
+\def\bbd@margin@setdir{%
+    \edef\bbd@margin@dir{\bbd@margin@direction}%
+    \bbd@setdir{\bbd@margin@dir}%
+}
+
+% Explicit commands change the note's text direction, not its placement.
+% Resolve \marginpar at use time and retain its optional left-hand text.
+\long\def\bbd@marginpar#1#2#3{%
+    \IfNoValueTF{#2}%
+    {\marginpar{{\bbd@setdir{#1}#3\par}}}%
+    {\marginpar[{\bbd@setdir{#1}#2\par}]%
+        {{\bbd@setdir{#1}#3\par}}}%
+}
+
+\ProvideDocumentCommand{\LTRmarginpar}{o +m}{%
+    \bbd@marginpar{0}{#1}{#2}%
+}
+
+\ProvideDocumentCommand{\RTLmarginpar}{o +m}{%
+    \bbd@marginpar{1}{#1}{#2}%
+}
+
+% Mirror only the final placement box. LaTeX still selects the optional text
+% and handles page parity, reverse margins, columns and vertical collisions.
+\long\def\bbd@margin@place#1{%
+    \ifnum\bbd@margin@direction>\z@
+        \hboxR to \columnwidth{#1}%
+    \else
+        \hboxL to \columnwidth{#1}%
+    \fi
+}
+
+\AddToHook{begindocument/before}{%
+    \ifPDFTeX
+        \let\bbd@margin@reset\@marginparreset
+        \def\@marginparreset{%
+            \bbd@margin@reset
+            % A note may be placed in a box with the opposite direction.
+            % Give LTR paragraphs an explicit TeXXeT run as well as RTL ones.
+            \def\bbl@xeeverypar{%
+                \ifnum\bbl@thepardir=\z@
+                    \beginL
+                \else
+                    {\setbox\z@\lastbox\beginR\box\z@}%
+                \fi
+            }%
+        }%
+    \fi
+    \let\bbd@margin@ympar\@ympar
+    \long\def\@ympar#1{%
+        % As in bidi, the policy applies to ordinary notes without optional
+        % text; the optional form retains the surrounding text direction.
+        \bbd@margin@ympar{{\bbd@margin@setdir#1\par}}%
+    }%
+    \bbl@sreplace\@addmarginpar
+    {\hb@xt@\columnwidth}{\bbd@margin@place}%
+}
+
+
+% ------------------------------------------
+% Two-column order, independent of the text direction
+% ------------------------------------------
+
+\def\bbd@dblcol@dir{-1}
+
+\ProvideDocumentCommand{\RTLdblcol}{}{\def\bbd@dblcol@dir{1}}
+\ProvideDocumentCommand{\LTRdblcol}{}{\def\bbd@dblcol@dir{0}}
+
+\def\bbd@dblcol@direction{%
+    \ifnum\bbd@dblcol@dir<\z@
+        \bbd@main@dir
+    \else
+        \bbd@dblcol@dir
+    \fi
+}
+
+% Change only the box joining the two completed columns. Keep the output
+% routine's float handling, marks and column contents intact.
+\long\def\bbd@dblcol@box#1{%
+    \hboxL to \textwidth{%
+        \ifnum\bbd@dblcol@direction>\z@
+            % Swap the register names locally, not the contents of the boxes.
+            % A directional outer box would also reverse pdfTeX's text.
+            \let\bbd@dblcol@first\@leftcolumn
+            \let\@leftcolumn\@outputbox
+            \let\@outputbox\bbd@dblcol@first
+        \fi
+        #1%
+    }%
+}
+
+\AddToHook{begindocument/before}{%
+    \bbl@sreplace\@outputdblcol
+    {\hb@xt@\textwidth}{\bbd@dblcol@box}%
+    % Babel's columns layout may already have replaced the same box.
+    \bbl@sreplace\@outputdblcol
+    {\bbl@outputhbox}{\bbd@dblcol@box}%
+}
+
+
+% ------------------------------------------
+% Continued footnote rules and direction diagnostics
+% ------------------------------------------
+
+\def\bbd@split@rule{%
+    \ifx\@listdepth\@mplistdepth
+        \bbd@split@mp
+    \else
+        \ifnum\bbd@split@previous=\z@
+            \bbd@split@page
+        \else
+            \kern-3\p@\hrule\kern2.6\p@
+        \fi
+        \xdef\bbd@split@previous{\the\insertpenalties}%
+    \fi
+}
+
+\ProvideDocumentCommand{\SplitFootnoteRule}{}{%
+    \ifx\footnoterule\bbd@split@rule\else
+        \gdef\bbd@split@previous{0}%
+        \DeclareCommandCopy{\bbd@split@page}{\footnoterule}%
+        \DeclareCommandCopy{\bbd@split@mp}{\footnoterule}%
+        \DeclareCommandCopy{\footnoterule}{\bbd@split@rule}%
+    \fi
+}
+
+\newif\ifbbd@fn@debug
+\ProvideDocumentCommand{\debugfootnotedirection}{}{\bbd@fn@debugtrue}
+
+% Like bidi, diagnostics are emitted when the automatic rule is evaluated.
+\DeclareCommandCopy{\bbd@fn@auto@original}{\bbd@fn@rule@auto}
+\def\bbd@fn@rule@auto{%
+    \bbd@fn@auto@original
+    \ifbbd@fn@debug
+        \begingroup
+        \ifLuaTeX
+            \count@\bbd@fn@rule@dir
+        \else
+            \count@\bbd@pdf@fn@dir
+        \fi
+        \typeout{[footdir] \number\c@page: \ifnum\count@<\z@ else\else
+                \ifnum\count@=\z@ left\else right\fi\fi}%
+        \endgroup
+    \fi
+}
+
+\makeatother
+
+\endinput

@@ -1,0 +1,326 @@
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-api-extrafootnotes.def}[2026/11/08 v0.1.0 Extra footnote layouts for Babelbidi]
+
+\makeatletter
+
+% The widths, direction-separated streams and successive vertical splits
+% follow extrafootnotefeatures-xetex-bidi.def (Vafa Khalighi, LPPL 1.3c+).
+% Reuse the existing insertion commands instead of replacing their language,
+% label and hyperlink handling. XeTeX loads bidi's implementation directly.
+
+\newinsert\bbd@extra@ltr
+\newinsert\bbd@extra@rtl
+\newinsert\bbd@extra@mpltr
+\newinsert\bbd@extra@mprtl
+\newbox\bbd@extra@rest
+\newbox\bbd@extra@piece
+\newbox\bbd@extra@row
+\newbox\bbd@extra@note
+\newcount\bbd@extra@remaining
+\newdimen\bbd@extra@gap
+\newdimen\bbd@extra@width
+\newdimen\bbd@extra@height
+\newdimen\bbd@extra@fullwidth
+
+\def\bbd@extra@mode{1}
+\def\bbd@extra@layout{2}
+\newdimen\bbd@extra@markwidth
+\bbd@extra@markwidth1em
+\def\bbd@extra@fraction{.45}
+
+\skip\bbd@extra@ltr\skip\footins
+\skip\bbd@extra@rtl\skip\footins
+\skip\bbd@extra@mpltr\skip\@mpfootins
+\skip\bbd@extra@mprtl\skip\@mpfootins
+
+\def\bbd@extra@select#1#2{%
+    \def\bbd@extra@mode{#1}%
+    \IfBooleanTF{#2}%
+    {\bbd@extra@markwidth\z@}%
+    {\bbd@extra@markwidth1em}%
+    \ifnum#1=\@ne\else
+        \def\bbd@extra@layout{#1}%
+        \skip\bbd@extra@ltr\skip\footins
+        \skip\bbd@extra@rtl\skip\footins
+        \ifnum#1=\z@
+            \begingroup
+            \footnotesize
+            \@tempdima\footnotesep
+            \advance\@tempdima by -\ht\strutbox
+            \ifdim\@tempdima<\z@\@tempdima\z@\fi
+            \advance\@tempdima by .5\normalbaselineskip
+            \xdef\bbd@extra@paraskip{\the\@tempdima}%
+            \endgroup
+            \advance\skip\bbd@extra@ltr by \bbd@extra@paraskip
+            \advance\skip\bbd@extra@rtl by \bbd@extra@paraskip
+            \count@=1000
+            \@tempdima\dimen\footins
+        \else
+            \count@=1000 \divide\count@ by #1\relax
+            \@tempdima\dimen\footins \multiply\@tempdima by #1\relax
+            \edef\bbd@extra@fraction{\ifcase#1\or1\or.45\or.3\or.25\or.2\or.16\or.142\or.125\or.1\or.1\fi}%
+        \fi
+        \count\bbd@extra@ltr\count@
+        \count\bbd@extra@rtl\count@
+        \dimen\bbd@extra@ltr\@tempdima
+        \dimen\bbd@extra@rtl\@tempdima
+    \fi
+}
+
+\ProvideDocumentCommand{\normalfootnotes}{s}{\bbd@extra@select{1}{#1}}
+\ProvideDocumentCommand{\twocolumnfootnotes}{s}{\bbd@extra@select{2}{#1}}
+\ProvideDocumentCommand{\threecolumnfootnotes}{s}{\bbd@extra@select{3}{#1}}
+\ProvideDocumentCommand{\fourcolumnfootnotes}{s}{\bbd@extra@select{4}{#1}}
+\ProvideDocumentCommand{\fivecolumnfootnotes}{s}{\bbd@extra@select{5}{#1}}
+\ProvideDocumentCommand{\sixcolumnfootnotes}{s}{\bbd@extra@select{6}{#1}}
+\ProvideDocumentCommand{\sevencolumnfootnotes}{s}{\bbd@extra@select{7}{#1}}
+\ProvideDocumentCommand{\eightcolumnfootnotes}{s}{\bbd@extra@select{8}{#1}}
+\ProvideDocumentCommand{\ninecolumnfootnotes}{s}{\bbd@extra@select{9}{#1}}
+\ProvideDocumentCommand{\tencolumnfootnotes}{s}{\bbd@extra@select{10}{#1}}
+\ProvideDocumentCommand{\paragraphfootnotes}{s}{\bbd@extra@select{0}{#1}}
+
+% bidi uses a full-width rule with this option and disables rule selectors.
+\def\footnoterule{\kern-3\p@\hrule\@width\columnwidth\kern2.6\p@}
+\RenewDocumentCommand{\autofootnoterule}{}{}
+\RenewDocumentCommand{\leftfootnoterule}{}{}
+\RenewDocumentCommand{\rightfootnoterule}{}{}
+\RenewDocumentCommand{\textwidthfootnoterule}{}{}
+\DeclareCommandCopy{\LRfootnoterule}{\leftfootnoterule}
+\DeclareCommandCopy{\RLfootnoterule}{\rightfootnoterule}
+
+\def\bbd@extra@direction{%
+    \ifnum\bbd@fn@explicit<\z@
+        \ifnum\bbd@fn@policy<\z@
+            \the\bbl@thetextdir
+        \else
+            \bbd@fn@policy
+        \fi
+    \else
+        \bbd@fn@explicit
+    \fi
+}
+
+\long\def\bbd@extra@insert#1#2#3{%
+    \begingroup
+    \edef\bbd@extra@dir{\bbd@extra@direction}%
+    \bbd@extra@fullwidth\columnwidth
+    \ifnum\bbd@extra@mode=\@ne\else
+        \ifnum#1=\z@
+            \ifnum\bbd@extra@dir=\z@
+                \let\footins\bbd@extra@ltr
+            \else
+                \let\footins\bbd@extra@rtl
+            \fi
+        \else
+            \ifnum\bbd@extra@dir=\z@
+                \let\@mpfootins\bbd@extra@mpltr
+            \else
+                \let\@mpfootins\bbd@extra@mprtl
+            \fi
+        \fi
+        \ifnum\bbd@extra@mode>\@ne
+            \columnwidth\bbd@extra@fraction\columnwidth
+        \fi
+    \fi
+    \let\@makefntext\bbd@extra@format
+    #2{#3}%
+    \endgroup
+}
+
+\def\bbd@extra@mark{%
+    \ifdim\bbd@extra@markwidth=\z@
+        \hboxL{\@makefnmark}%
+    \else
+        \hboxL to \bbd@extra@markwidth{%
+            \ifnum\bbd@extra@dir=\z@\hss\fi
+            \@makefnmark
+            \ifnum\bbd@extra@dir>\z@\hss\fi
+        }%
+    \fi%
+}
+
+\long\def\bbd@extra@format#1{%
+    \bbd@footnote@dir{\bbd@extra@dir}%
+    \parindent\z@
+    \tolerance5000
+    \ifnum\bbd@extra@mode=\z@
+        \bbd@extra@paranote{#1}%
+    \else
+        \ifnum\bbd@extra@mode=\@ne\parindent1em\fi
+        \noindent\bbd@extra@mark#1\par
+        \ifnum\bbd@extra@mode>\@ne\allowbreak\fi
+    \fi
+}
+
+% Store paragraph notes as breakable horizontal material. TeX reserves an
+% estimated height for each note, then the output routine reflows the stream.
+\long\def\bbd@extra@paranote#1{%
+    \setbox\bbd@extra@note\hbox{%
+        \bbl@textdir{\bbd@extra@dir}%
+        \def\@finalstrut##1{\strut}%
+        \bbd@extra@mark\strut#1%
+        \penalty-10
+        \hskip1em plus.3em minus.3em
+    }%
+    \@tempdima\baselineskip
+    \multiply\@tempdima by 256
+    \@tempdimb\bbd@extra@fullwidth
+    \divide\@tempdimb by 256
+    \divide\@tempdima by \@tempdimb
+    \ht\bbd@extra@note=\strip@pt\@tempdima\wd\bbd@extra@note
+    \dp\bbd@extra@note\z@
+    \box\bbd@extra@note
+    \penalty\z@
+}
+
+% Join the two extra insertion classes before LaTeX builds its footnote area.
+% Mixed directions follow bidi's order: normal notes, RTL group, LTR group.
+\def\bbd@extra@join{%
+    \bbd@extra@append\footins\bbd@extra@rtl{1}%
+    \bbd@extra@append\footins\bbd@extra@ltr{0}%
+}
+\def\bbd@extra@joinmp{%
+    \bbd@extra@append\@mpfootins\bbd@extra@mprtl{1}%
+    \bbd@extra@append\@mpfootins\bbd@extra@mpltr{0}%
+}
+
+\def\bbd@extra@append#1#2#3{%
+    \ifvoid#2\else
+        \global\setbox#1\vbox{%
+            \ifvoid#1\else
+                \unvbox#1%
+                \@tempskipa\skip#2%
+                \ifnum\bbd@extra@layout=\z@
+                    \advance\@tempskipa by -\bbd@extra@paraskip
+                \fi
+                \vskip\@tempskipa
+            \fi
+            \begingroup
+            \bbd@setdir{#3}%
+            \reset@font\footnotesize
+            \@parboxrestore
+            \hsize\columnwidth
+            \ifnum\bbd@extra@layout=\z@
+                \bbd@extra@paragraph#2%
+            \else
+                \bbd@extra@columns#2{#3}%
+            \fi
+            \endgroup
+        }%
+        \global\setbox#2\box\voidb@x
+    \fi
+}
+
+% Split the remaining material by the number of columns still to fill, as
+% bidi does. Keep each column's own direction; only reverse their order.
+\def\bbd@extra@columns#1#2{%
+    \setbox\bbd@extra@rest\box#1%
+    \bbd@extra@remaining\bbd@extra@layout\relax
+    \bbd@extra@width\bbd@extra@fraction\columnwidth
+    \bbd@extra@gap\columnwidth
+    \advance\bbd@extra@gap by -\bbd@extra@layout\bbd@extra@width
+    \@tempcnta\bbd@extra@layout\relax \advance\@tempcnta\m@ne
+    \divide\bbd@extra@gap by \@tempcnta
+    \splittopskip\ht\strutbox
+    \splitmaxdepth\dp\strutbox
+    \vbadness\@M
+    \setbox\bbd@extra@row\hboxL{}%
+    \loop
+    \bbd@extra@height\ht\bbd@extra@rest
+    \divide\bbd@extra@height by \bbd@extra@remaining
+    \advance\bbd@extra@height by \splittopskip
+    \setbox\bbd@extra@piece\vsplit\bbd@extra@rest to \bbd@extra@height
+    \setbox\bbd@extra@piece\vtop{%
+        \hsize\bbd@extra@width
+        \kern\z@
+        \unvbox\bbd@extra@piece
+    }%
+    \wd\bbd@extra@piece\bbd@extra@width
+    \setbox\bbd@extra@row\hboxL{%
+        \ifnum#2=\z@
+            \unhbox\bbd@extra@row
+            \ifnum\bbd@extra@remaining<\bbd@extra@layout\relax
+                \kern\bbd@extra@gap
+            \fi
+            \box\bbd@extra@piece
+        \else
+            \box\bbd@extra@piece
+            \ifnum\bbd@extra@remaining<\bbd@extra@layout\relax
+                \kern\bbd@extra@gap
+            \fi
+            \unhbox\bbd@extra@row
+        \fi
+    }%
+    \advance\bbd@extra@remaining\m@ne
+    \ifnum\bbd@extra@remaining>\z@\repeat
+    \hboxL to \columnwidth{\unhbox\bbd@extra@row\hss}%
+}
+
+\def\bbd@extra@paragraph#1{%
+    \setbox\bbd@extra@row\hbox{}%
+    \setbox\bbd@extra@rest\vbox{%
+        \unvbox#1%
+        \bbd@extra@collect
+    }%
+    \parindent\z@
+    \noindent\unhbox\bbd@extra@row\unskip\par
+}
+\def\bbd@extra@collect{%
+    \unskip\unpenalty\unskip
+    \setbox\bbd@extra@note\lastbox
+    \ifhbox\bbd@extra@note
+        \global\setbox\bbd@extra@row\hbox{%
+            \unhbox\bbd@extra@note\unhbox\bbd@extra@row
+        }%
+        \expandafter\bbd@extra@collect
+    \fi
+}
+
+\def\bbd@extra@reinsert#1{%
+    \ifvoid#1\else\insert#1{\unvbox#1}\fi
+}
+
+\AddToHook{begindocument/before}[babelbidi/extrafootnotes]{%
+    \DeclareCommandCopy{\bbd@extra@footnotetext}{\@footnotetext}%
+    \DeclareCommandCopy{\bbd@extra@mpfootnotetext}{\@mpfootnotetext}%
+    \long\def\@footnotetext#1{%
+        \bbd@extra@insert{0}\bbd@extra@footnotetext{#1}%
+    }%
+    \long\def\@mpfootnotetext#1{%
+        \bbd@extra@insert{1}\bbd@extra@mpfootnotetext{#1}%
+    }%
+    \bbl@sreplace\endminipage
+    {\ifvoid\@mpfootins}{\bbd@extra@joinmp\ifvoid\@mpfootins}%
+}
+\DeclareHookRule{begindocument/before}{babelbidi/extrafootnotes}{after}{babelbidi/bidi-api}
+
+\AddToHook{cmd/@makecol/before}{\bbd@extra@join}
+\AddToHook{cmd/@doclearpage/before}{\bbd@extra@join}
+\AddToHook{cmd/@reinserts/after}{%
+    \bbd@extra@reinsert\bbd@extra@rtl
+    \bbd@extra@reinsert\bbd@extra@ltr
+}
+
+\makeatother
+\endinput

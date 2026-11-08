@@ -1,0 +1,213 @@
+% Test babelbidi-api-layout.def; compile twice with any of the three engines.
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage[main=english]{babelbidi}
+\newtheorem{apitest}{Theorem}[subsection]
+
+\title{Layout API}
+\author{First author\LTRthanks{LTR title footnote.}%
+    \and Second author\RTLthanks{RTL title footnote.}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Footnotes and overlaps}
+
+Separate mark\footnotemark
+\LTRfootnotetext{LTR text with the current footnote number.}
+Explicit mark\footnotemark[7]
+\RTLfootnotetext[7]{RTL text with an explicit number.\par Second paragraph.}
+
+{\setfootnoteRL
+    Ordinary RTL\footnote{Ordinary footnote forced RTL.}
+    Explicit LTR\LTRfootnote{Explicit LTR overrides the RTL setting.}
+    \setfootnoteLR
+    Ordinary LTR\footnote{Ordinary footnote forced LTR.}
+    Explicit RTL\RTLfootnote{Explicit RTL overrides the LTR setting.}
+    \setfootnoteRL\unsetfootnoteRL
+    Unset RTL\footnote{LTR after unsetfootnoteRL.}}
+
+Default restored\footnote{The original footnote behaviour is restored.}
+
+\medskip
+\begin{minipage}{.8\linewidth}
+    \setfootnoteRL
+    Minipage\footnote{RTL minipage footnote.}
+
+\end{minipage}
+
+\LRfootnoterule
+
+\bigskip
+\noindent LTR overlaps:\quad
+\hboxL{\vrule height 10pt\bidillap{L}\bidirlap{R}}
+
+\medskip
+\noindent RTL overlaps:\quad
+\hboxR{\vrule height 10pt\bidillap{L}\bidirlap{R}}
+
+\clearpage
+\section{Lists and bibliography}
+
+\begin{enumerate}
+    \item Default LTR item.
+    \begin{RTLitems}
+        \item RTL item.
+        \begin{itemize}
+            \item Nested RTL item.
+            \begin{LTRitems}
+                \item Nested LTR item.
+            \end{LTRitems}
+        \end{itemize}
+    \end{RTLitems}
+    \item LTR restored.
+\end{enumerate}
+
+
+
+\setRTLbibitems
+\begin{thebibliography}{9}
+    \bibitem{rtl} RTL entry with an LTR heading.
+    \begin{LTRbibitems}
+        \bibitem{ltr-group} LTR entry in an RTL bibliography.
+    \end{LTRbibitems}
+    \bibitem{rtl-restored} RTL restored.
+\end{thebibliography}
+
+\begin{RTL}
+    \setLTRbibitems
+    \begin{thebibliography}{9}
+        \bibitem{ltr} LTR entry with an RTL heading.
+        \begin{RTLbibitems}
+            \bibitem{rtl-group} RTL entry in an LTR bibliography.
+        \end{RTLbibitems}
+    \end{thebibliography}
+\end{RTL}
+
+\setdefaultbibitems
+\begin{thebibliography}{9}
+    \bibitem{default} Default bibliography direction restored.
+\end{thebibliography}
+
+\clearpage
+\section{Cases and numbering}
+
+\SepMark{-}
+\subsection{Hyphen separator}\label{api:hyphen}
+\subsubsection{Nested numbering}
+\numberwithin{equation}{subsection}
+
+\begin{equation}\label{api:cases}
+    f(x)=\begin{RTLcases}
+        $x^2$ & \LR{if $x>0$}\\[3pt]
+        $-x$  & \LR{otherwise}
+    \end{RTLcases}
+\end{equation}
+
+Text mode: \begin{RTLcases}
+    \LR{first} & \LR{condition A}\\
+    \LR{second longer} & \LR{B}
+\end{RTLcases}.
+
+\begin{RTL}
+    \begin{RTLcases}
+        $x+1$ & \LR{condition}\\
+        $0$   & \LR{otherwise}
+    \end{RTLcases}
+\end{RTL}
+
+\begin{apitest}
+    The parent number uses the selected separator.
+\end{apitest}
+
+References: subsection~\ref{api:hyphen}, equation~\eqref{api:cases}.
+
+{\SepMark{/}}
+\subsection{Slash separator persists outside its group}
+\begin{equation}a+b=c\end{equation}
+
+\SepMark{.}
+\subsection{Default separator restored}
+\begin{equation}a-b=c\end{equation}
+
+\clearpage
+\section{Margin notes}
+
+Default placement.\marginpar{\LR{Default}}
+\par\bigskip
+
+\setRTLmarginpar
+RTL policy.\marginpar{\LR{RTL policy}}
+\par\bigskip
+Explicit LTR text, with the same placement.\LTRmarginpar{\LR{LTR text}}
+\par\bigskip
+
+\setLTRmarginpar
+LTR policy.\marginpar{\LR{LTR policy}}
+\par\bigskip
+Explicit RTL text, with the same placement.\RTLmarginpar{\LR{RTL text}}
+\par\bigskip
+
+\setdefaultmarginpar
+Optional text.\LTRmarginpar[\LR{Left text}]{\LR{Right text}}
+\par\bigskip
+
+\reversemarginpar
+Reversed margin.\RTLmarginpar[\LR{Left choice}]{\LR{Right choice}}
+\par\bigskip
+\normalmarginpar
+
+\begin{RTL}
+    \LR{Default placement in RTL text.}\marginpar{\LR{RTL default}}
+    \par\bigskip
+    % Native bidi applies the explicit direction only to the first paragraph;
+    % the LuaTeX/pdfTeX implementation keeps it for the whole margin note.
+    \LR{Explicit LTR text in RTL context.}\LTRmarginpar{First line.\par Second line.}
+    \par\bigskip
+\end{RTL}
+
+Default restored.\marginpar{\LR{Restored}}
+
+
+\clearpage
+\RTLdblcol
+\twocolumn[\section{Two-column order}]
+% Recompute the common rule width after switching to narrow columns.
+\setlength{\footnoterulewidth}{.4\columnwidth}
+\setlength{\columnseprule}{.4pt}
+
+\noindent RTL: first column (right).\LTRfootnote{Footnote in the first column.}
+\par\medskip
+The text itself remains left to right.
+
+\newpage
+\noindent RTL: second column (left).\LTRfootnote{Footnote in the second column.}
+
+\clearpage
+\LTRdblcol
+\noindent LTR: first column (left).\LTRfootnote{Footnote in the first column.}
+
+\newpage
+\noindent LTR: second column (right).\LTRfootnote{Footnote in the second column.}
+
+\onecolumn
+\setlength{\footnoterulewidth}{.4\columnwidth}
+\setlength{\columnseprule}{0pt}
+
+
+
+\clearpage
+\section{Continued footnote rules and diagnostics}
+\autofootnoterule
+\debugfootnotedirection
+\SplitFootnoteRule
+\newcommand{\NoteLine}{A line in a long footnote.\par}
+\newcommand{\NoteBlock}{%
+    \NoteLine\NoteLine\NoteLine\NoteLine\NoteLine\NoteLine
+    \NoteLine\NoteLine\NoteLine\NoteLine\NoteLine\NoteLine}
+A long note\LTRfootnote{%
+    \NoteBlock\NoteBlock\NoteBlock\NoteBlock\NoteBlock\NoteBlock}
+\clearpage
+RTL note\RTLfootnote{\LR{A right-to-left note.}}
+\end{document}
