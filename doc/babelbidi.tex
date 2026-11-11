@@ -1,104 +1,438 @@
 % !TeX program = lualatex
+% Portions of the presentation code are adapted from Babel's user guide
+% (babel.dtx, version 26.14, 2026-10-15).
+% Copyright (C) 2012-2026 Javier Bezos and Johannes L. Braams.
+% Copyright (C) 1989-2012 Johannes L. Braams and individual authors
+% listed in the original file. Babel is distributed under the LPPL,
+% version 1.3 or later; see THIRD-PARTY-NOTICES.md and LICENSE.
+% Changes: the documentation helpers and page layout have been adapted
+% to this manual; the cover and manual text describe babelbidi.
+% This is not the Babel manual, nor is it maintained by its authors.
 
 \documentclass{ltxdoc}
 
+% --------------------------------------------------------------------
+% 1. Engine, packages and languages
+% --------------------------------------------------------------------
+\usepackage{iftex}
+\RequireLuaTeX
+\usepackage[svgnames]{xcolor}
+\usepackage{graphics}
+
+% Load minted first so babelbidi can configure its integration.
 \usepackage{minted}
 \usepackage[arabic,persian,english]{babelbidi}
+
+% Required before the font-existence tests below.
+% Keep this after babelbidi so its fontspec hooks are registered first.
+\usepackage{fontspec}
 
 \babelprovide[import,mapdigits,onchar=ids fonts letters]{arabic}
 \babelprovide[import,onchar=ids fonts letters]{persian}
 \babelprovide[import,main,onchar=ids fonts letters]{english}
 
-\babelfont{rm}[english]{Times New Roman}
-\babelfont{tt}[english]{JetBrains Mono}
-\babelfont{rm}[arabic]{Amiri}
-\babelfont{tt}[arabic]{Kawkab Mono}
-\babelfont{rm}[persian]{Vazirmatn}
-\babelfont{tt}[persian]{Vazir Code}
-
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usepackage[manual]{amikhteh-logo}
 \usepackage{pkgmeta}
 \usepackage{datemultical}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{needspace}
+
+% ltxdoc or babelbidi may already have loaded hyperref.
+\makeatletter
+\@ifpackageloaded{hyperref}{}{\RequirePackage{hyperref}}
+\makeatother
 
 \dmcset{babelbidi}
 {\pkgmeta[year]{babelbidi}}
 {\pkgmeta[month]{babelbidi}}
 {\pkgmeta[day]{babelbidi}}
 
-\usepackage[svgnames]{xcolor}
-\usepackage{tabularx}
-\usepackage{booktabs}
-\usepackage{hyperref}
-
-\setminted{
-    breaklines=true,
-    escapeinside=||
+% --------------------------------------------------------------------
+% 2. Body fonts: language-specific families managed by Babel
+% --------------------------------------------------------------------
+\IfFontExistsTF{Noto Serif}{%
+    \babelfont[english]{rm}[Scale=.88]{Noto Serif}
+}{%
+    \babelfont[english]{rm}{Latin Modern Roman}
 }
-\setminted[latex]{bgcolor=Gold,bgcolorpadding=0.5em}
-\setminted[bash]{bgcolor=Gainsboro}
+\IfFontExistsTF{Noto Sans}{%
+    \babelfont[english]{sf}[Scale=.88]{Noto Sans}
+}{%
+    \babelfont[english]{sf}{Latin Modern Sans}
+}
+\IfFontExistsTF{DejaVu Sans Mono}{%
+    \babelfont[english]{tt}[Scale=.86,FakeStretch=.97]{DejaVu Sans Mono}
+}{%
+    \babelfont[english]{tt}[Scale=MatchLowercase]{Latin Modern Mono}
+}
 
+\IfFontExistsTF{Amiri}{%
+    \babelfont[arabic]{rm}{Amiri}
+    \babelfont[arabic]{sf}{Amiri}
+}{%
+    \babelfont[arabic]{rm}{FreeSerif}
+    \babelfont[arabic]{sf}{FreeSerif}
+}
+\IfFontExistsTF{Kawkab Mono}{%
+    \babelfont[arabic]{tt}{Kawkab Mono}
+}{%
+    \babelfont[arabic]{tt}{DejaVu Sans Mono}
+}
+
+\IfFontExistsTF{Vazirmatn}{%
+    \babelfont[persian]{rm}{Vazirmatn}
+    \babelfont[persian]{sf}{Vazirmatn}
+}{%
+    \IfFontExistsTF{Amiri}{%
+        \babelfont[persian]{rm}{Amiri}
+        \babelfont[persian]{sf}{Amiri}
+    }{%
+        \babelfont[persian]{rm}{FreeSerif}
+        \babelfont[persian]{sf}{FreeSerif}
+    }
+}
+\IfFontExistsTF{Vazir Code}{%
+    \babelfont[persian]{tt}{Vazir Code}
+}{%
+    \babelfont[persian]{tt}{DejaVu Sans Mono}
+}
+
+% Main cover title only.
+% Requires Cormorant Garamond to be installed.
+\deflatinfont{\bbCoverTitle}[
+Ligatures=TeX
+]{Cormorant Garamond}
+
+\deflatinfont{\bbCoverTitleBold}[
+Ligatures=TeX
+]{Cormorant Garamond Bold}
+
+% --------------------------------------------------------------------
+% 3. Cover fonts: independent families defined through babelbidi
+% --------------------------------------------------------------------
+% Arguments: regular face, emphasis face, light face.
+% These commands do not redefine Babel's body-font families.
+\newcommand*\bbdDefineCoverFonts[3]{%
+    \deflatinfont{\bbCoverFont}[
+    Ligatures=TeX,
+    UprightFont={#1},
+    BoldFont={#2}
+    ]{#1}%
+    \deflatinfont{\bbCoverLight}[
+    Ligatures=TeX
+    ]{#3}%
+    \deflatinfont{\bbCoverLabel}[
+    Ligatures=TeX,
+    LetterSpace=9
+    ]{#1}%
+}
+
+\newcommand*\bbdFallbackCoverFonts{%
+    \bbdDefineCoverFonts
+    {TeX Gyre Heros}
+    {TeX Gyre Heros Bold}
+    {TeX Gyre Heros}%
+}
+
+% Use the Fira design only when all three required weights are present.
+\IfFontExistsTF{Fira Sans Regular}{%
+    \IfFontExistsTF{Fira Sans Medium}{%
+        \IfFontExistsTF{Fira Sans Light}{%
+            \bbdDefineCoverFonts
+            {Fira Sans Regular}
+            {Fira Sans Medium}
+            {Fira Sans Light}%
+        }{\bbdFallbackCoverFonts}%
+    }{\bbdFallbackCoverFonts}%
+}{\bbdFallbackCoverFonts}
+
+% --------------------------------------------------------------------
+% 4. Palette: body colours and an independent cover palette
+% --------------------------------------------------------------------
+\definecolor{thered}{rgb}{0.65,0.04,0.07}
+\definecolor{thegrey}{gray}{0.8}
+\definecolor{thegreyed}{gray}{0.6}
+\definecolor{shadecolor}{rgb}{0.97,0.97,0.94}
+\definecolor{coverrose}{rgb}{0.86,0.73,0.67}
+\definecolor{covercream}{rgb}{0.92,0.86,0.73}
+\definecolor{covergrey}{rgb}{0.95,0.95,0.95}
+\definecolor{coverink}{rgb}{0.55,0.40,0.35}
+
+\definecolor{bbCoverInk}{HTML}{283F46}
+\definecolor{bbCoverCream}{HTML}{EBDDB9}
+\definecolor{bbCoverRose}{HTML}{DDBBAA}
+
+% --------------------------------------------------------------------
+% 5. Body layout and documentation helpers
+% --------------------------------------------------------------------
+% Preserve the existing ltxdoc-based layout of the manual body.
+\addtolength{\oddsidemargin}{-2em}
+\addtolength{\evensidemargin}{-2em}
+\addtolength{\textwidth}{25.5pt}
+\addtolength{\textheight}{3.5cm}
+\addtolength{\topmargin}{-2cm}
+\setlength{\columnsep}{1.5em}
+\setlength{\emergencystretch}{2em}
+\frenchspacing
+\raggedright
+\setlength{\parindent}{.8em}
+
+\makeatletter
+% Preserve the two-argument interface used throughout the manual.
+% The command token is printed rather than executed.
+\def\Describe#1#2{%
+    \par\vskip 1.7ex plus .7ex minus .2ex
+    \noindent\hspace*{-1.7cm}%
+    {\color{thegreyed}\normalsize\ttfamily
+        \underline{\strut{\color{thered}\string#1}\color{black}#2}}%
+    \par\nobreak\vskip 1.1ex plus .2ex\relax
+}
+\def\DescribeOther{\nobreak\vskip-1.1\baselineskip\Describe}
+
+% Environment signatures: \begin{environment} ... \end{environment}.
+\def\menv#1{\char`\{#1\char`\}}
+\def\Eenv#1{%
+    \quad...\quad
+    \texttt{\color{thered}\string\end\menv{#1}}%
+}
+
+% Manual-only helper: no dependency on a newer installed package API.
+\newcommand*\bbdManualContents{%
+    \pdfbookmark[0]{\contentsname}{bbd-manual-contents}%
+    \begingroup
+    \small
+    \setlength{\parindent}{0pt}%
+    \begin{multicols}{2}[\section*{\contentsname}]
+        \@starttoc{toc}%
+    \end{multicols}%
+    \endgroup
+}
+\makeatother
+
+% --------------------------------------------------------------------
+% 6. Code examples
+% --------------------------------------------------------------------
+\usemintedstyle{friendly}
+\setminted{
+    fontsize=\small,
+    breaklines=true,
+    autogobble=true,
+    escapeinside=||,
+    bgcolor=shadecolor,
+    bgcolorpadding=1.5mm,
+    frame=single,
+    framerule=.4pt,
+    framesep=1.5mm,
+    rulecolor=\color{black!45},
+    baselinestretch=1
+}
+\setminted[bash]{bgcolor=covergrey}
+
+% --------------------------------------------------------------------
+% 7. PDF metadata and title information
+% --------------------------------------------------------------------
 \hypersetup{
     colorlinks=true,
-    linkcolor=blue,
-    urlcolor=blue
+    linkcolor=thered,
+    urlcolor=blue,
+    citecolor=thered,
+    pdfdisplaydoctitle=true,
+    pdftitle={The babelbidi Package -- User Guide},
+    pdfauthor={Amer Amikhteh},
+    pdfsubject={Bidirectional typesetting with Babel},
+    pdfkeywords={babelbidi, Babel, LuaLaTeX, RTL, multilingual typesetting},
+    bookmarksnumbered=true
 }
 
 \title{The \textsf{babelbidi} Package}
 \author{Amer Amikhteh}
-\date{%
-    Version \pkgmeta[version]{babelbidi}\\[2pt]
-    \dmc{babelbidi}{long}
+\date{Version \pkgmeta[version]{babelbidi}\\[2pt]\dmc{babelbidi}{long}}
+
+% --------------------------------------------------------------------
+% 8. Cover styles: typography is separate from page geometry
+% --------------------------------------------------------------------
+\tikzset{
+    bb cover node/.style={
+        inner sep=0pt,
+        outer sep=0pt,
+        align=left,
+        font=\bbCoverFont
+    },
+    bb cover label/.style={
+        font=\bbCoverLabel\fontsize{9}{12}\selectfont
+    },
+    bb cover arrow/.style={
+        line width=1.1pt,
+        -{Stealth[length=3mm,width=2mm]}
+    }
 }
+
+
+
+% Shared cover placement and optional manual page style.
+% The package owns mark placement, sizing, section tracking and footer layout.
+\AmikhtehLogoCoverSetup{primary=bbCoverCream,accent=bbCoverRose}
 
 \begin{document}
 
-    \maketitle
+    % The cover must not share a page anchor with page 1 of the manual body.
+    \hypersetup{pageanchor=false}
+    \begin{titlepage}
+        \thispagestyle{empty}
+        \begingroup
+        \hypersetup{urlcolor=bbCoverInk}
 
-   \begin{abstract}
-       The \textsf{babelbidi} package extends Babel's bidirectional
-       support by correcting direction-sensitive behaviour and
-       providing interfaces for text direction, layout, language
-       selection, and font configuration, including Lua\TeX\ glyph
-       fallback. It supports languages available through Babel and
-       works with Lua\TeX\ (recommended), Xe\TeX, and pdf\TeX,
-       with either an LTR or RTL main language.
-   \end{abstract}
+        \noindent
+        \begin{tikzpicture}[remember picture,overlay]
+            \begin{scope}[
+                shift={(current page.south west)},
+                x=\paperwidth,
+                y=\paperheight,
+                every node/.style={bb cover node}
+                ]
+                % Full-bleed fields, independent of the body margins.
+                \fill[bbCoverCream] (0,0) rectangle (1,1);
+                \fill[bbCoverInk]   (0,.36) rectangle (1,1);
+                \fill[bbCoverRose]  (.975,0) rectangle (1,1);
 
-    \tableofcontents
+                % Shared baseline for the two top labels.
+                \node[bb cover label,anchor=base west,text=bbCoverCream]
+                at (.09,.915) {A \LaTeX\ PACKAGE};
+                \node[bb cover label,anchor=base east,text=bbCoverRose]
+                at (.90,.915) {USER GUIDE};
+
+                % One baseline, two weights, no artificial gap in the package name.
+                \node[
+                anchor=base west,
+                font=\fontsize{74}{80}\selectfont
+                ]
+                at (.09,.775) {%
+                    {\bbCoverTitle\color{bbCoverCream}babel}%
+                    {\bbCoverTitleBold\color{bbCoverRose}bidi}%
+                };
+
+                \node[
+                anchor=north west,
+                text=bbCoverCream,
+                text width=.81\paperwidth,
+                font=\bbCoverFont\fontsize{23}{31}\selectfont
+                ] at (.09,.675) {An extension to Babel's\\bidirectional support};
+
+                % Opposing directions; both arrows share the content grid.
+                \node[bb cover label,anchor=base west,text=bbCoverCream]
+                at (.09,.535) {LEFT TO RIGHT};
+                \draw[bb cover arrow,draw=bbCoverCream]
+                (.09,.51) -- (.90,.51);
+                \draw[bb cover arrow,draw=bbCoverRose]
+                (.90,.445) -- (.09,.445);
+                \node[bb cover label,anchor=base east,text=bbCoverRose]
+                at (.90,.415) {RIGHT TO LEFT};
+
+                % Scope, deliberately separate from the release information.
+                \node[
+                anchor=north west,
+                text=bbCoverInk,
+                text width=.81\paperwidth,
+                font=\bbCoverFont\fontsize{12}{19}\selectfont
+                ] at (.09,.31) {%
+                    Text direction \enspace\textperiodcentered\enspace
+                    Multilingual layout \enspace\textperiodcentered\enspace
+                    Language selection \enspace\textperiodcentered\enspace
+                    Font configuration
+                };
+
+                % Two-column metadata, aligned by label and value baselines.
+                \node[bb cover label,anchor=base west,text=bbCoverInk]
+                at (.09,.225) {VERSION};
+                \node[bb cover label,anchor=base west,text=bbCoverInk]
+                at (.55,.225) {MAINTAINER};
+
+                \node[
+                anchor=base west,
+                text=bbCoverInk,
+                font=\bbCoverFont\fontsize{20}{25}\selectfont
+                ] at (.09,.175) {\pkgmeta[version]{babelbidi}};
+                \node[
+                anchor=base west,
+                text=bbCoverInk,
+                font=\bbCoverFont\fontsize{15}{21}\selectfont
+                ] at (.55,.175) {Amer Amikhteh};
+                \node[
+                anchor=base west,
+                text=bbCoverInk,
+                font=\bbCoverFont\fontsize{10}{14}\selectfont
+                ] at (.09,.14) {\dmc{babelbidi}{long}};
+
+                % Quiet footer separator and compact technical information.
+                \draw[bbCoverInk,opacity=.25,line width=.4pt]
+                (.09,.12) -- (.90,.12);
+                \node[
+                anchor=base west,
+                text=bbCoverInk,
+                font=\bbCoverFont\fontsize{10}{14}\selectfont
+                ] at (.09,.09) {%
+                    Lua\TeX (recommended)
+                    \enspace\textperiodcentered\enspace Xe\TeX
+                    \enspace\textperiodcentered\enspace pdf\TeX
+                };
+                \node[
+                anchor=base west,
+                text=bbCoverInk,
+                font=\bbCoverFont\fontsize{10}{14}\selectfont
+                ] at (.09,.05) {%
+                    \href{https://github.com/gambi-shah/babelbidi}
+                    {github.com/gambi-shah/babelbidi}%
+                };
+            \end{scope}
+        \end{tikzpicture}%
+        \AmikhtehLogoCover\par
+        \null
+        \endgroup
+    \end{titlepage}
+    \hypersetup{pageanchor=true}
+
+    \pagestyle{amikhteh-logo}
+    \AmikhtehLogoFooterTitle{}
+
+    \begin{abstract}
+        The \textsf{babelbidi} package extends Babel's bidirectional
+        support by correcting direction-sensitive behaviour and
+        providing interfaces for text direction, layout, language
+        selection, and font configuration, including \LuaTeX glyph
+        fallback. It works with Babel-supported languages and with
+        \LuaTeX (recommended), \XeTeX, and \pdfTeX, with either
+        an LTR or RTL main language.
+    \end{abstract}
+
+    \AmikhtehLogoFooterTitle{\contentsname}
+    \bbdManualContents
     \clearpage
+
 
     \section{Introduction}
     \label{sec:introduction}
 
-    Babel provides a flexible framework for multilingual typesetting
-    in LaTeX, including support for documents that combine
-    left-to-right (LTR) and right-to-left (RTL) languages. However,
-    supporting multiple writing directions involves more than
-    selecting the appropriate language. Text direction also affects
-    paragraph layout, footnotes, lists, tables, margins, and other
-    document elements. Although Babel provides bidirectional
-    support, some of these components may still require adjustments
-    to behave consistently in RTL contexts.
+    Babel provides a framework for multilingual typesetting in
+    \LaTeX, including documents that combine left-to-right (LTR) and
+    right-to-left (RTL) languages. Direction also affects paragraph
+    layout, footnotes, lists, tables, margins, and other document
+    elements, some of which may require adjustments in RTL contexts.
 
-    The \textsf{babelbidi} package addresses these gaps while keeping
-    Babel as the foundation for multilingual document processing.
-    Rather than introducing a separate language-management system,
-    it complements Babel's bidirectional support with direction
-    interfaces and layout corrections. It works with either an LTR
-    or RTL main language, allowing Babel's language facilities to
-    be used in both types of documents.
+    The \textsf{babelbidi} package extends Babel's bidirectional
+    support with direction interfaces and layout corrections. It also
+    provides language-aware text switching, font configuration, and
+    glyph fallback with \LuaLaTeX. It supports either an LTR or RTL
+    main language.
 
-    The package also brings together facilities useful for
-    multilingual documents, including explicit control over text
-    direction, language-aware text switching, font configuration,
-    and glyph fallback with Lua\LaTeX. It aims to provide consistent
-    user-level interfaces across the supported engines, while
-    allowing engine-specific implementations where necessary.
-
-    The package provides user-level interfaces compatible with
-    \textsf{bidi}, while allowing engine-specific implementations.
-    Consequently, identical output across engines is not guaranteed. For bidirectional processing, Xe\TeX\ uses the
-    \textsf{bidi} backend, while Lua\TeX\ and pdf\TeX\
-    use implementations supplied by \textsf{babelbidi}.
+    The package provides interfaces compatible with \textsf{bidi},
+    with engine-dependent implementations. \XeTeX uses the
+    \textsf{bidi} backend; \LuaTeX and \pdfTeX use interfaces
+    supplied by \textsf{babelbidi}. Identical output across engines
+    is not guaranteed.
 
     The main engine-dependent capabilities are summarized below.
     Here, \texttt{Native} means that the feature is implemented
@@ -108,7 +442,7 @@
     \begin{center}
         \begin{tabularx}{\linewidth}{@{}Xlll@{}}
             \toprule
-            Feature & Lua\TeX & Xe\TeX & pdf\TeX \\
+            Feature & \LuaTeX & \XeTeX & \pdfTeX \\
             \midrule
             Direction and layout interfaces
             & Native & Via \textsf{bidi} & Native \\
@@ -133,7 +467,7 @@
 
     The table describes interface availability, not identical
     behaviour or equal language coverage. In particular,
-    pdf\LaTeX\ still requires suitable input encodings, fonts,
+    \pdfLaTeX still requires suitable input encodings, fonts,
     and Babel language support.
 
     The following sections explain how to load and configure
@@ -167,29 +501,32 @@
     \end{minted}
 
     Normally, \textsf{babelbidi} loads Babel and selects a
-    bidirectional backend. With Lua\LaTeX\ and
+    bidirectional backend. With \LuaLaTeX and
     \textsf{beamer-rl}, Babel setup is delegated to the class.
     Options not defined by \textsf{babelbidi} are passed to Babel.
     The \texttt{bidi} and \texttt{layout} options are Babel
     options for which \textsf{babelbidi} provides
     engine-dependent defaults.
 
-    If \texttt{bidi} is not specified, its default value is selected
-    according to the engine:
+    \Needspace{10\baselineskip}
+    \Describe{bidi}{=\meta{value}}
+    Selects the bidirectional backend. If it is not specified,
+    its default value is selected according to the engine:
 
     \begin{center}
         \begin{tabular}{@{}ll@{}}
             \toprule
             Engine & Default value of \texttt{bidi} \\
             \midrule
-            Lua\TeX & \texttt{basic} \\
-            Xe\TeX & \texttt{bidi-r} \\
-            pdf\TeX & \texttt{default} \\
+            \LuaTeX & \texttt{basic} \\
+            \XeTeX & \texttt{bidi-r} \\
+            \pdfTeX & \texttt{default} \\
             \bottomrule
         \end{tabular}
     \end{center}
 
-    With Lua\TeX, the default value of \texttt{layout} is:
+    \Describe{layout}{=\meta{selectors}}
+    With \LuaTeX, the default value is:
 
     \begin{minted}{latex}
         counters graphics footnotes lists
@@ -205,10 +542,10 @@
     This selects only \texttt{counters} and \texttt{footnotes}. To retain
     \texttt{graphics} and \texttt{lists}, include them explicitly. Values
     containing multiple selectors must be enclosed in braces. The package
-    applies this \texttt{layout} setting only with Lua\TeX; it has no
-    effect in the Xe\TeX\ and pdf\TeX\ loading branches.
+    applies this \texttt{layout} setting only with \LuaTeX; it has no
+    effect in the \XeTeX and \pdfTeX loading branches.
 
-    Lua\LaTeX\ is recommended for its broader capabilities and
+    \LuaLaTeX is recommended for its broader capabilities and
     extensibility. Babel's \texttt{onchar} option can select a language
     from the characters in the text. For Arabic, for example:
 
@@ -219,42 +556,45 @@
     Punctuation shared by several scripts, such as parentheses, may still
     require explicit language selection. For slides with an RTL main
     language, \textsf{beamer-rl} is recommended over \textsf{beamer},
-    although it is not required. With Lua\LaTeX~
+    although it is not required. With \LuaLaTeX~
     and \textsf{beamer-rl}, Babel setup is delegated to the class.
 
-    With Lua\TeX, the boolean \texttt{fontcache} option controls caching
-    of Babel font mappings used by automatic font selection and glyph
-    fallback. It is enabled by default to improve compilation speed. In
-    special cases, such as font changes made through the
-    \texttt{rmfamily} hook, cached mappings may prevent changes from
-    taking effect. Disable the cache when needed:
+    With \LuaTeX, the boolean option
+    \Describe{fontcache}{=\meta{true}/\meta{false}}
+    controls caching of Babel font mappings used by automatic font
+    selection and glyph fallback. It is enabled by default to improve
+    compilation speed. In special cases, such as font changes made
+    through the \texttt{rmfamily} hook, cached mappings may prevent
+    changes from taking effect. Disable the cache when needed:
 
     \begin{minted}{latex}
         \usepackage[fontcache=false]{babelbidi}
     \end{minted}
 
-    {\sloppy
     To enable paragraph and multi-column footnote layouts, use the
-    \texttt{extrafootnotefeatures} option:
-    \par}
+    following option:
 
-
+    \Describe{extrafootnotefeatures}{=\meta{on}/\meta{off}}
+    Its default is \texttt{off}. The option also accepts explicit
+    \texttt{=on} and \texttt{=off} values:
 
     \begin{minted}{latex}
         \usepackage[extrafootnotefeatures]{babelbidi}
     \end{minted}
 
-
-
-    The option also accepts \texttt{=on} and \texttt{=off}; its default
-    is off. With Xe\TeX, it is passed to \textsf{bidi}; with Lua\TeX\ and
-    pdf\TeX, \textsf{babelbidi} provides its own implementation. See
+    With \XeTeX, it is passed to \textsf{bidi}; with \LuaTeX and
+    \pdfTeX, \textsf{babelbidi} provides its own implementation. See
     Section~\ref{sec:footnote-layouts} for the available commands.
+
+    \Describe{logostyle}{=\meta{auto}/\meta{simple}}
+    Selects the engine-logo style. The default is \texttt{auto}.
+    Use \texttt{simple} for non-reflected logos, even when
+    \textsf{graphicx} is loaded. See Section~\ref{sec:engine-logos}.
 
     \section{Quick Start}
     \label{sec:quick-start}
 
-    The following example works with Lua\LaTeX\ and Xe\LaTeX\
+    The following example works with \LuaLaTeX and \XeLaTeX
     and requires the fonts Latin Modern Roman and Amiri:
 
     \begin{minted}{latex}
@@ -285,9 +625,13 @@
     \section{Font Fallback}
     \label{sec:font-fallback}
 
-    With Lua\LaTeX, \textsf{babelbidi} can use fonts from other Babel
+    With \LuaLaTeX, \textsf{babelbidi} can use fonts from other Babel
     languages when the current font lacks a required glyph. Declare an
     ordered fallback chain in the preamble:
+
+    \Describe{\fontfallback}{\marg{source}\marg{candidates}}
+    Declares an ordered list of candidate languages whose fonts can
+    provide missing glyphs for the source language.
 
     \begin{minted}{latex}
         \fontfallback{english}{persian,greek}
@@ -317,8 +661,8 @@
     and is applied per glyph before shaping. If no candidate contains a
     glyph, it remains in the original font. Combining-mark placement,
     joining, and visual consistency across fonts are not guaranteed;
-    choose compatible fonts for the scripts involved. Xe\LaTeX\ and
-    pdf\LaTeX\ warn and ignore explicit fallback declarations.
+    choose compatible fonts for the scripts involved. \XeLaTeX and
+    \pdfLaTeX warn and ignore explicit fallback declarations.
 
     \section{Text Direction}
     \label{sec:text-direction}
@@ -330,45 +674,52 @@
     \subsection{Inline Text}
     \label{sec:inline-direction}
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Command & Description \\
-        \midrule
-        \cmd{\beginL}, \cmd{\endL} &
-        Begin and end an explicit LTR text group \\
-        \cmd{\beginR}, \cmd{\endR} &
-        Begin and end an explicit RTL text group \\
-         \cmd{\LRE\{<text>\}}, \cmd{\LR\{<text>\}} &
-        Inline LTR text \\
-        \cmd{\RLE\{<text>\}}, \cmd{\RL\{<text>\}} &
-        Inline RTL text \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\beginL}{}
+    Begins an explicit LTR text segment; it must be matched by
+    \cmd{\endL}.
 
-    Each \cmd{\beginL} must be matched by \cmd{\endL}, and each
-    \cmd{\beginR} by \cmd{\endR}. Prefer the argument-taking commands
-    for short passages.
+    \Describe{\endL}{}
+    Ends the explicit LTR text segment.
+
+    \Describe{\beginR}{}
+    Begins an explicit RTL text segment; it must be matched by
+    \cmd{\endR}.
+
+    \Describe{\endR}{}
+    Ends the explicit RTL text segment.
+
+    \Describe{\LR}{\marg{text}}
+    \DescribeOther{\LRE}{\marg{text}}
+    Typesets the argument as inline LTR text. The two names are equivalent.
+
+    \Describe{\RL}{\marg{text}}
+    \DescribeOther{\RLE}{\marg{text}}
+    Typesets the argument as inline RTL text. The two names are equivalent.
+
+    Prefer the argument-taking commands for short passages.
 
     \subsection{Paragraphs and Blocks}
     \label{sec:paragraph-direction}
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Interface & Description \\
-        \midrule
-        \cmd{\setLTR}, \cmd{\setLR}, \cmd{\unsetRTL} &
-        Set paragraph direction to LTR \\
-        \cmd{\setRTL}, \cmd{\setRL}, \cmd{\unsetLTR} &
-        Set paragraph direction to RTL \\
-        \texttt{LTR}, \texttt{RTL} environments &
-        Typeset an enclosed block in LTR or RTL direction \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\setLTR}{}
+    \DescribeOther{\setLR}{}
+    \DescribeOther{\unsetRTL}{}
+    These equivalent commands set paragraph direction to LTR.
 
-    The switches take no arguments; place them between paragraphs and
-    use a group to limit their scope. End the final paragraph before
-    closing the group. The environments handle paragraph boundaries and
-    may contain several paragraphs.
+    \Describe{\setRTL}{}
+    \DescribeOther{\setRL}{}
+    \DescribeOther{\unsetLTR}{}
+    These equivalent commands set paragraph direction to RTL.
+
+    The switches take no arguments; place them between paragraphs and use
+    a group to limit their scope. End the final paragraph before closing
+    the group.
+
+    \Describe{\begin\menv{LTR}}{\Eenv{LTR}}
+    \DescribeOther{\begin\menv{RTL}}{\Eenv{RTL}}
+    The \texttt{LTR} environment typesets an enclosed block in LTR direction;
+    \texttt{RTL} typesets it in RTL direction. The environments handle
+    paragraph boundaries and may contain several paragraphs.
 
     \section{Boxes and Positioning}
     \label{sec:boxes-positioning}
@@ -379,18 +730,23 @@
     These are directional variants of \cmd{\hbox}, \cmd{\vbox}, and
     \cmd{\vtop}; the suffix selects LTR or RTL direction.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Command & Description \\
-        \midrule
-        \cmd{\hboxL}, \cmd{\hboxR} &
-        Horizontal box without line breaking \\
-        \cmd{\vboxL}, \cmd{\vboxR} &
-        Vertical box with a bottom reference point \\
-        \cmd{\vtopL}, \cmd{\vtopR} &
-        Vertical box with a top reference point \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\hboxL}{}
+    Creates a horizontal LTR box without line breaking.
+
+    \Describe{\hboxR}{}
+    Creates a horizontal RTL box without line breaking.
+
+    \Describe{\vboxL}{}
+    Creates a vertical LTR box with a bottom reference point.
+
+    \Describe{\vboxR}{}
+    Creates a vertical RTL box with a bottom reference point.
+
+    \Describe{\vtopL}{}
+    Creates a vertical LTR box with a top reference point.
+
+    \Describe{\vtopR}{}
+    Creates a vertical RTL box with a top reference point.
 
     Text in vertical boxes is broken into lines according to
     \cmd{\hsize}. For boxes containing lines of text, \cmd{\vbox}
@@ -408,16 +764,11 @@
     These direction-sensitive variants of \cmd{\llap} and \cmd{\rlap}
     place text in a zero-width box.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Command & Description \\
-        \midrule
-        \cmd{\bidillap\{<text>\}} &
-        Overlap left in LTR text, right in RTL text \\
-        \cmd{\bidirlap\{<text>\}} &
-        Overlap right in LTR text, left in RTL text \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\bidillap}{\marg{text}}
+    Overlaps text to the left in LTR text and to the right in RTL text.
+
+    \Describe{\bidirlap}{\marg{text}}
+    Overlaps text to the right in LTR text and to the left in RTL text.
 
     \section{Footnotes and Title Notes}
     \label{sec:footnotes}
@@ -434,28 +785,17 @@
     commands when a footnote also requires a different language
     or font.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Command & Arguments and effect \\
-        \midrule
-        \cmd{\LTRfootnote}, \cmd{\RTLfootnote} &
-        \oarg{num}\marg{text}: insert a footnote in the
-        specified direction \\
+    \Describe{\LTRfootnote}{\oarg{num}\marg{text}}
+    Inserts a footnote whose text is set in LTR direction.
 
-        \cmd{\LTRfootnotetext}, \cmd{\RTLfootnotetext} &
-        \oarg{num}\marg{text}: insert directed footnote text
-        without a mark in the main text \\
+    \Describe{\RTLfootnote}{\oarg{num}\marg{text}}
+    Inserts a footnote whose text is set in RTL direction.
 
-        \cmd{\LTRthanks}, \cmd{\RTLthanks} &
-        \marg{text}: insert a directed title note \\
+    \Describe{\LTRfootnotetext}{\oarg{num}\marg{text}}
+    Inserts LTR footnote text without a mark in the main text.
 
-        \cmd{\setfootnoteLR}, \cmd{\unsetfootnoteRL} &
-        Set ordinary footnotes to LTR \\
-
-        \cmd{\setfootnoteRL}, \cmd{\unsetfootnoteLR} &
-        Set ordinary footnotes to RTL \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\RTLfootnotetext}{\oarg{num}\marg{text}}
+    Inserts RTL footnote text without a mark in the main text.
 
     The optional \meta{num} has the same meaning as in
     \cmd{\footnote} or \cmd{\footnotetext}. The
@@ -463,9 +803,23 @@
     do not insert a mark in the main text; use them with
     \cmd{\footnotemark} when a mark is needed.
 
+    \Describe{\LTRthanks}{\marg{text}}
+    Inserts a title note in LTR direction.
+
+    \Describe{\RTLthanks}{\marg{text}}
+    Inserts a title note in RTL direction.
+
     The title-note commands are counterparts of \cmd{\thanks}
     and can be used in the \cmd{\author} or \cmd{\title}
     argument.
+
+    \Describe{\setfootnoteLR}{}
+    \DescribeOther{\unsetfootnoteRL}{}
+    These equivalent commands set subsequent ordinary footnotes to LTR.
+
+    \Describe{\setfootnoteRL}{}
+    \DescribeOther{\unsetfootnoteLR}{}
+    These equivalent commands set subsequent ordinary footnotes to RTL.
 
     The switches take no arguments and insert no note. They
     set the direction policy for subsequent ordinary footnotes.
@@ -485,26 +839,39 @@
 
     These controls affect the rule, not the footnote text direction.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Interface & Description \\
-        \midrule
-        \cmd{\leftfootnoterule}, \cmd{\LRfootnoterule} &
-        Left-aligned rule \\
-        \cmd{\rightfootnoterule}, \cmd{\RLfootnoterule} &
-        Right-aligned rule \\
-        \cmd{\textwidthfootnoterule} &
-        Full-width rule \\
-        \cmd{\autofootnoterule} &
-        Rule alignment based on footnote direction \\
-        \cmd{\footnoterulewidth} &
-        Length controlling the width of short footnote rules \\
-        \cmd{\SplitFootnoteRule} &
-        Full-width rule above a continued footnote \\
-        \cmd{\debugfootnotedirection} &
-        Direction messages when the automatic rule is evaluated \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\leftfootnoterule}{}
+    \DescribeOther{\LRfootnoterule}{}
+    These equivalent commands select a left-aligned footnote rule.
+
+    \Describe{\rightfootnoterule}{}
+    \DescribeOther{\RLfootnoterule}{}
+    These equivalent commands select a right-aligned footnote rule.
+
+    \Describe{\textwidthfootnoterule}{}
+    Selects a full-width footnote rule.
+
+    \Describe{\autofootnoterule}{}
+    Selects rule alignment according to footnote direction.
+    Automatic alignment is engine-dependent:
+
+    \begin{description}
+        \item[\LuaTeX:]
+        Inspect the direction of the first line in the ordinary footnote
+        insertion box; use a left rule if no line is found.
+
+        \item[\pdfTeX:]
+        Use the first explicitly directed footnote recorded since the
+        preceding shipout; use a left rule if none was recorded. This is
+        a fallback, not an inspection of the final footnote box.
+
+        \item[\XeTeX:]
+        Use the implementation supplied by \textsf{bidi}.
+    \end{description}
+
+    \Describe{\footnoterulewidth}{}
+    Length controlling the width of short footnote rules.
+    With \LuaTeX and \pdfTeX, the initial short-rule width is
+    \texttt{.4}\cmd{\columnwidth}, evaluated when the length is set.
 
     For example:
 
@@ -513,25 +880,14 @@
         \rightfootnoterule
     \end{minted}
 
-    With Lua\TeX\ and pdf\TeX, rule selectors make global assignments.
-    The initial short-rule width is \texttt{.4}\cmd{\columnwidth},
-    evaluated when the length is set. Automatic alignment is
-    engine-dependent:
+    \Describe{\SplitFootnoteRule}{}
+    Selects a full-width rule above a continued footnote.
+    Select the ordinary rule before \cmd{\SplitFootnoteRule}. It retains
+    that rule on ordinary pages and uses a full-width rule above a
+    continuation from the preceding page.
 
-    \begin{description}
-        \item[Lua\TeX:]
-        Inspect the direction of the first line in the ordinary footnote
-        insertion box; use a left rule if no line is found.
-
-        \item[pdf\TeX:]
-        Use the first explicitly directed footnote recorded since the
-        preceding shipout; use a left rule if none was recorded. This is
-        a fallback, not an inspection of the final footnote box.
-
-        \item[Xe\TeX:]
-        Use the implementation supplied by \textsf{bidi}.
-    \end{description}
-
+    \Describe{\debugfootnotedirection}{}
+    Enables direction messages when the automatic rule is evaluated.
     To diagnose automatic rule selection, use:
 
     \begin{minted}{latex}
@@ -539,65 +895,72 @@
         \debugfootnotedirection
     \end{minted}
 
-    The Lua\TeX\ and pdf\TeX\ implementations provide no corresponding
+    The \LuaTeX and \pdfTeX implementations provide no corresponding
     public command to disable these diagnostic messages. Remove the
     diagnostic command for normal runs.
 
-    Select the ordinary rule before \cmd{\SplitFootnoteRule}. It retains
-    that rule on ordinary pages and uses a full-width rule above a
-    continuation from the preceding page. In RTL-main documents, the
-    package selects a right-aligned default rule only if no replacement
-    rule has already been selected. Extra footnote layouts change rule
-    handling as described below.
+    With \LuaTeX and \pdfTeX, rule selectors make global assignments.
+    In RTL-main documents, the package selects a right-aligned default
+    rule only if no replacement rule has already been selected. Extra
+    footnote layouts change rule handling as described below.
 
     \subsection{Extra Footnote Layouts}
     \label{sec:footnote-layouts}
 
     Enable these layouts with the \texttt{extrafootnotefeatures} package
-    option. With Lua\TeX\ and pdf\TeX, they apply to page and minipage
+    option. With \LuaTeX and \pdfTeX, they apply to page and minipage
     footnotes and preserve language, direction, labels, and hyperlinks.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Command & Layout for subsequent footnotes \\
-        \midrule
-        \cmd{\normalfootnotes} &
-        Ordinary one-column layout \\
-        \cmd{\paragraphfootnotes} &
-        Paragraph layout \\
-        \begin{tabular}[t]{@{}l@{}}
-            \cmd{\twocolumnfootnotes} \\
-            \cmd{\threecolumnfootnotes} \\
-            \cmd{\fourcolumnfootnotes} \\
-            \cmd{\fivecolumnfootnotes} \\
-            \cmd{\sixcolumnfootnotes} \\
-            \cmd{\sevencolumnfootnotes} \\
-            \cmd{\eightcolumnfootnotes} \\
-            \cmd{\ninecolumnfootnotes} \\
-            \cmd{\tencolumnfootnotes}
-        \end{tabular} &
-        Multi-column layout with two to ten columns, as specified
-        by the command name \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\normalfootnotes}{\texttt{[*]}}
+    Selects the ordinary one-column layout.
 
-    Each command accepts an optional star. Without it, the footnote mark
-    occupies a fixed-width box; with it, the box uses the mark's natural
-    width:
+    \Describe{\paragraphfootnotes}{\texttt{[*]}}
+    Selects paragraph layout.
+
+    \Describe{\twocolumnfootnotes}{\texttt{[*]}}
+    Selects a two-column layout.
+
+    \Describe{\threecolumnfootnotes}{\texttt{[*]}}
+    Selects a three-column layout.
+
+    \Describe{\fourcolumnfootnotes}{\texttt{[*]}}
+    Selects a four-column layout.
+
+    \Describe{\fivecolumnfootnotes}{\texttt{[*]}}
+    Selects a five-column layout.
+
+    \Describe{\sixcolumnfootnotes}{\texttt{[*]}}
+    Selects a six-column layout.
+
+    \Describe{\sevencolumnfootnotes}{\texttt{[*]}}
+    Selects a seven-column layout.
+
+    \Describe{\eightcolumnfootnotes}{\texttt{[*]}}
+    Selects an eight-column layout.
+
+    \Describe{\ninecolumnfootnotes}{\texttt{[*]}}
+    Selects a nine-column layout.
+
+    \Describe{\tencolumnfootnotes}{\texttt{[*]}}
+    Selects a ten-column layout.
+
+    Each layout command accepts an optional star. Without it, the
+    footnote mark occupies a fixed-width box; with it, the box uses the
+    mark's natural width:
 
     \begin{minted}{latex}
         \twocolumnfootnotes*
     \end{minted}
 
-    With Lua\TeX\ and pdf\TeX, paragraph and multi-column layouts collect
+    With \LuaTeX and \pdfTeX, paragraph and multi-column layouts collect
     RTL and LTR notes separately. Ordinary one-column footnotes are output first, followed by the RTL group and then the LTR group. Within each
     multi-column group, columns run right to left for RTL notes and left
     to right for LTR notes. Consequently, the visual order of notes may
-    differ from the order of references in the text. With Xe\TeX, the
+    differ from the order of references in the text. With \XeTeX, the
     layouts and their detailed behaviour are supplied by \textsf{bidi}.
 
-    Layout assignments are local, but collected notes are assembled
-    later. Select a layout in the preamble or at a page boundary and keep
+    With \LuaTeX and \pdfTeX, layout assignments are local, but
+    collected notes are assembled later. Select a layout in the preamble or at a page boundary and keep
     it in force until the affected notes have been output. Do not rely on
     independent paragraph and multi-column layouts within the same
     pending stream. For a document-wide layout:
@@ -607,14 +970,18 @@
         \twocolumnfootnotes
     \end{minted}
 
-    To change the layout in the body, flush the preceding page first:
+    With \LuaTeX and \pdfTeX, to change the layout in the body, flush
+    the preceding page first:
 
     \begin{minted}{latex}
         \clearpage
         \paragraphfootnotes
     \end{minted}
 
-    With Lua\TeX\ and pdf\TeX, the extra-layout implementation installs
+    With \XeTeX, select \cmd{\paragraphfootnotes} in the preamble;
+    its implementation in \textsf{bidi} requires preamble-only setup.
+
+    With \LuaTeX and \pdfTeX, the extra-layout implementation installs
     a rule spanning \cmd{\columnwidth} and disables
     \cmd{\autofootnoterule}, \cmd{\leftfootnoterule},
     \cmd{\LRfootnoterule}, \cmd{\rightfootnoterule},
@@ -626,24 +993,41 @@
     \section{Lists, Cases, and Counters}
     \label{sec:lists-cases-counters}
 
+    \subsection{Citations}
+    \label{sec:citations}
+
+    \Describe{\Latincite}{\oarg{note}\marg{keys}}
+    Works like \cmd{\cite}, except that citation labels and their
+    separators are typeset using the selected Latin language and font.
+    The optional \meta{note} retains the surrounding language and
+    text direction. With standard LaTeX citations, a Persian comma
+    precedes the note in right-to-left text; ensure that this character
+    is available in the surrounding font or through font fallback. In
+    left-to-right text, an ordinary comma is used. With \textsf{cite},
+    \textsf{natbib}, or \textsf{biblatex}, the
+    citation arguments and formatting follow the active \cmd{\cite}.
+
+    \begin{minted}{latex}
+        \Latincite{knuth}
+        \Latincite[page 23]{knuth}
+        \Latincite{knuth,lamport}
+    \end{minted}
+
     \subsection{Lists and Bibliographies}
     \label{sec:lists-bibliographies}
 
     These environments set the direction of selected items within an
     existing list or bibliography; they do not create a new list.
+    Use them inside the corresponding list or bibliography environment.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Environment & Description \\
-        \midrule
-        \texttt{LTRitems}, \texttt{RTLitems} &
-        Set LTR or RTL direction for a group of \cmd{\item} entries
-        inside a list such as \texttt{itemize} or \texttt{enumerate} \\
-        \texttt{LTRbibitems}, \texttt{RTLbibitems} &
-        Set LTR or RTL direction for a group of \cmd{\bibitem} entries
-        inside \texttt{thebibliography} \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\begin\menv{LTRitems}}{\Eenv{LTRitems}}
+    \DescribeOther{\begin\menv{RTLitems}}{\Eenv{RTLitems}}
+    The \texttt{LTRitems} environment sets the direction of the enclosed
+    list items to LTR; \texttt{RTLitems} sets it to RTL.
+
+    The environments group consecutive \cmd{\item} entries. They can
+    be used inside lists such as \texttt{itemize} and \texttt{enumerate};
+    they do not replace those environments.
 
     For example, a list can contain an RTL group between ordinary items:
 
@@ -657,6 +1041,14 @@
             \item The fourth item
         \end{itemize}
     \end{minted}
+
+    \Describe{\begin\menv{LTRbibitems}}{\Eenv{LTRbibitems}}
+    \DescribeOther{\begin\menv{RTLbibitems}}{\Eenv{RTLbibitems}}
+    The \texttt{LTRbibitems} environment sets the direction of the enclosed
+    bibliography entries to LTR; \texttt{RTLbibitems} sets it to RTL.
+
+    Use these environments inside \texttt{thebibliography}, with
+    \cmd{\bibitem} for each entry.
 
     For bibliography entries, use \cmd{\bibitem} rather than
     \cmd{\item}. The following example sets one entry in LTR direction
@@ -679,24 +1071,22 @@
     setting is local; the heading and running marks retain the
     surrounding direction.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Command & Description \\
-        \midrule
-        \cmd{\setLTRbibitems}, \cmd{\setRTLbibitems} &
-        Set all bibliography entries to LTR or RTL direction \\
-        \cmd{\setdefaultbibitems} &
-        Restore the default bibliography-entry direction \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\setLTRbibitems}{}
+    Sets all bibliography entries to LTR direction.
+
+    \Describe{\setRTLbibitems}{}
+    Sets all bibliography entries to RTL direction.
+
+    \Describe{\setdefaultbibitems}{}
+    Restores the default bibliography-entry direction.
 
     \subsection{Cases}
     \label{sec:cases}
 
-    The \texttt{RTLcases} environment typesets two columns with a
-    brace on the right. Cells use text mode: separate columns with
-    \texttt{\&}, rows with \cmd{\\}, and enclose mathematics in
-    \texttt{\$...\$}.
+    \Describe{\begin\menv{RTLcases}}{\Eenv{RTLcases}}
+    Typesets two columns with a brace on the right. Cells use text mode:
+    separate columns with \texttt{\&}, rows with \cmd{\\}, and enclose
+    mathematics in \texttt{\$...\$}.
 
     \begin{minted}{latex}
         \begin{RTLcases}
@@ -708,12 +1098,14 @@
     \subsection{Counter Separators}
     \label{sec:counter-separators}
 
-    With Xe\TeX, \cmd{\SepMark} is provided by
+    With \XeTeX, \cmd{\SepMark} is provided by
     \textsf{bidi}; its counter-formatting behaviour follows
     that implementation.
-    \cmd{\SepMark}\marg{separator} globally sets the separator in
-    supported compound counters; the default is a period. With Lua\TeX~
-    and pdf\TeX, the patch replaces a period immediately following the
+
+    \Describe{\SepMark}{\marg{separator}}
+    Globally sets the separator in supported compound counters;
+    the default is a period. With \LuaTeX~
+    and \pdfTeX, the patch replaces a period immediately following the
     parent counter in standard sectioning formats, chapter-based
     equation, figure, and table numbers, and formats created by
     unstarred \cmd{\numberwithin}. It also sets the theorem-counter
@@ -733,38 +1125,40 @@
     Explicit commands insert a directed note; switches configure
     ordinary \cmd{\marginpar} commands without inserting a note.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Command & Arguments and effect \\
-        \midrule
-        \cmd{\LTRmarginpar}, \cmd{\RTLmarginpar} &
-        \oarg{left-text}\marg{right-text}: insert a note with LTR or
-        RTL text \\
-        \cmd{\setLTRmarginpar}, \cmd{\setRTLmarginpar} &
-        Set ordinary notes to LTR or RTL direction and placement \\
-        \cmd{\setdefaultmarginpar} &
-        Restore behaviour based on surrounding text direction \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\LTRmarginpar}{\oarg{left-text}\marg{right-text}}
+    Inserts a margin note with LTR text.
+
+    \Describe{\RTLmarginpar}{\oarg{left-text}\marg{right-text}}
+    Inserts a margin note with RTL text.
 
     The optional \meta{left-text} argument has the same meaning as in
     \cmd{\marginpar}: alternative text for the left margin.
+    Explicit commands change the note's text direction, not its
+    placement policy.
+
+    With \XeTeX, these explicit commands use the native
+    \textsf{bidi} implementation, which may apply the
+    explicit direction only to the first paragraph
+    of a multi-paragraph margin note. With \LuaTeX
+    and \pdfTeX, \textsf{babelbidi} keeps the selected
+    direction throughout the note.
+
+    \Describe{\setLTRmarginpar}{}
+    Sets ordinary margin notes to LTR direction and placement.
+
+    \Describe{\setRTLmarginpar}{}
+    Sets ordinary margin notes to RTL direction and placement.
+
+    \Describe{\setdefaultmarginpar}{}
+    Restores behaviour based on the surrounding text direction.
+
     For ordinary \cmd{\marginpar} commands, the direction
     switches apply when no optional left-hand text is supplied.
     With the optional form, the surrounding text direction
-    is retained.
-    Explicit commands change the note's text direction, not its
-    placement policy. The switches are local; page parity,
+    is retained. The switches are local; page parity,
     reversed margins, and document columns still participate
     in placement. By default, ordinary margin notes follow the
     surrounding text direction.
-
-    With Xe\TeX, these commands use the native
-    \textsf{bidi} implementation, which may apply the
-    explicit direction only to the first paragraph
-    of a multi-paragraph margin note. With Lua\TeX\
-    and pdf\TeX, \textsf{babelbidi} keeps the selected
-    direction throughout the note.
 
     \subsection{Two-Column Output}
     \label{sec:two-column-output}
@@ -772,17 +1166,23 @@
     These commands change the order of completed document columns, not
     the direction of their contents. They do not enable two-column mode.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Command & Description \\
-        \midrule
-        \cmd{\LTRdblcol} & Place the first column on the left \\
-        \cmd{\RTLdblcol} & Place the first column on the right \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\LTRdblcol}{}
+    Places the first column on the left.
+
+    \Describe{\RTLdblcol}{}
+    Places the first column on the right.
 
     The default order follows the main document direction. For
     multi-column footnotes, see Section~\ref{sec:footnote-layouts}.
+
+    \subsection{Two-Column Table of Contents}
+    \label{sec:two-column-toc}
+
+    \Describe{\twocolumnstableofcontents}{}
+    Typesets the table of contents in two columns, with a full-width
+    section heading and \cmd{\small} entries. It takes no arguments
+    and does not change the current language or direction. Load
+    \textsf{multicol} in the preamble.
 
     \section{Language and Font APIs}
     \label{sec:language-fonts}
@@ -790,42 +1190,47 @@
     \subsection{Font Selection}
     \label{sec:font-selection}
 
-    With Xe\LaTeX\ or Lua\LaTeX, the following commands are available:
+    With \XeLaTeX or \LuaLaTeX, the following font commands are available.
+    The optional arguments accept font feature settings supported by
+    \textsf{fontspec}.
 
-    \begin{itemize}
-        \item
-        \cmd{\settextfont}\oarg{options}\marg{font}:
-        Set the \texttt{rm}, \texttt{sf}, and \texttt{tt} fonts for the
-        main language.
+    \Describe{\settextfont}{\oarg{font features}\marg{font}}
+    Sets the same font and font features for the \texttt{rm},
+    \texttt{sf}, and \texttt{tt} families of the main language.
 
-        \item
-        \cmd{\setlatintextfont}\oarg{options}\marg{font}:
-        Set all three font families for the selected Latin language.
+    \Describe{\setlatintextfont}{\oarg{font features}\marg{font}}
+    Sets the same font and font features for all three font families
+    of the selected Latin language.
 
-        \item
-        \cmd{\deflatinfont}\marg{command}\oarg{options}\marg{font}:
-        Define a font-family command with \texttt{Script=Latin}; this
-        does not select a language.
-
-        \item
-        \cmd{\setlatinsansfont}\oarg{options}\marg{font}:
-        Set the sans-serif font for the selected Latin language.
-
-        \item
-        \cmd{\setlatinmonofont}\oarg{options}\marg{font}:
-        Set the monospaced font for the selected Latin language and
-        configure it for use by \cmd{\latinttfamily}.
-
-        \item
-        \cmd{\setmonofont}\oarg{options}\marg{font}:
-        In the preamble, also register the main language's monospaced
-        font with Babel, making it available to font fallback.
-    \end{itemize}
-
-    The first two commands set all three font families
-    (\texttt{rm}, \texttt{sf}, and \texttt{tt}), not just the roman
-    family. For individual language--family assignments, use
+    These two commands apply the same font and font features to all
+    three families (\texttt{rm}, \texttt{sf}, and \texttt{tt}).
+    For individual language--family assignments, use
     \cmd{\babelfont} directly.
+
+    \Describe{\latinfont}{}
+    Selects the roman font for the selected Latin language,
+    without changing the current language or direction.
+    Use a group to limit its scope:
+    \texttt{\{\cmd{\latinfont} Latin text\}}.
+
+    \Describe{\deflatinfont}{\marg{command}\oarg{font features}\marg{font}}
+    Defines an independent font-family command with
+    \texttt{Script=Latin}. Additional font features can be
+    specified in the optional argument. This command does not
+    register a font with Babel or select a language.
+
+    \Describe{\setlatinsansfont}{\oarg{font features}\marg{font}}
+    Sets the sans-serif font family for the selected Latin language.
+
+    \Describe{\setlatinmonofont}{\oarg{font features}\marg{font}}
+    Sets the monospaced font family for the selected Latin language
+    and configures it for use by \cmd{\latinttfamily}.
+
+    \Describe{\setmonofont}{\oarg{font features}\marg{font}\oarg{font features}}
+    Sets the document's monospaced font through \textsf{fontspec}.
+    When Babel is loaded, it also registers this font for the
+    \texttt{tt} family of the main language, making it available
+    to \LuaTeX glyph fallback.
 
     \subsection{Language Commands}
     \label{sec:language-commands}
@@ -836,25 +1241,23 @@
     only; they do not select a language. The language-switching commands
     are not part of the standard \textsf{bidi} interface.
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Command & Description \\
-        \midrule
-        \cmd{\lr\{<text>\}} &
-        Typeset text using the selected LTR language \\
-        \cmd{\rl\{<text>\}}  &
-        Typeset text using the selected RTL language \\
-        \cmd{\latintoday}  &
-        Print the current date using the selected Latin language \\
-        \cmd{\latinttfamily}  &
-        Select the Latin monospaced font family; Unicode engines only \\
-        \cs{latinverb\mid<text>\mid} &
-        Inline verbatim in the selected \texttt{code} language \\
-        \cmd{\latinverb*\mid<text>\mid} &
-        The same, with visible spaces \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\lr}{\marg{text}}
+    Typesets text using the selected LTR language.
 
+    \Describe{\rl}{\marg{text}}
+    Typesets text using the selected RTL language.
+
+    \Describe{\latintoday}{}
+    Prints the current date using the selected Latin language.
+
+    \Describe{\latinttfamily}{}
+    Selects the Latin monospaced font family; Unicode engines only.
+
+    \Describe{\latinverb}{\meta{delimiter}\meta{text}\meta{delimiter}}
+    Typesets inline verbatim text in the selected \texttt{code} language.
+
+    \Describe{\latinverb*}{\meta{delimiter}\meta{text}\meta{delimiter}}
+    Does the same, with visible spaces.
 
     Despite its name, \cmd{\latinverb} selects the \texttt{code}
     language, not the \texttt{latin} alias.
@@ -862,18 +1265,14 @@
     \subsection{Language Environments}
     \label{sec:language-environments}
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Environment & Description \\
-        \midrule
-        \texttt{latin} &
-        Typeset contents in the selected Latin language \\
-        \texttt{latinverbatim} &
-        Typeset a verbatim block in the \texttt{code} language \\
-        \texttt{latinverbatim*} &
-        The same, with visible spaces \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{\begin\menv{latin}}{\Eenv{latin}}
+    Typesets contents in the selected Latin language.
+
+    \Describe{\begin\menv{latinverbatim}}{\Eenv{latinverbatim}}
+    \DescribeOther{\begin\menv{latinverbatim*}}{\Eenv{latinverbatim*}}
+    The \texttt{latinverbatim} environment typesets a verbatim block in the
+    selected \texttt{code} language. The starred form does the same, with
+    visible spaces.
 
     The Latin verbatim interfaces are available regardless of the
     main script.
@@ -884,19 +1283,19 @@
     The following package keys select the languages used by these
     interfaces:
 
-    \begin{tabularx}{\linewidth}{@{}lX@{}}
-        \toprule
-        Key & Used for \\
-        \midrule
-        \texttt{latin} &
-        The \texttt{latin} environment, \cmd{\latintoday}, and Latin
-        font commands \\
-        \texttt{ltr} & \cmd{\lr} \\
-        \texttt{rtl} & \cmd{\rl} \\
-        \texttt{code} &
-        Latin verbatim interfaces and code-package integration \\
-        \bottomrule
-    \end{tabularx}
+    \Describe{latin}{=\meta{language}}
+    Selects the language for the \texttt{latin} environment,
+    \cmd{\latintoday}, \cmd{\latinttfamily}, \cmd{\latinfont}, \cmd{\Latincite}, and Latin font commands.
+
+    \Describe{ltr}{=\meta{language}}
+    Selects the language used by \cmd{\lr}.
+
+    \Describe{rtl}{=\meta{language}}
+    Selects the language used by \cmd{\rl}.
+
+    \Describe{code}{=\meta{language}}
+    Selects the language for Latin verbatim interfaces and
+    code-package integration.
 
     These keys select language names; they do not load the languages.
     For example:
@@ -937,6 +1336,68 @@
     default such as \texttt{english} or \texttt{arabic}. Declare
     languages before configuring their fonts.
 
+    \Needspace{11\baselineskip}
+    These selections are handled by \textsf{babelbidi-lang}, which
+    \textsf{babelbidi} loads automatically. For standalone use, load
+    Babel first:
+
+    \begin{minted}{latex}
+        \usepackage[english]{babel}
+        \usepackage{babelbidi-lang}
+    \end{minted}
+
+    The standalone package provides \cmd{\lr}, \cmd{\rl},
+    \cmd{\latintoday}, and the \texttt{latin} environment, and accepts
+    the language-selection keys above. Configure Babel's languages,
+    direction support, and fonts as needed.
+
+   \section{Engine Logos}
+   \label{sec:engine-logos}
+
+    \begingroup
+    \newcommand*\LogoName[1]{%
+        {\normalfont\normalsize\ttfamily\color{thegreyed}%
+            \underline{\strut{\color{thered}\string#1}}}%
+    }
+
+    \par\medskip
+    \noindent\hspace*{-1.7cm}%
+    \begin{tabular*}{\dimexpr\linewidth\relax}
+        {@{\extracolsep{\fill}}lll@{}}
+        \LogoName{\TeX}
+        & \LogoName{\LaTeX}
+        & \LogoName{\LaTeXe} \\
+
+        \LogoName{\XeTeX}
+        & \LogoName{\LuaTeX}
+        & \LogoName{\pdfTeX} \\
+
+        \LogoName{\XeLaTeX}
+        & \LogoName{\LuaLaTeX}
+        & \LogoName{\pdfLaTeX}
+    \end{tabular*}
+    \par\medskip
+    \endgroup
+
+
+   These commands typeset the corresponding logos, preserving
+   the surrounding language and direction. With \textsf{babelbidi},
+   they locally use English or the selected Latin language,
+   when available.
+
+   All logos use \verb|\xspace| for automatic spacing.
+   Append \verb|{}| for explicit control, as in
+   \verb|\LaTeX{}-based|.
+
+   The default \texttt{logostyle=auto} uses graphics-based
+   variants when \textsf{graphics} or \textsf{graphicx} is loaded
+   before \textsf{babelbidi}. Use \texttt{logostyle=simple}
+   for variants without reflected letters. This option does
+   not affect the standard \TeX, \LaTeX, and \LaTeXe constructions.
+
+   For standalone use, load \textsf{babelbidi-logos} directly,
+   with \texttt{style=auto} or \texttt{style=simple}.
+
     \section{Patches}
     \label{sec:patches}
 
@@ -949,7 +1410,7 @@
 
     \begin{itemize}
         \item
-        \textbf{LaTeX verbatim interfaces:}
+        \textbf{\LaTeX verbatim interfaces:}
         With a non-Latin main script, adjust direction and font handling
         for \cmd{\verb}, \cmd{\verb}\texttt{*}, \texttt{verbatim}, and
         \texttt{verbatim*}. With Unicode engines, the font patch selects
@@ -974,8 +1435,12 @@
         displayed counter values.
     \end{itemize}
 
-    \subsection{Xe\LaTeX\ Patches}
+    \subsection{\texorpdfstring{\XeLaTeX}{XeLaTeX} Patches}
     \label{sec:xelatex-patches}
+
+    With \XeLaTeX, load \textsf{hyperref} before \textsf{babelbidi}.
+    With current \textsf{bidi} versions, the reverse order can cause
+    errors in footnotes.
 
     \begin{itemize}
         \item
@@ -989,7 +1454,7 @@
         active. This is not a general mathematics-direction patch.
     \end{itemize}
 
-    \subsection{Lua\LaTeX\ Patches}
+    \subsection{\texorpdfstring{\LuaLaTeX}{LuaLaTeX} Patches}
     \label{sec:lualatex-patches}
 
     \begin{itemize}
@@ -1009,7 +1474,7 @@
         Adjust rounded-box layout, except with \textsf{beamer-rl}.
     \end{itemize}
 
-    For RTL-main documents, additional Lua\LaTeX\ patches apply:
+    For RTL-main documents, additional \LuaLaTeX patches apply:
 
     \begin{itemize}
         \item
@@ -1040,14 +1505,17 @@
     \subsection{Language and Direction}
     \label{sec:minted-language-direction}
 
-    The \texttt{textlang} option selects an already declared Babel
-    language. If it is empty, the selected \texttt{code} language is
-    used. The \texttt{textdir} option accepts \texttt{ltr} or
-    \texttt{rtl}. It is applied after language selection, so an explicit
-    direction overrides the direction established by \texttt{textlang}.
+    \Describe{textlang}{=\meta{language}}
+    Selects an already declared Babel language. If it is empty,
+    the selected \texttt{code} language is used.
+
+    \Describe{textdir}{=\meta{direction}}
+    Accepts \texttt{ltr} or \texttt{rtl}. It is applied after
+    language selection, so an explicit direction overrides the
+    direction established by \texttt{textlang}.
 
     \begin{minted}{latex}
-        \begin{minted}[textlang=persian,textdir=rtl]{text}
+        \begin{min||ted}[textlang=persian,textdir=rtl]{text}
             متن فارسی
         \end{min||ted}
     \end{minted}
@@ -1064,11 +1532,13 @@
     \subsection{Character Directions}
     \label{sec:minted-character-directions}
 
-    With Lua\LaTeX, \texttt{chardir} temporarily changes Babel character-
-    direction properties. Its value is a comma-separated list of
-    \texttt{\{character\}\{direction\}} pairs. Direction values include
-    \texttt{l}, \texttt{r}, \texttt{al}, \texttt{en}, \texttt{an},
-    \texttt{on}, \texttt{et}, and \texttt{cs}.
+    With \LuaLaTeX, the following option temporarily changes Babel
+    character-direction properties:
+
+    \Describe{chardir}{=\meta{pairs}}
+    Accepts a comma-separated list of \texttt{\{character\}\{direction\}}
+    pairs. Direction values include \texttt{l}, \texttt{r}, \texttt{al},
+    \texttt{en}, \texttt{an}, \texttt{on}, \texttt{et}, and \texttt{cs}.
 
     For example, assign LTR direction to a backslash and closing brace:
 
@@ -1084,48 +1554,56 @@
     Saved properties are restored after the \texttt{minted} environment.
     The restoration hook is environment-based; do not assume equivalent
     restoration for inline commands or file-input interfaces. A nonempty
-    \texttt{chardir} value raises an error with Xe\LaTeX\ or pdf\LaTeX;
+    \texttt{chardir} value raises an error with \XeLaTeX or \pdfLaTeX;
     it is not silently ignored.
 
     \subsection{Layout}
     \label{sec:minted-layout}
 
     Inside \texttt{minted} environments, line numbers use Latin digits.
-    With Lua\LaTeX, frame lines and padding receive LTR geometry
-    adjustments. For a non-Latin main script, the additional Lua\LaTeX
+    With \LuaLaTeX, frame lines and padding receive LTR geometry
+    adjustments. For a non-Latin main script, the additional \LuaLaTeX
     display wrapper uses a minipage. Such wrapped displays cannot break
     across pages; keep this in mind for long listings.
 
+    \Needspace{15\baselineskip}
     \section{Limitations and Compatibility}
     \label{sec:limitations}
 
     \begin{itemize}
         \item
         Shared interfaces do not imply identical implementations
-        or output across engines. With Xe\TeX, behaviour may also
+        or output across engines. With \XeTeX, behaviour may also
         depend on the installed \textsf{bidi} version.
 
         \item
         Direction commands do not provide language data, input
         encodings, fonts, or glyphs. Some patches depend on Babel
         or third-party package internals, so successful compilation
-        alone does not guarantee correct bidirectional layout.
+        alone does not guarantee correct bidirectional layout. Inspect
+        the output, especially when combining direction changes with
+        other layout packages.
 
         \item
         Extra footnote layouts modify insertion and output handling.
         Check their compatibility with classes or packages that
-        modify these mechanisms; universal compatibility is not
-        guaranteed.
+        modify these mechanisms, including the position and order of
+        notes. See Section~\ref{sec:footnote-layouts} for the
+        engine-specific behaviour and restrictions.
     \end{itemize}
 
     \section{License}
     \label{sec:license}
 
     The \textsf{babelbidi} package is released under the
-    \LaTeX~Project Public License (LPPL), version 1.3c or later. The full
+    \LaTeX Project Public License (LPPL), version 1.3c or later. The full
     license text is available in the \texttt{LICENSE} file.
+    This independent guide adapts presentation code from the Babel
+    manual. Source and copyright notices for this and other reused
+    material are in \href{run:../THIRD-PARTY-NOTICES.md}
+    {\texttt{THIRD-PARTY-NOTICES.md}}.
 
-        \section{Author and Maintainer}
+    \section{Author and Maintainer}
     \label{sec:author}
 
     The package is developed and maintained by
@@ -1138,8 +1616,13 @@
         \url{https://github.com/gambi-shah/babelbidi}
     \end{center}
 
-    For bug reports, include a minimal example, the \TeX\
-    engine and its version, and the complete log file.
+    The repository also contains test documents in the
+    \href{https://github.com/gambi-shah/babelbidi/tree/main/test}
+    {\texttt{test/}} directory. These development files are not
+    included in the CTAN distribution.
+
+    For bug reports, include a minimal example, the \TeX engine
+    and its version, and the complete log file.
     Add \cmd{\listfiles} to the preamble to record the
     loaded file versions in the log.
 

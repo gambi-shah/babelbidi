@@ -1,0 +1,228 @@
+% !TeX program = xelatex
+\documentclass{article}
+
+% ============================================================
+% Package selection
+% ============================================================
+
+\newif\ifUseXePersian
+\UseXePersianfalse
+% \UseXePersiantrue
+
+% ============================================================
+% Common packages
+% ============================================================
+
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+% ============================================================
+% Persian package
+% ============================================================
+
+\ifUseXePersian
+\usepackage{xepersian}
+\newcommand{\ActivePackageName}{XePersian}
+\else
+\usepackage{unipersian}
+\newcommand{\ActivePackageName}{UniPersian}
+\fi
+
+% ============================================================
+% Fonts
+% ============================================================
+
+\settextfont{Amiri}
+\setlatintextfont{TeX Gyre Termes}
+
+% ============================================================
+% Document
+% ============================================================
+
+\begin{document}
+
+    \begin{center}
+        {\Large آزمون دستور \lr{\textbackslash Latincite}}
+
+        \medskip
+        بستهٔ فعال: \lr{\ActivePackageName}
+    \end{center}
+
+    \hrule
+    \bigskip
+
+    \tableofcontents
+
+    \listoffigures
+
+    % ============================================================
+    \section{Basic Citations}
+
+    این یک ارجاع معمولی است:
+    \cite{knuth}.
+
+    این یک ارجاع لاتین تکی است:
+    \Latincite{knuth}.
+
+    این هم ارجاع به دو منبع است:
+    \Latincite{knuth,lamport}.
+
+    ترتیب معکوس دو منبع:
+    \Latincite{lamport,knuth}.
+
+    سه منبع با ترتیب متفاوت:
+    \Latincite{mittelbach,knuth,lamport}.
+
+    % ============================================================
+    \section{Optional Notes}
+
+    یادداشت فارسی ساده:
+    \Latincite[صفحهٔ ۲۳]{knuth}.
+
+    یادداشت فارسی با ویرگول:
+    \Latincite[صفحهٔ ۲۳، بند ۴]{knuth}.
+
+    یادداشت ترکیبی فارسی و انگلیسی:
+    \Latincite[برای توضیح بیشتر در \lr{The TeXbook}، صفحهٔ ۲۳]{knuth}.
+
+    یادداشت طولانی:
+    \Latincite[برای مطالعهٔ بیشتر، به فصل دوم و صفحات ۲۳ تا ۳۱ مراجعه کنید]{knuth}.
+
+    یادداشت لاتین:
+    \Latincite[see page 23]{knuth}.
+
+    % ============================================================
+    \section{Multiple and Repeated Keys}
+
+    کلیدها با فاصله:
+    \Latincite{knuth, lamport}.
+
+    کلیدهای تکراری:
+    \Latincite{knuth,knuth}.
+
+    سه کلید با فاصله:
+    \Latincite{knuth, lamport, mittelbach}.
+
+    تکرار در ترکیب با یادداشت:
+    \Latincite[صفحات ۲۳ و ۲۴]{knuth,lamport}.
+
+    % ============================================================
+    \section{Interaction with Normal Citations}
+
+    ابتدا ارجاع معمولی و سپس ارجاع لاتین:
+    \cite{knuth}، \Latincite{knuth,lamport}.
+
+    ابتدا ارجاع لاتین و سپس ارجاع معمولی:
+    \Latincite{lamport,knuth}، \cite{mittelbach}.
+
+    چند ارجاع متوالی:
+    \Latincite{knuth}؛
+    \Latincite[صفحهٔ ۴۰]{lamport}؛
+    \cite{mittelbach}.
+
+    % ============================================================
+    \section{Citations in Moving Arguments
+        \texorpdfstring{\Latincite{mittelbach}}{}}
+
+    ارجاع در عنوان قسمت باید در فهرست مطالب نیز درست نمایش داده شود.
+
+    \begin{figure}[htbp]
+        \centering
+        \rule{0.65\linewidth}{18mm}
+        \caption{آزمون ارجاع در عنوان شکل
+            \Latincite[صفحهٔ ۱۵]{lamport}}
+        \label{fig:citation}
+    \end{figure}
+
+    ارجاع به شکل:
+    \hyperref[fig:citation]{شکل بالا}.
+
+    % ============================================================
+    \section{Citations in Footnotes}
+
+    ارجاع در متن پانویس%
+    \footnote{
+        این پانویس شامل یک ارجاع لاتین است:
+        \Latincite[صفحهٔ ۲۳]{knuth}.
+        متن فارسی پس از ارجاع نیز باید درست نمایش داده شود.
+    }
+
+    ارجاع دیگری در پانویس:
+    \footnote{
+        دو منبع:
+        \Latincite{lamport,mittelbach}.
+    }
+
+    % ============================================================
+    \section{Citations in Tables}
+
+    \begin{center}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            منبع & ارجاع معمولی & ارجاع لاتین \\
+            \hline
+            Knuth & \cite{knuth} & \Latincite{knuth} \\
+            \hline
+            Lamport & \cite{lamport} & \Latincite{lamport} \\
+            \hline
+            Mittelbach & \cite{mittelbach} &
+            \Latincite{mittelbach} \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    % ============================================================
+    \section{Citations in Minipages}
+
+    \begin{minipage}{0.8\linewidth}
+        این یک محیط مستقل است.
+
+        ارجاع تکی:
+        \Latincite{knuth}.
+
+        ارجاع چندتایی:
+        \Latincite{lamport,mittelbach}.
+
+        یادداشت فارسی:
+        \Latincite[صفحهٔ ۵۰]{lamport}.
+    \end{minipage}
+
+    % ============================================================
+    \section{Normal Text After Citations}
+
+    \Latincite{knuth,lamport}.
+
+    این متن فارسی باید پس از ارجاع همچنان
+    با جهت و قلم صحیح ادامه پیدا کند.
+
+    \Latincite[صفحهٔ ۲۳]{knuth}.
+
+    این هم متن فارسی پس از ارجاع دارای یادداشت.
+
+    % ============================================================
+    \begin{thebibliography}{99}
+
+        \bibitem{knuth}
+        \lr{%
+            Donald E. Knuth.
+            \emph{The TeXbook}.
+            Addison-Wesley, 1984.
+        }
+
+        \bibitem{lamport}
+        \lr{%
+            Leslie Lamport.
+            \emph{LaTeX: A Document Preparation System}.
+            Addison-Wesley, 1994.
+        }
+
+        \bibitem{mittelbach}
+        \lr{%
+            Frank Mittelbach et al.
+            \emph{The LaTeX Companion}.
+            Addison-Wesley, 2004.
+        }
+
+    \end{thebibliography}
+
+\end{document}

@@ -1,6 +1,15 @@
 % babelbidi-onchar.def
 %
 % BabelBidi: bidirectional support for LaTeX.
+% Copyright (C) 2026 Amer Amikhteh.
+%
+% The expected font mapper and part of the cache-miss path reproduce code
+% from Babel's babel.dtx / luababel.def (compared with Babel 26.14).
+% Copyright (C) 2012-2026 Javier Bezos and Johannes L. Braams.
+% Copyright (C) 1989-2012 Johannes L. Braams and individual authors
+% listed in the original file. Babel is distributed under the LPPL,
+% version 1.3 or later. This file adds a compatibility guard and font-map
+% caching. Original source and notices: THIRD-PARTY-NOTICES.md.
 %
 % This file is part of the BabelBidi package.
 %
@@ -17,7 +26,7 @@
 % https://www.latex-project.org/lppl/
 
 \ProvidesFile{babelbidi-onchar.def}
-[2026/10/21 v0.3.2 Cache for Babel font mappings]
+[2026/11/11 v0.3.3 Cache for Babel font mappings]
 
 \makeatletter
 

@@ -1,0 +1,83 @@
+% Layout regression/preview. Compile twice, from the package root.
+\documentclass[a4paper,11pt,twoside]{article}
+\usepackage[margin=25mm,footskip=14mm]{geometry}
+\usepackage[colorlinks]{hyperref}
+\makeatletter
+\providecommand\input@path{}
+\g@addto@macro\input@path{{../}}
+\let\BeforeSectionMark\sectionmark
+\newdimen\BeforeFootskip \BeforeFootskip=\footskip
+\let\BeforeOddFoot\@oddfoot
+\makeatother
+\usepackage[manual]{amikhteh-logo}
+\makeatletter
+\ifx\sectionmark\BeforeSectionMark\else
+  \errmessage{Loading manual option changed section marks}\fi
+\ifdim\footskip=\BeforeFootskip\else
+  \errmessage{Loading manual option changed footskip}\fi
+\ifx\@oddfoot\BeforeOddFoot\else
+  \errmessage{Loading manual option activated a page style}\fi
+\typeout{MANUAL TEST PASS: no automatic layout activation}
+\makeatother
+\definecolor{CoverInk}{HTML}{F3EFE2}
+\definecolor{CoverRose}{HTML}{FFB9D7}
+\AmikhtehLogoCoverSetup{primary=CoverInk,accent=CoverRose}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{7pt}
+\newcommand\Paragraph{A shared visual identity is independent of a
+package's language, fonts and direction policy. Documentation should
+remain readable while the same small mark connects this manual to the
+other members of the family. Section titles, rather than subsections,
+identify the reader's position in the footer.\par}
+\begin{document}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\thispagestyle{empty}
+\noindent
+\begin{tikzpicture}[remember picture,overlay,x=\paperwidth,y=\paperheight]
+\begin{scope}[shift={(current page.south west)}]
+\fill[black!90] (0,0) rectangle (1,1);
+\node[anchor=north west,text=CoverInk,align=left]
+  at (.10,.87) {\sffamily\Huge BabelBidi\\[8mm]
+    \sffamily\Large Cover and footer layout test};
+\node[anchor=west,text=CoverInk] at (.10,.20)
+  {\sffamily No footer on this page};
+\end{scope}
+\end{tikzpicture}%
+\AmikhtehLogoCover
+\end{titlepage}
+\hypersetup{pageanchor=true}
+\pagestyle{amikhteh-logo}
+\AmikhtehLogoFooterTitle{Contents}
+\tableofcontents
+\vfill
+The contents footer must say ``Contents'', not a later section title.
+\newpage
+\section{Introduction}
+\Paragraph\Paragraph
+\subsection{This subsection must not replace the main-section footer}
+\Paragraph\Paragraph
+\vfill
+The footer must read ``Introduction'', page number, coloured mark.
+\newpage
+\section{A deliberately long main-section title that must wrap safely
+without overlapping the page number or the shared coloured mark}
+\Paragraph\Paragraph\Paragraph
+\vfill
+This is also an even-page alignment check. The page/mark should stay right.
+\newpage
+\section[A short running title]{A much longer printed section heading
+with a deliberately short optional running title}
+\Paragraph
+\AmikhtehLogo[size=12mm]\quad
+{\AmikhtehLogoSetup{size=30mm}\AmikhtehLogo}\quad
+\AmikhtehLogo[size=12mm]
+\par The footer must remain 9\,mm and blue/green despite the cover settings
+and the large local mark above.
+\newpage
+\section*{Build notes}
+\AmikhtehLogoFooterTitle{Build notes}
+\Paragraph
+\vfill
+This explicit unnumbered-section title should appear in the footer.
+\end{document}

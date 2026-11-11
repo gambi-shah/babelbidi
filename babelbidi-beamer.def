@@ -1,9 +1,14 @@
 % babelbidi-beamer.def
 %
-% This file contains code copied from the beamer-rl class
-% by Salim Bou.
+% This file extracts rounded-box code from the beamer-rl class by
+% Salim Bou for use by babelbidi with the beamer class. The extracted
+% definitions match those in beamer-rl 2.1 (2026-07-22), apart from
+% whitespace; the file identification and loading wrapper are new.
+% Related beamerbaseboxes code is copyright Till Tantau, Vedran Miletic,
+% Joseph Wright and samcarter; see THIRD-PARTY-NOTICES.md.
 %
 % Copyright (c) 2019--2025 Salim Bou.
+% The compared beamer-rl 2.1 distribution states 2019--2026.
 %
 % The original work is distributed under the
 % LaTeX Project Public License, version 1.3c or later.
@@ -17,7 +22,7 @@
 %   https://github.com/seloumi/beamer-rl
 
 \ProvidesFile{babelbidi-beamer.def}
-[2026/10/09 v0.1.0 LuaTeX beamer support for babelbidi]
+[2026/11/11 v0.1.1 LuaTeX beamer support for babelbidi]
 
 
 \makeatletter

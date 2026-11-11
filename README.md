@@ -1,10 +1,11 @@
-# LaTeX Package: BabelBidi v0.6.0 (2026-11-08)
+LaTeX Package: BabelBidi v1.0.0 (2026-11-11)
+----------------------------------------
 
 An extension to Babel’s bidirectional support.
 
 ## Description
 
-This package extends [Babel](https://ctan.org/pkg/babel)’s bidirectional support by correcting direction-sensitive behaviour, providing text-direction and layout controls, and adding interfaces for language selection and font configuration, including glyph fallback with LuaTeX. It supports Babel languages and works with LuaTeX (recommended), XeTeX, or pdfTeX, with either an LTR or RTL main language.
+This package extends [Babel](https://ctan.org/pkg/babel)’s bidirectional support by correcting direction-sensitive behaviour and providing text-direction and layout controls. It supports Babel languages and works with LuaTeX (recommended), XeTeX, or pdfTeX, with either an LTR or RTL main language.
 
 ## Features
 
@@ -12,8 +13,8 @@ This package extends [Babel](https://ctan.org/pkg/babel)’s bidirectional suppo
 - Direction commands, environments, directional boxes, and overlapping text.
 - Directed footnotes and title notes, configurable footnote rules, and optional extra footnote layouts.
 - Direction controls for lists, bibliographies, cases, margin notes, and columns.
-- Automatic auxiliary-language selection.
 - Font configuration, LuaTeX glyph fallback, and layout patches for commonly used packages.
+- Engine logos that adapt to the surrounding language and text direction.
 
 ## Installation
 
@@ -36,13 +37,15 @@ Compile with LuaLaTeX (recommended), XeLaTeX, or pdfLaTeX. Babel language option
 
 ## Interfaces
 
-BabelBidi provides the complete user-level interfaces of `bidi` and `luabidi`, including direction commands and environments, directional boxes, footnote controls, list and bibliography direction, the `RTLcases` environment, counter separators, margin notes, and column-order controls.
+BabelBidi provides the complete user-level interfaces of `bidi` and `luabidi`.
 
-The optional `extrafootnotefeatures` package option enables paragraph and two- to ten-column footnote layouts.
+Some additional interfaces include:
 
-Additional interfaces include language-aware `\lr{...}` and `\rl{...}`, `\latinverb` and `\latinverbatim`, font commands such as `\settextfont` and `\deflatinfont`, and LuaTeX's `\fontfallback`.
-
-Layout patches apply to non-Latin main scripts. Related packages may be loaded before or after BabelBidi.
+- `\lr{...}` and `\rl{...}` for language-aware text direction.
+- `\Latincite` for citations using the selected Latin language.
+- `\latinverb` and the `latinverbatim` environment for code and verbatim text.
+- `\settextfont` and `\deflatinfont` for font configuration with Unicode engines.
+- `\fontfallback` for glyph fallback with LuaTeX.
 
 ## Language Selection
 
@@ -50,10 +53,15 @@ Auxiliary Latin, LTR, RTL, and code languages are selected automatically and upd
 
 ## Documentation
 
-See the [main manual](doc/babelbidi.pdf) for configuration details and examples.
+See the [main manual](doc/babelbidi.pdf) for configuration details and examples, including compatibility notes and engine-specific limitations.
+
+The optional `babelbidi.cwl` provides TeXstudio completion for the package's commands and environments. Copy it to TeXstudio's user completion directory (`~/.config/texstudio/completion/user/` on Linux).
+
+The distribution also includes `amikhteh-logo`, a companion package used in the documentation. See its [companion guide](doc/amikhteh-logo.pdf).
 
 ## License and Maintainer
 
 - License: LPPL 1.3c or later.
+- Third-party source, copyright, and license details: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 - Maintainer: Amer Amikhteh.
 - Report bugs via the [repository issue tracker](https://github.com/gambi-shah/babelbidi/issues).

@@ -1,0 +1,93 @@
+
+% !TeX program = lualatex
+\documentclass{article}
+
+% ============================================================
+% BabelBidi
+% ============================================================
+\usepackage{graphics}
+
+
+\usepackage[latin=english,ltr=german,logostyle=auto]{babelbidi}
+
+\babelprovide[main,import]{german}
+\babelprovide[import]{english}
+
+% Use visibly different fonts for the main and Latin languages.
+\ifTUTeX
+\babelfont[german]{rm}{Latin Modern Roman}
+\babelfont[english]{rm}{TeX Gyre Termes}
+\fi
+
+
+% ============================================================
+% Optional graphics support
+% ============================================================
+
+% Define \BBDTestGraphics to test the enhanced XeTeX logos.
+\ifdefined\BBDTestGraphics
+%\usepackage{graphicx}
+\fi
+
+% Report which XeTeX logo implementation is available.
+\makeatletter
+\@ifundefined{reflectbox}
+{\typeout{BABELBIDI LOGOS: Simple XeTeX logos}}
+{\typeout{BABELBIDI LOGOS: Reflected XeTeX logos}}
+\makeatother
+
+% ============================================================
+% Document
+% ============================================================
+
+\begin{document}
+
+\section{Engine Logos}
+
+This document tests the engine logo commands provided by
+BabelBidi.
+
+\subsection{TeX engines}
+
+\begin{center}
+    \begin{tabular}{ll}
+        \texttt{\string\XeTeX}    & \XeTeX    \\[8pt]
+        \texttt{\string\XeLaTeX}  & \XeLaTeX  \\[8pt]
+        \texttt{\string\LuaTeX}   & \LuaTeX   \\[8pt]
+        \texttt{\string\LuaLaTeX} & \LuaLaTeX \\[8pt]
+        \texttt{\string\pdfTeX}   & \pdfTeX   \\[8pt]
+        \texttt{\string\pdfLaTeX} & \pdfLaTeX
+    \end{tabular}
+\end{center}
+
+\subsection{Inline usage}
+
+The engines are \XeTeX, \XeLaTeX, \LuaTeX,
+\LuaLaTeX, \pdfTeX, and \pdfLaTeX.
+
+The surrounding language should remain German after every logo.
+
+\subsection{Right-to-left context}
+
+\RLE{%
+    RTL embedding:
+    \XeTeX,
+    \XeLaTeX,
+    \LuaTeX,
+    \LuaLaTeX,
+    \pdfTeX,
+    \pdfLaTeX.
+}
+
+The surrounding text should retain its original direction
+and language.
+
+\subsection{English context}
+
+\begin{otherlanguage}{english}
+    These are the engine logos:
+    \XeTeX, \XeLaTeX, \LuaTeX,
+    \LuaLaTeX, \pdfTeX, and \pdfLaTeX.
+\end{otherlanguage}
+
+\end{document}

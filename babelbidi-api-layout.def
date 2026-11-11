@@ -20,11 +20,32 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-api-layout.def}[2026/11/08 v0.1.0 Additional Bidi API for Babelbidi]
+\ProvidesFile{babelbidi-api-layout.def}[2026/11/11 v0.2.0 Additional Bidi API for Babelbidi]
 
 \makeatletter
 
+
+% ------------------------------------------
+% Two-column table of contents
+% ------------------------------------------
+
+\ProvideDocumentCommand{\twocolumnstableofcontents}{}{%
+    \@ifpackageloaded{multicol}{%
+        \begin{multicols}{2}[\section*{\contentsname}]%
+            \small
+            \@starttoc{toc}%
+        \end{multicols}%
+    }{%
+        \PackageError{babelbidi}%
+        {The \string\twocolumnstableofcontents\space command requires multicol}%
+        {Load \string\usepackage{multicol} in the preamble.}%
+    }%
+}
+
+% ------------------------------------------
 % XeTeX uses bidi's original interfaces, including its footnote machinery.
+% ------------------------------------------
+
 \ifXeTeX
     \makeatother
     \expandafter\endinput

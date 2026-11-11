@@ -1,0 +1,345 @@
+% amikhteh-logo.sty -- Amer Amikhteh's shared package-family identity.
+% Distributed as a companion file of BabelBidi, not a separate release.
+% Copyright (C) 2026 Amer Amikhteh
+% License: LPPL 1.3c or later (same license as BabelBidi).
+% This work consists of amikhteh-logo.sty and its accompanying documentation.
+\NeedsTeXFormat{LaTeX2e}[2020-10-01]
+\ProvidesPackage{amikhteh-logo}[2026/11/11 v0.1.0 Shared package-family identity]
+% The optional manual layout is enabled explicitly; normal logo use does
+% not load fancyhdr or alter page styles, section marks or page geometry.
+\newif\ifamikhtehlogo@manual
+\DeclareOption{manual}{\amikhtehlogo@manualtrue}
+\DeclareOption*{\PackageError{amikhteh-logo}{Unknown option `\CurrentOption'}%
+  {The only package option is manual.}}
+\ProcessOptions\relax
+\RequirePackage{tikz}
+\RequirePackage{iftex}
+
+% No BabelBidi, UniPersian, fontspec, external image or shell escape needed.
+% Do NOT load this file automatically from babelbidi.sty: ordinary documents
+% using BabelBidi should not acquire TikZ just for a documentation logo.
+% TikZ loads graphicx indirectly. If babelbidi-logos uses style=auto,
+% load BabelBidi (or babelbidi-logos) FIRST to preserve its graphics detection.
+
+\definecolor{AmikhtehLogoBlue}{HTML}{00B0F1}
+\definecolor{AmikhtehLogoGreen}{HTML}{00B14F}
+\newdimen\amikhtehlogo@size
+
+% ================================================================
+% 1. Public settings. Setup changes the defaults in the current group;
+%    options on a logo command affect only that particular occurrence.
+% ================================================================
+\pgfkeys{
+  /amikhteh-logo/.is family,
+  /amikhteh-logo,
+  size/.code={%
+      \setlength{\amikhtehlogo@size}{#1}%
+      \ifdim\amikhtehlogo@size>0pt\else
+        \PackageError{amikhteh-logo}{Logo size must be positive}%
+        {Use a positive TeX length, for example size=20mm.}%
+        \amikhtehlogo@size=20mm\relax
+      \fi
+    },
+  primary/.store in=\amikhtehlogo@primary,
+  accent/.store in=\amikhtehlogo@accent,
+  mono-color/.store in=\amikhtehlogo@mono,
+  name-font/.store in=\amikhtehlogo@namefont,
+  name-gap/.store in=\amikhtehlogo@gap,
+  baseline/.is choice,
+  baseline/bottom/.code={\def\amikhtehlogo@baseline{220}},
+  baseline/center/.code={\def\amikhtehlogo@baseline{110}},
+  % Geometry: unitless coordinates on a 220 x 220 grid.
+  % x increases RIGHTWARDS, y DOWNWARDS. These keys change the artwork,
+  % not just its output size; keep their values inside the design square.
+  stroke/.store in=\amikhtehlogo@stroke,        % Spine and line thickness.
+  stem-x/.store in=\amikhtehlogo@stemx,         % Left edge of vertical spine.
+  stem-top/.store in=\amikhtehlogo@stemtop,     % Top edge of vertical spine.
+  premise-y/.store in=\amikhtehlogo@premisey,   % Top of longest premise.
+  premise-end/.store in=\amikhtehlogo@premiseend, % Its right edge.
+  short-x/.store in=\amikhtehlogo@shortx,       % Left edge of short premises.
+  short-end/.store in=\amikhtehlogo@shortend,   % Their right edge.
+  short-one-y/.store in=\amikhtehlogo@shortone, % Top of first short premise.
+  short-two-y/.store in=\amikhtehlogo@shorttwo, % Top of second short premise.
+  result-x/.store in=\amikhtehlogo@resultx,     % Left edge of conclusion.
+  result-y/.store in=\amikhtehlogo@resulty,     % Top of conclusion.
+  result-end/.store in=\amikhtehlogo@resultend  % Right edge of conclusion.
+}
+\def\amikhtehlogo@setup#1{%
+  \pgfkeys{/amikhteh-logo/.cd,#1}%
+}
+\amikhtehlogo@setup{
+  size=20mm, primary=AmikhtehLogoBlue, accent=AmikhtehLogoGreen,
+  mono-color=black, baseline=bottom,
+  name-font=\sffamily\Large, name-gap=2mm,
+  stroke=11, stem-x=80, stem-top=55,
+  premise-y=70, premise-end=159,
+  short-x=117, short-end=151, short-one-y=94, short-two-y=114,
+  result-x=111, result-y=142, result-end=171
+}
+
+% Keep the mark and Latin package-name lockup unmirrored in RTL contexts.
+% Direction changes are local to the containing hbox. Do not change the
+% document language, fonts, digits, paragraph direction or engine-logo APIs.
+\long\def\amikhtehlogo@ltr#1{%
+  \ifLuaTeX
+    \textdir TLT #1%
+  \else
+    \ifdefined\TeXXeTstate
+      \ifnum\TeXXeTstate>0 \beginL#1\endL\else #1\fi
+    \else
+      #1%
+    \fi
+  \fi
+}
+
+% ================================================================
+% 2. Editable native TikZ artwork: proof-inspired family mark.
+%    Each component is a filled path. All gaps are transparent; there
+%    is no white backing rectangle, even in the monochrome version.
+% ================================================================
+\def\amikhtehlogo@draw{%
+  \pgfmathsetlengthmacro{\amikhtehlogo@unit}{\amikhtehlogo@size/220}%
+  \pgfmathsetmacro{\amikhtehlogo@stemright}{\amikhtehlogo@stemx+\amikhtehlogo@stroke}%
+  \begin{tikzpicture}[
+      x=\amikhtehlogo@unit,y=-\amikhtehlogo@unit,
+      baseline=(amikhteh-logo-baseline)]
+    % Fixed square footprint, including clear space, at every output size.
+    \path[use as bounding box] (0,0) rectangle (220,220);
+    \begin{pgfinterruptboundingbox}
+      \coordinate (amikhteh-logo-baseline) at (0,\amikhtehlogo@baseline);
+      % Outer crescent. To alter its curvature, edit these control points.
+      \path[fill=\amikhtehlogo@primary,draw=none]
+      (184,53) % Upper pointed tip; shared by outer and inner arcs.
+      .. controls (145,0) and (62,4) .. (31,65) % Outer upper arc.
+      .. controls (10,106) and (20,148) .. (61,180) % Outer lower arc.
+      -- (69,166) % Lower tip; leave a clear gap beside the spine.
+      .. controls (36,140) and (28,106) .. (44,72) % Inner lower arc.
+      .. controls (69,20) and (143,10) .. (184,53) % Inner upper arc.
+      -- cycle;
+      % Spine and lower sweep are ONE continuous silhouette.
+      \path[fill=\amikhtehlogo@primary,draw=none]
+      (\amikhtehlogo@stemx,\amikhtehlogo@stemtop)
+      -- (\amikhtehlogo@stemright,\amikhtehlogo@stemtop)
+      -- (\amikhtehlogo@stemright,174) % Spine-to-sweep junction.
+      .. controls (134,158) and (169,160) .. (198,177) % Upper sweep / tip.
+      .. controls (161,167) and (132,180) .. (102,189) % Lower return.
+      .. controls (80,196) and (62,198) .. (48,193) % Left heel.
+      .. controls (71,181) and (\amikhtehlogo@stemx,169)
+      .. (\amikhtehlogo@stemx,153) % Rejoin the left edge of the spine.
+      -- cycle;
+      % Premises: the longest line meets the spine, the others are inset.
+      \path[fill=\amikhtehlogo@primary,draw=none]
+      (\amikhtehlogo@stemx,\amikhtehlogo@premisey)
+      rectangle (\amikhtehlogo@premiseend,{\amikhtehlogo@premisey+\amikhtehlogo@stroke})
+      (\amikhtehlogo@shortx,\amikhtehlogo@shortone)
+      rectangle (\amikhtehlogo@shortend,{\amikhtehlogo@shortone+\amikhtehlogo@stroke})
+      (\amikhtehlogo@shortx,\amikhtehlogo@shorttwo)
+      rectangle (\amikhtehlogo@shortend,{\amikhtehlogo@shorttwo+\amikhtehlogo@stroke});
+      % Conclusion: separated from both the spine and the sweep.
+      \path[fill=\amikhtehlogo@accent,draw=none]
+      (\amikhtehlogo@resultx,\amikhtehlogo@resulty)
+      rectangle (\amikhtehlogo@resultend,{\amikhtehlogo@resulty+\amikhtehlogo@stroke});
+    \end{pgfinterruptboundingbox}
+  \end{tikzpicture}%
+}
+
+% ================================================================
+% 3. Internal rendering. Public commands below only parse arguments.
+%    Starred forms use mono-color for BOTH fills.
+% ================================================================
+\def\amikhtehlogo@mark#1#2{%
+  \begingroup
+  \amikhtehlogo@setup{#2}%
+  \IfBooleanT{#1}{%
+    \let\amikhtehlogo@primary\amikhtehlogo@mono
+    \let\amikhtehlogo@accent\amikhtehlogo@mono}%
+  \leavevmode\hbox{\amikhtehlogo@ltr{\amikhtehlogo@draw}}%
+  \endgroup
+}
+\def\amikhtehlogo@name#1#2#3{%
+  \begingroup
+  \amikhtehlogo@setup{#2}%
+  \IfBooleanT{#1}{%
+    \let\amikhtehlogo@primary\amikhtehlogo@mono
+    \let\amikhtehlogo@accent\amikhtehlogo@mono}%
+  % A name lockup always uses center alignment, independent of baseline.
+  % Raising the mark by half an x-height aligns it with lowercase text.
+  \def\amikhtehlogo@baseline{110}%
+  \leavevmode\hbox{\amikhtehlogo@ltr{%
+      \amikhtehlogo@namefont
+      \raisebox{.5ex}{\amikhtehlogo@draw}%
+      \hskip\amikhtehlogo@gap\relax
+      #3%
+    }}%
+  \endgroup
+}
+
+% ================================================================
+% 4. Public interface. All user commands have capitalized names.
+%    AmikhtehLogoBlue and AmikhtehLogoGreen are also public colour names.
+% ================================================================
+\NewDocumentCommand\AmikhtehLogoSetup{m}{%
+  \amikhtehlogo@setup{#1}%
+}
+\NewDocumentCommand\AmikhtehLogo{s O{}}{%
+  \amikhtehlogo@mark{#1}{#2}%
+}
+\NewDocumentCommand\AmikhtehLogoName{s O{} m}{%
+  \amikhtehlogo@name{#1}{#2}{#3}%
+}
+
+% ================================================================
+% 5. Cover placement. This is a separate zero-size overlay, NOT a node
+%    to be nested in another tikzpicture. Invoke after the cover artwork.
+%    Coordinates are fractions of the physical page, from south west.
+%    Each context has its own size/colours; geometry still follows Setup.
+% ================================================================
+\pgfkeys{
+  /amikhteh-logo/cover/.is family,
+  /amikhteh-logo/cover,
+  x/.store in=\amikhtehlogo@coverx,
+  y/.store in=\amikhtehlogo@covery,
+  anchor/.store in=\amikhtehlogo@coveranchor,
+  size/.store in=\amikhtehlogo@coversize,
+  primary/.store in=\amikhtehlogo@coverprimary,
+  accent/.store in=\amikhtehlogo@coveraccent,
+  mono-color/.store in=\amikhtehlogo@covermono,
+  mark-options/.store in=\amikhtehlogo@coveroptions
+}
+\def\amikhtehlogo@coversetup#1{%
+  \pgfkeys{/amikhteh-logo/cover/.cd,#1}%
+}
+\amikhtehlogo@coversetup{
+  x=.90,y=.805,anchor=east,size=22mm,
+  primary=AmikhtehLogoBlue,accent=AmikhtehLogoGreen,
+  mono-color=black,mark-options={}
+}
+\def\amikhtehlogo@cover#1#2{%
+  \begingroup
+  \amikhtehlogo@coversetup{#2}%
+  \amikhtehlogo@setup{
+    size=\amikhtehlogo@coversize,
+    primary=\amikhtehlogo@coverprimary,
+    accent=\amikhtehlogo@coveraccent,
+    mono-color=\amikhtehlogo@covermono}%
+  \expandafter\amikhtehlogo@setup\expandafter{\amikhtehlogo@coveroptions}%
+  \leavevmode
+  \begin{tikzpicture}[remember picture,overlay,
+      x=\paperwidth,y=\paperheight]
+    \begin{scope}[shift={(current page.south west)}]
+      \node[anchor=\amikhtehlogo@coveranchor,
+        inner sep=0pt,outer sep=0pt]
+      at (\amikhtehlogo@coverx,\amikhtehlogo@covery)
+      {\amikhtehlogo@mark{#1}{}};
+    \end{scope}
+  \end{tikzpicture}%
+  \endgroup
+}
+\NewDocumentCommand\AmikhtehLogoCoverSetup{m}{%
+  \amikhtehlogo@coversetup{#1}%
+}
+\NewDocumentCommand\AmikhtehLogoCover{s O{}}{%
+  \amikhtehlogo@cover{#1}{#2}%
+}
+
+% ================================================================
+% 6. Optional manual footer: section title, page number, coloured mark.
+%    Fancyhdr is loaded only with [manual]. Nothing activates this style
+%    automatically. Use \pagestyle{amikhteh-logo} AFTER the title page.
+% ================================================================
+\pgfkeys{
+  /amikhteh-logo/footer/.is family,
+  /amikhteh-logo/footer,
+  size/.store in=\amikhtehlogo@footersize,
+  primary/.store in=\amikhtehlogo@footerprimary,
+  accent/.store in=\amikhtehlogo@footeraccent,
+  mark-options/.store in=\amikhtehlogo@footeroptions,
+  title/.store in=\amikhtehlogo@footertitle,
+  font/.store in=\amikhtehlogo@footerfont,
+  text-color/.store in=\amikhtehlogo@footerink,
+  gap/.store in=\amikhtehlogo@footergap,
+  raise/.store in=\amikhtehlogo@footerraise,
+  footskip/.store in=\amikhtehlogo@footskip,
+  track/.is choice,
+  track/section/.code={\def\amikhtehlogo@track{section}},
+  track/none/.code={\def\amikhtehlogo@track{none}}
+}
+\def\amikhtehlogo@footersetup#1{%
+  \pgfkeys{/amikhteh-logo/footer/.cd,#1}%
+}
+\amikhtehlogo@footersetup{
+  size=9mm,primary=AmikhtehLogoBlue,accent=AmikhtehLogoGreen,
+  mark-options={},title=\leftmark,font={\normalfont\small},
+  text-color=black,gap=1.5em,raise=.5ex,footskip=14mm,track=section
+}
+\NewDocumentCommand\AmikhtehLogoFooterSetup{m}{%
+  \amikhtehlogo@footersetup{#1}%
+}
+% For a starred section, TOC, bibliography, etc. Call after any heading
+% command that may set its own marks. Titles may contain formatting.
+\NewDocumentCommand\AmikhtehLogoFooterTitle{m}{\markboth{#1}{}}
+
+\ifamikhtehlogo@manual
+  % Some fancyhdr releases initialise the class's mark commands at load
+  % time. Preserve them: tracking starts only when our style is selected.
+  % This also preserves an undefined \chaptermark in article-like classes.
+  \let\amikhtehlogo@savedchaptermark\chaptermark
+  \let\amikhtehlogo@savedsectionmark\sectionmark
+  \let\amikhtehlogo@savedsubsectionmark\subsectionmark
+  \RequirePackage{fancyhdr}
+  \let\chaptermark\amikhtehlogo@savedchaptermark
+  \let\sectionmark\amikhtehlogo@savedsectionmark
+  \let\subsectionmark\amikhtehlogo@savedsubsectionmark
+  \newsavebox{\amikhtehlogo@tailbox}
+  \newsavebox{\amikhtehlogo@footerbox}
+  \def\amikhtehlogo@sectionmark#1{\markboth{#1}{}}
+  \def\amikhtehlogo@footer{%
+    \begingroup
+    \amikhtehlogo@footerfont
+    \color{\amikhtehlogo@footerink}%
+    \amikhtehlogo@setup{
+      size=\amikhtehlogo@footersize,baseline=center,
+      primary=\amikhtehlogo@footerprimary,
+      accent=\amikhtehlogo@footeraccent}%
+    \expandafter\amikhtehlogo@setup\expandafter{\amikhtehlogo@footeroptions}%
+    \sbox{\amikhtehlogo@footerbox}{\amikhtehlogo@ltr{%
+        \sbox{\amikhtehlogo@tailbox}{%
+          \hspace*{\amikhtehlogo@footergap}%
+          \thepage
+          \hspace*{\amikhtehlogo@footergap}%
+          \raisebox{\amikhtehlogo@footerraise}{\AmikhtehLogo}%
+        }%
+        \dimen@=\headwidth
+        \advance\dimen@ by -\wd\amikhtehlogo@tailbox
+        \ifdim\dimen@>1em
+          % A long title wraps instead of colliding with the page/mark.
+          \parbox[b]{\dimen@}{\raggedleft
+            \nouppercase{\amikhtehlogo@footertitle}\strut}%
+        \else
+          \PackageWarning{amikhteh-logo}{Footer too narrow; title omitted}%
+        \fi
+        \usebox{\amikhtehlogo@tailbox}%
+      }}%
+    % Fancyhdr wraps each field in a top-aligned parbox. Report a
+    % fixed text-line footprint so tall artwork and wrapped titles do
+    % not push the footer baseline downwards. The title grows UPWARDS.
+    \leavevmode
+    \raisebox{0pt}[\ht\strutbox][\dp\strutbox]{%
+      \usebox{\amikhtehlogo@footerbox}}%
+    \endgroup
+  }
+  \fancypagestyle{amikhteh-logo}{%
+    \fancyhf{}%
+    \renewcommand{\headrulewidth}{0pt}%
+    \renewcommand{\footrulewidth}{0pt}%
+    \renewcommand{\footruleskip}{0pt}%
+    \setlength{\footskip}{\amikhtehlogo@footskip}%
+    \def\amikhtehlogo@tmp{section}%
+    \ifx\amikhtehlogo@track\amikhtehlogo@tmp
+      \let\sectionmark\amikhtehlogo@sectionmark
+      \let\subsectionmark\@gobble
+    \fi
+    \fancyfoot[R]{\amikhtehlogo@footer}%
+  }
+\fi
+\endinput

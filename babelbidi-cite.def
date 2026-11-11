@@ -1,0 +1,278 @@
+%
+% babelbidi-cite.def
+%
+% Babelbidi: Bidi extensions for Babel.
+%
+% The standard citation loop closely matches LaTeX's \@citex in
+% ltbibl.dtx. Copyright (C) 1993-2026 The LaTeX Project and individual
+% authors listed in the original file; LPPL 1.3c or later. This file adds
+% language selection and citation-package integration. See
+% THIRD-PARTY-NOTICES.md for source details.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Babelbidi package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{babelbidi-cite.def}
+[2026/11/11 v0.1.0 Latin citation labels]
+
+\RequirePackage{etoolbox}
+\makeatletter
+
+\newif\ifbbd@cite@pending
+\newif\ifbbd@cite@latin
+\newif\ifbbd@cite@enabled
+\newif\ifbbd@cite@unitopen
+
+% Latin context for citation labels only.
+\protected\long\def\bbd@cite@label#1{%
+    \ifbbd@cite@latin
+        #1%
+    \else
+        \foreignlanguage{\bbd@main@latin}{%
+            \bbd@cite@latintrue
+            \ifTUTeX\latinfont\fi
+            #1}%
+    \fi}
+
+% Save surrounding language and font attributes, but not font size.
+% Notes in superscripts must retain the superscript size.
+\def\bbd@cite@capture{%
+    \edef\bbd@cite@language{\languagename}%
+    \edef\bbd@cite@font{%
+        \noexpand\fontencoding{\f@encoding}%
+        \noexpand\fontfamily{\f@family}%
+        \noexpand\fontseries{\f@series}%
+        \noexpand\fontshape{\f@shape}%
+        \noexpand\selectfont}}
+
+\protected\long\def\bbd@cite@surround#1{%
+    \foreignlanguage{\bbd@cite@language}{%
+        \bbd@cite@latinfalse
+        \bbd@cite@font
+        #1}}
+
+% Consume a one-shot request across the backend's own groups.
+\def\bbd@cite@choose{%
+    \ifbbd@cite@pending
+        \global\bbd@cite@pendingfalse
+        \expandafter\@firstoftwo
+    \else
+        \expandafter\@secondoftwo
+    \fi}
+
+\def\bbd@cite@request{%
+    \global\bbd@cite@pendingtrue}
+
+% Deliberately no argument parser or trailing closing-group token.
+\DeclareRobustCommand{\Latincite}{%
+    \bbd@cite@request\cite}
+
+% ============================================================
+% Standard LaTeX citation processor for Latin citations
+% ============================================================
+
+\protected\def\bbd@cite@standard@command{%
+\@ifnextchar
+[{\@tempswatrue\bbd@cite@standard@citex}
+{\@tempswafalse\bbd@cite@standard@citex[]}}
+
+\long\def\bbd@cite@standard@citex[#1]#2{%
+    \leavevmode
+    \begingroup
+    \let\@citea\@empty
+    %
+    % Match the surrounding text direction for the note separator.
+    \if@RTL
+        \def\bbd@cite@notecomma{ ،}%
+    \else
+        \def\bbd@cite@notecomma{,}%
+    \fi
+    \long\def\@cite##1##2{%
+        [{##1\if@tempswa\bbd@cite@notecomma\space ##2\fi}]}%
+    %
+    \@cite
+    {\foreignlanguage[captions]{\bbd@main@latin}{%
+            \@for\@citeb:=#2\do{%
+                \@citea
+                \def\@citea{,\penalty\@m\ }%
+                \edef\@citeb{%
+                    \expandafter\@firstofone\@citeb\@empty}%
+                \if@filesw
+                    \immediate\write\@auxout
+                    {\string\citation{\@citeb}}%
+                \fi
+                \@ifundefined{b@\@citeb}{%
+                    \hbox{\reset@font\bfseries ?}%
+                    \G@refundefinedtrue
+                    \@latex@warning
+                    {Citation `\@citeb' on page
+                        \thepage \space undefined}}%
+                {\@cite@ofmt
+                    {\csname b@\@citeb\endcsname}}%
+            }%
+        }}%
+    {#1}%
+    \endgroup
+}
+
+% ============================================================
+% LaTeX standard citations and the cite package
+% ============================================================
+
+\def\bbd@cite@install@standard{%
+    \let\bbd@cite@original\@cite
+    %
+    \@ifpackageloaded{cite}{%
+        % The cite package has its own label-list formatter.
+        \protected\long\def\@cite##1##2{%
+            \bbd@cite@choose
+            {\bbd@cite@original
+                {\bbd@cite@label{##1}}{##2}}%
+            {\bbd@cite@original{##1}{##2}}}%
+        %
+        \@ifundefined{@citess}{}{%
+            \let\bbd@cite@superscript\@citess
+            \protected\long\def\@citess##1{%
+                \bbd@cite@choose
+                {\bbd@cite@superscript
+                    {\bbd@cite@label{##1}}}%
+                {\bbd@cite@superscript{##1}}}}%
+    }{%
+        % Standard LaTeX:
+        % Use an independent citation processor, following
+        % the XePersian approach.
+        \let\Latincite\bbd@cite@standard@command
+    }%
+}
+
+% ============================================================
+% natbib
+% ============================================================
+
+\def\bbd@cite@nat@patch#1#2{%
+    \let#2#1%
+    \protected\long\def#1##1##2##3{%
+        \ifbbd@cite@pending
+            \global\bbd@cite@pendingfalse
+            \bbd@cite@capture
+            #2{\bbd@cite@label{##1}}{##2}{##3}%
+        \else
+            #2{##1}{##2}{##3}%
+        \fi}%
+    \ifx\@cite#2\let\@cite#1\fi}
+
+% Notes embedded in natbib's textual citation must return to the
+% surrounding language while the complete label is set left-to-right.
+\protected\long\def\bbd@cite@nat@note#1{%
+    \ifbbd@cite@latin\bbd@cite@surround{#1}\else#1\fi}
+
+\def\bbd@cite@nat@patchwarning#1{%
+    \PackageWarning{babelbidi}{Could not patch the natbib #1}}
+
+% etoolbox needs parameter markers with catcode 12 in nested patches.
+\begingroup
+\catcode`\#=12
+\gdef\bbd@cite@install@natbib{%
+    \patchcmd{\NAT@citex}{#1\NAT@spacechar}
+        {\bbd@cite@nat@note{#1}\NAT@spacechar}{}
+        {\bbd@cite@nat@patchwarning{author-year prenote}}%
+    \patchcmd{\NAT@citex}{\NAT@cmt#2}
+        {\NAT@cmt\bbd@cite@nat@note{#2}}{}
+        {\bbd@cite@nat@patchwarning{author-year postnote}}%
+    \patchcmd{\NAT@citexnum}{#1\NAT@spacechar}
+        {\bbd@cite@nat@note{#1}\NAT@spacechar}{}
+        {\bbd@cite@nat@patchwarning{numerical prenote}}%
+    \patchcmd{\NAT@citexnum}{\NAT@cmt#2}
+        {\NAT@cmt\bbd@cite@nat@note{#2}}{}
+        {\bbd@cite@nat@patchwarning{numerical postnote}}%
+    \bbd@cite@nat@patch
+    \NAT@cite\bbd@cite@nat@cite
+    \bbd@cite@nat@patch
+    \NAT@citenum\bbd@cite@nat@citenum
+    \bbd@cite@nat@patch
+    \NAT@citesuper\bbd@cite@nat@citesuper}
+\endgroup
+
+% ============================================================
+% biblatex
+% ============================================================
+
+\def\bbd@cite@blx@close{%
+    \ifbbd@cite@unitopen
+        \end{otherlanguage*}%
+    \fi}
+
+\def\bbd@cite@blx@setup{%
+    \bbd@cite@capture
+    \bbd@cite@enabledtrue
+    %
+    \let\bbd@cite@blx@begin\blx@begunit
+    \let\bbd@cite@blx@end\blx@endunit
+    \let\bbd@cite@blx@endno\blx@endnounit
+    %
+    \def\blx@begunit{%
+        % Emit the original inter-unit punctuation first.
+        \bbd@cite@blx@begin
+        \bbd@cite@unitopenfalse
+        \ifbbd@cite@enabled
+            \ifbbd@cite@latin
+            \else
+                \bbd@cite@unitopentrue
+                \begin{otherlanguage*}{\bbd@main@latin}%
+                \bbd@cite@latintrue
+                \ifTUTeX\latinfont\fi
+            \fi
+        \fi}%
+    %
+    \def\blx@endunit{%
+        \bbd@cite@blx@close
+        \bbd@cite@blx@end}%
+    %
+    \def\blx@endnounit{%
+        \bbd@cite@blx@close
+        \bbd@cite@blx@endno}%
+    %
+    \bbd@cite@blx@note
+    {prenote}\bbd@cite@blx@prenote
+    \bbd@cite@blx@note
+    {postnote}\bbd@cite@blx@postnote}
+
+\def\bbd@cite@blx@note#1#2{%
+    \ifcsname abx@macro@#1\endcsname
+        \expandafter\let\expandafter#2%
+        \csname abx@macro@#1\endcsname
+        \expandafter\def\csname abx@macro@#1\endcsname{%
+            \bbd@cite@surround{%
+                \bbd@cite@enabledfalse
+                #2}}%
+    \fi}
+
+% Install after the packages' begin-document initialization.
+\AddToHook{begindocument/end}[babelbidi/cite]{%
+    \@ifpackageloaded{biblatex}{%
+        \def\bbd@cite@request{%
+            \AtNextCite{\bbd@cite@blx@setup}}%
+    }{%
+        \@ifpackageloaded{natbib}
+        {\bbd@cite@install@natbib}%
+        {\bbd@cite@install@standard}}}
+
+\makeatother
+\endinput

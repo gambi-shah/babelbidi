@@ -1,0 +1,409 @@
+%
+% babelbidi-logos.sty
+%
+% Babelbidi: Bidi extensions for Babel.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the babelbidi package.
+%
+% This work is free software; you may redistribute and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+%
+
+\NeedsTeXFormat{LaTeX2e}[2020-10-01]
+\ProvidesPackage{babelbidi-logos}
+[2026/11/11 v0.1.0 Standalone engine logos for BabelBidi]
+
+\RequirePackage{iftex}
+\RequirePackage{xspace}
+\RequirePackage{xkeyval}
+
+% ------------------------------------------
+% Package options
+% ------------------------------------------
+
+% auto: retain automatic graphics detection.
+% simple: disable graphics-based construction and all reflection.
+\newif\ifbbd@logo@simple
+\bbd@logo@simplefalse
+
+\DeclareOptionX{style}[auto]{%
+    \edef\bbd@logo@style@option{#1}%
+    \def\bbd@logo@style@auto{auto}%
+    \def\bbd@logo@style@simple{simple}%
+    \ifx\bbd@logo@style@option\bbd@logo@style@auto
+        \bbd@logo@simplefalse
+    \else
+        \ifx\bbd@logo@style@option\bbd@logo@style@simple
+            \bbd@logo@simpletrue
+        \else
+            \PackageError{babelbidi-logos}%
+            {Invalid style value '#1'}%
+            {Use style=auto or style=simple.}%
+        \fi
+    \fi
+}
+
+\ProcessOptionsX\relax
+
+% ------------------------------------------
+% Saved base logos
+% ------------------------------------------
+
+% Copy robust commands together with their implementations.
+% A plain \let is not sufficient for arbitrary robust definitions.
+% Capture the definitions supplied by packages loaded before this one.
+\NewCommandCopy\bbd@logo@base@tex\TeX
+\NewCommandCopy\bbd@logo@base@latex\LaTeX
+\NewCommandCopy\bbd@logo@base@latexe\LaTeXe
+
+% ------------------------------------------
+% Standalone fallback
+% ------------------------------------------
+
+% Do not guess a language or a font.
+% Use textLR if supplied by the surrounding bidi system.
+% Otherwise only keep the logo together in a horizontal box.
+\def\bbd@logo@plain#1{%
+    \leavevmode
+    \@ifundefined{textLR}{%
+        \hbox{#1}%
+    }{%
+        \textLR{\hbox{#1}}%
+    }%
+}
+
+% ------------------------------------------
+% BabelBidi language context
+% ------------------------------------------
+
+\def\bbd@logo@babelbidi#1{%
+    \@ifundefined{dateenglish}{%
+        \@ifundefined{bbd@main@latin}{%
+            \bbd@logo@plain{#1}%
+        }{%
+            \foreignlanguage{\bbd@main@latin}{%
+                \ifTUTeX
+                    \@ifundefined{latinfont}{}{\latinfont}%
+                \fi
+                #1%
+            }%
+        }%
+    }{%
+        \foreignlanguage{english}{#1}%
+    }%
+}
+
+% ------------------------------------------
+% Babel language context (without BabelBidi)
+% ------------------------------------------
+
+\def\bbd@logo@babel#1{%
+    \@ifundefined{dateenglish}{%
+        \bbd@logo@plain{#1}%
+    }{%
+        \foreignlanguage{english}{#1}%
+    }%
+}
+
+% ------------------------------------------
+% Polyglossia language context
+% ------------------------------------------
+
+% textenglish is normally defined when English is loaded.
+% Do not load English or infer a Latin language automatically.
+\def\bbd@logo@polyglossia#1{%
+    \@ifundefined{textenglish}{%
+        \bbd@logo@plain{#1}%
+    }{%
+        \textenglish{#1}%
+    }%
+}
+
+% ------------------------------------------
+% Internal logo context
+% ------------------------------------------
+
+% Detect language support at use time, not at package load time.
+\def\bbd@logo@context#1{%
+    \@ifpackageloaded{babelbidi}{%
+        \bbd@logo@babelbidi{#1}%
+    }{%
+        \@ifpackageloaded{polyglossia}{%
+            \bbd@logo@polyglossia{#1}%
+        }{%
+            \@ifpackageloaded{babel}{%
+                \bbd@logo@babel{#1}%
+            }{%
+                \bbd@logo@plain{#1}%
+            }%
+        }%
+    }%
+}
+
+% Keep xspace outside the group and all context wrappers.
+% Composite logos must use the saved base commands, not the public
+% wrappers: otherwise language contexts and xspace would be nested.
+\def\bbd@logo@latin#1{%
+    \begingroup
+    \let\TeX\bbd@logo@base@tex
+    \let\LaTeX\bbd@logo@base@latex
+    \let\LaTeXe\bbd@logo@base@latexe
+    \bbd@logo@context{#1}%
+    \endgroup
+    \xspace
+}
+
+% ------------------------------------------
+% Graphics branch selection
+% ------------------------------------------
+
+% Choose the branch once, while loading this package.
+% The simple style overrides graphics/graphicx detection.
+% Loading graphics/graphicx later does not change this choice.
+\newif\ifbbd@logo@graphics
+
+\ifbbd@logo@simple
+    \bbd@logo@graphicsfalse
+\else
+    \@ifpackageloaded{graphics}
+    {\bbd@logo@graphicstrue}
+    {\bbd@logo@graphicsfalse}
+\fi
+
+% ==========================================
+% Engine logo construction
+% ==========================================
+
+\ifbbd@logo@graphics
+
+    % ------------------------------------------
+    % Logos with graphics
+    % ------------------------------------------
+
+    \def\bbd@xetex@reflect#1{%
+        \reflectbox{#1}%
+    }
+
+    % A vertically reflected U with its baseline corrected.
+    % The lowercase a is centred inside the reflected U.
+    % Use the normal medium series: a light series is not provided
+    % by every font family (for example, TeX Gyre Termes).
+    \def\bbd@logo@lua@ua{%
+        \begingroup
+        \scriptsize
+        \setbox\z@=\hbox{%
+            \scalebox{1.7}[-1.2]{%
+                {\mdseries U}%
+            }%
+        }%
+        \setbox\z@=\hbox{%
+            \raise\dp\z@\box\z@
+        }%
+        \hbox{%
+            \rlap{%
+                \hbox to \wd\z@{%
+                    \hss
+                    \raise.2ex\hbox{a}%
+                    \hss
+                }%
+            }%
+            \box\z@
+        }%
+        \endgroup
+    }
+
+    \def\bbd@logo@lua@kern{-.08}
+    \def\bbd@luatex@logo#1#2{%
+        \leavevmode
+        \hbox{%
+            L%
+            \kern-.22em
+            \raise.38ex\hbox{%
+                \bbd@logo@lua@ua
+            }%
+            \kern#1em
+            #2%
+        }%
+    }
+
+    \def\bbd@logo@pdf@kern{-.10em}
+    \def\bbd@pdftex@logo#1#2{%
+        \leavevmode
+        \hbox{%
+            P%
+            \kern-.25em
+            \raise-.18ex\hbox{%
+                \scriptsize
+                \reflectbox{D}%
+                \kern-.06em
+                f%
+            }%
+            \kern#1%
+            #2%
+        }%
+    }
+
+\else
+
+    % ------------------------------------------
+    % Logos without graphics
+    % ------------------------------------------
+
+    % Select the simple/auto reflection policy at package load time.
+    % In auto mode, look up the bidi helper when the logo is used.
+    \ifbbd@logo@simple
+        \def\bbd@xetex@reflect#1{#1}
+    \else
+        \def\bbd@xetex@reflect#1{%
+            \@ifundefined{bidi@reflect@box}
+            {#1}
+            {\bidi@reflect@box{#1}}%
+        }
+    \fi
+
+    \def\bbd@logo@lua@kern{-.16}
+    \def\bbd@luatex@logo#1#2{%
+        \leavevmode
+        \hbox{%
+            L%
+            \kern-.1em
+            \raise.28ex\hbox{%
+                \scriptsize Ua%
+            }%
+            \kern#1em
+            #2%
+        }%
+    }
+
+    \def\bbd@logo@pdf@kern{-.08em}
+    \def\bbd@pdftex@logo#1#2{%
+        \leavevmode
+        \hbox{%
+            P%
+            \kern-.12em
+            \raise-.42ex\hbox{%
+                \scriptsize Df%
+            }%
+            \kern#1%
+            #2%
+        }%
+    }
+
+\fi
+
+% ------------------------------------------
+% Shared XeTeX / XeLaTeX construction
+% ------------------------------------------
+
+% Preserve the wider simple-style spacing; choose it once at load time.
+\ifbbd@logo@simple
+    \def\bbd@logo@xelatex@kern{0}
+\else
+    \def\bbd@logo@xelatex@kern{-.1667}
+\fi
+
+\def\bbd@xetex@logo#1#2{%
+    \leavevmode
+    $\smash{\hbox{%
+                X%
+                \lower.5ex\hbox{%
+                    \kern-.125em
+                    \bbd@xetex@reflect{E}%
+                }%
+                \kern#1em #2%
+            }}$%
+}
+
+% ==========================================
+% Public base logos
+% ==========================================
+
+\DeclareDocumentCommand{\TeX}{}{%
+    \bbd@logo@latin{\bbd@logo@base@tex}%
+}
+
+\DeclareDocumentCommand{\LaTeX}{}{%
+    \bbd@logo@latin{\bbd@logo@base@latex}%
+}
+
+% LaTeXe contains LaTeX: wrap the whole logo, not its inner component.
+\DeclareDocumentCommand{\LaTeXe}{}{%
+    \bbd@logo@latin{\bbd@logo@base@latexe}%
+}
+
+% ==========================================
+% Public engine logos
+% ==========================================
+
+% Existing commands with these names are deliberately redefined.
+\DeclareDocumentCommand{\XeTeX}{}{%
+    \bbd@logo@latin{%
+        \bbd@xetex@logo{-.1667}{\TeX}%
+    }%
+}
+
+\DeclareDocumentCommand{\XeLaTeX}{}{%
+    \bbd@logo@latin{%
+        \bbd@xetex@logo{\bbd@logo@xelatex@kern}{\LaTeX}%
+    }%
+}
+
+\DeclareDocumentCommand{\LuaTeX}{}{%
+    \bbd@logo@latin{%
+        \bbd@luatex@logo{\bbd@logo@lua@kern}{\TeX}%
+    }%
+}
+
+\DeclareDocumentCommand{\pdfTeX}{}{%
+    \bbd@logo@latin{%
+        \bbd@pdftex@logo{\bbd@logo@pdf@kern}{\TeX}%
+    }%
+}
+
+% LaTeX variants have different spacing in the two branches.
+\ifbbd@logo@graphics
+
+    \DeclareDocumentCommand{\LuaLaTeX}{}{%
+        \bbd@logo@latin{%
+            \bbd@luatex@logo{-.02}{\LaTeX}%
+        }%
+    }
+
+    \DeclareDocumentCommand{\pdfLaTeX}{}{%
+        \bbd@logo@latin{%
+            \bbd@pdftex@logo{+.02em}{\LaTeX}%
+        }%
+    }
+
+\else
+
+    \DeclareDocumentCommand{\LuaLaTeX}{}{%
+        \bbd@logo@latin{%
+            \bbd@luatex@logo{-.01}{\LaTeX}%
+        }%
+    }
+
+    \DeclareDocumentCommand{\pdfLaTeX}{}{%
+        \bbd@logo@latin{%
+            \bbd@pdftex@logo{0em}{\LaTeX}%
+        }%
+    }
+
+\fi
+
+\endinput
