@@ -1,11 +1,24 @@
-LaTeX Package: BabelBidi v1.0.0 (2026-11-11)
+LaTeX Package: BabelBidi v1.0.1 (2026-11-13)
 ----------------------------------------
 
 An extension to Babel’s bidirectional support.
 
 ## Description
 
-This package extends [Babel](https://ctan.org/pkg/babel)’s bidirectional support by correcting direction-sensitive behaviour and providing text-direction and layout controls. It supports Babel languages and works with LuaTeX (recommended), XeTeX, or pdfTeX, with either an LTR or RTL main language.
+This package extends [Babel](https://ctan.org/pkg/babel)'s bidirectional support by correcting
+specific direction-sensitive behaviour and providing interfaces for
+text direction, layout, language selection, and font configuration,
+including glyph fallback with LuaTeX.
+
+It also provides directional boxes and direction-aware facilities
+for footnotes, lists, bibliographies, RTL cases, margin notes, and
+columns, together with configurable counter separators,
+Latin-language citations, and language selection for verbatim text.
+Targeted compatibility patches are supplied for commonly used
+packages.
+
+It works with Babel under LuaTeX (recommended), XeTeX, and pdfTeX,
+in documents with either an LTR or RTL main language.
 
 ## Features
 

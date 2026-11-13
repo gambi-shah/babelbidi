@@ -1,22 +1,55 @@
-% Compile with:
-% lualatex -shell-escape test-babelbidi-minted.tex
+% Run twice from the test directory:
+% lualatex -shell-escape minted.tex
 
 \documentclass{article}
 
-% babel is loaded internally by babelbidi.
-\usepackage[
-english,
-main=persian
-]{babelbidi}
+\usepackage[english,main=persian]{babelbidi}
+\babelprovide[import,onchar=ids fonts letters]{english}
+\babelprovide[import,main,onchar=ids fonts letters]{persian}
 
 \settextfont{HM XNiloofar}
-\babelfont{tt}[persian]{Vazir Code}
+\setlatinmonofont{JetBrains Mono}
+\babelfont[persian]{tt}{Vazir Code}
+\fontfallback{english}{persian}
 
-\usepackage{minted}
+\usepackage[highlightmode=immediate]{minted}
+\usepackage{codeframe}
+
+\renewcommand{\cfprompt}{}
+\tracinglostchars=3
+
+% Regression test input files.
+\begin{filecontents*}[overwrite]{\jobname-source.txt}
+echo hello # توضیح فارسی
+\end{filecontents*}
+
+\begin{filecontents*}[overwrite]{\jobname-label.txt}
+hello |\label{minted-input-label}| world
+\end{filecontents*}
+
+% Save and verify the surrounding Babel and font context.
+\makeatletter
+\newcommand\SaveCodeContext{%
+  \edef\SavedCodeContext{%
+    \languagename/\the\textdir/\the\pardir/\f@family
+  }%
+  \let\SavedBabelAux\babel@aux
+}
+
+\newcommand\CheckCodeContext{%
+  \edef\CurrentCodeContext{%
+    \languagename/\the\textdir/\the\pardir/\f@family
+  }%
+  \ifx\CurrentCodeContext\SavedCodeContext\else
+    \errmessage{Input minted leaked language, direction or font}%
+  \fi
+  \ifx\babel@aux\SavedBabelAux\else
+    \errmessage{Input minted leaked its Babel aux override}%
+  \fi
+}
+\makeatother
 
 \begin{document}
-
-
 
 \section*{آزمون babelbidi و minted}
 
@@ -27,45 +60,83 @@ main=persian
 \begin{minted}{text}
         Default: alpha = 1; beta = 2.
         {braces} [brackets] (parentheses)
-    \end{minted}
+\end{minted}
 
 \subsection*{\texttt{textdir=ltr}}
 
 \begin{minted}[textdir=ltr]{text}
         LTR block: alpha = 1; beta = 2.
         {braces} [brackets] (parentheses)
-    \end{minted}
+\end{minted}
 
 \subsection*{\texttt{textdir=rtl}}
 
 \begin{minted}[textdir=rtl]{text}
         RTL block: alpha = 1; beta = 2.
         {braces} [brackets] (parentheses)
-    \end{minted}
+\end{minted}
 
 \subsection*{\texttt{textlang=persian}}
 
 \begin{minted}[textlang=persian]{text}
         این یک کد persian است.
-    \end{minted}
+\end{minted}
 
 \subsection*{\texttt{chardir}: جداکننده‌ها}
 
 \begin{minted}[
-        textdir=rtl,
-        chardir={
-            {\{}{l},
-            {\}}{l},
-            {[}{l},
-            {]}{l},
-            {(}{l},
-            {)}{l}
-        }
-        ]{text}
+    textdir=rtl,
+    chardir={
+        {\{}{l},
+        {\}}{l},
+        {[}{l},
+        {]}{l},
+        {(}{l},
+        {)}{l}
+    }
+]{text}
         A1 Delimiters: B1
         A2 {curly braces} B2
         A3 [square brackets] B3
         A4 (parentheses) B4
-    \end{minted}
+\end{minted}
+
+
+\section*{Input Regression Tests}
+
+\SaveCodeContext
+
+\subsection*{\texttt{\string\inputminted}: Context Restoration}
+
+\setbox0=\vbox{\hsize=20em
+\inputminted[textlang=english]{bash}{\jobname-source.txt}
+% A trailing Babel write would hide the final skip from the enclosing box.
+\ifdim\lastskip>0pt\else
+    \errmessage{Input minted left a write after the trailing skip}%
+\fi
+}%
+\CheckCodeContext
+\copy0
+
+\subsection*{\texttt{\string\inputminted}: Escaped LaTeX}
+
+\inputminted[escapeinside=||]{text}{\jobname-label.txt}
+
+\CheckCodeContext
+
+Reference: \ref{minted-input-label}.
+
+\subsection*{Codeframe}
+
+\begin{terminal}[title={متن فارسی}]
+echo hello # توضیح فارسی
+\end{terminal}
+
+\CheckCodeContext
+
+متن فارسی پس از کادر.
+
+\typeout{INPUTMINTED REGRESSION PASSED}
+\typeout{MINTED TEST PASSED}
 
 \end{document}

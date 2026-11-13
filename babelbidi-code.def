@@ -23,7 +23,7 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-code.def}
-[2026/10/26 v0.4.0 Code support for Babelbidi]
+[2026/11/13 v0.4.1 Code support for Babelbidi]
 
 \makeatletter
 
@@ -109,8 +109,13 @@
 
     \RenewDocumentCommand{\RobustInputMintedProcess}{m m m}{%
         \begingroup
+        % Language switches inside a code listing must not write to the aux
+        % file: trailing writes prevent enclosing boxes from trimming skips.
+        \let\babel@aux\@gobbletwo
+        \begingroup
         \selectlanguage{\bbd@main@code}%
         \bbd@RobustInputMintedProcess{#1}{#2}{#3}%
+        \endgroup
         \endgroup
     }
 

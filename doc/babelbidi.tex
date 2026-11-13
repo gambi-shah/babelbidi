@@ -244,7 +244,7 @@ Ligatures=TeX
     pdftitle={The babelbidi Package -- User Guide},
     pdfauthor={Amer Amikhteh},
     pdfsubject={Bidirectional typesetting with Babel},
-    pdfkeywords={babelbidi, Babel, LuaLaTeX, RTL, multilingual typesetting},
+    pdfkeywords={babelbidi, Babel, LuaLaTeX, XeLaTeX, bidirectional typesetting, RTL},
     bookmarksnumbered=true
 }
 
@@ -340,7 +340,7 @@ Ligatures=TeX
                 font=\bbCoverFont\fontsize{12}{19}\selectfont
                 ] at (.09,.31) {%
                     Text direction \enspace\textperiodcentered\enspace
-                    Multilingual layout \enspace\textperiodcentered\enspace
+                    Bidirectional layout \enspace\textperiodcentered\enspace
                     Language selection \enspace\textperiodcentered\enspace
                     Font configuration
                 };
@@ -400,13 +400,18 @@ Ligatures=TeX
 
     \begin{abstract}
         The \textsf{babelbidi} package extends Babel's bidirectional
-        support by correcting direction-sensitive behaviour and
-        providing interfaces for text direction, layout, language
-        selection, and font configuration, including \LuaTeX glyph
-        fallback. It works with Babel-supported languages and with
-        \LuaTeX (recommended), \XeTeX, and \pdfTeX, with either
-        an LTR or RTL main language.
+        support by correcting specific direction-sensitive behaviour
+        and providing interfaces for text direction, layout, language
+        selection, and font configuration. These include directional
+        boxes and controls for footnotes, lists, bibliographies, margin
+        notes, and columns, as well as Latin-language citations and
+        language selection for verbatim text. The package also supplies
+        targeted compatibility patches for commonly used packages.
+        It works with Babel under \LuaTeX (recommended), \XeTeX, and
+        \pdfTeX, in documents with either an LTR or RTL main language.
     \end{abstract}
+
+
 
     \AmikhtehLogoFooterTitle{\contentsname}
     \bbdManualContents
@@ -416,23 +421,63 @@ Ligatures=TeX
     \section{Introduction}
     \label{sec:introduction}
 
-    Babel provides a framework for multilingual typesetting in
-    \LaTeX, including documents that combine left-to-right (LTR) and
-    right-to-left (RTL) languages. Direction also affects paragraph
-    layout, footnotes, lists, tables, margins, and other document
-    elements, some of which may require adjustments in RTL contexts.
+    Babel is a powerful, long-established framework for multilingual
+    typesetting and localisation in \LaTeX. It brings together language
+    and script support, hyphenation, localised document conventions,
+    language-specific fonts, and bidirectional typesetting, with support
+    for pdf\LaTeX, \XeLaTeX, and \LuaLaTeX. Its broad language coverage
+    and extensible language model make it a strong foundation for
+    multilingual documents.
 
-    The \textsf{babelbidi} package extends Babel's bidirectional
-    support with direction interfaces and layout corrections. It also
-    provides language-aware text switching, font configuration, and
-    glyph fallback with \LuaLaTeX. It supports either an LTR or RTL
-    main language.
+    Bidirectional documents can require additional control over
+    direction-sensitive elements and their interaction with other
+    packages. Footnotes, directional boxes, columns, and package-specific
+    output are examples. \textsf{babelbidi} complements Babel in these
+    areas, providing direction-control interfaces and targeted
+    compatibility adjustments while retaining Babel's language and font
+    configuration as the foundation. Babel's own APIs are used directly,
+    not replaced by a parallel system.
 
-    The package provides interfaces compatible with \textsf{bidi},
-    with engine-dependent implementations. \XeTeX uses the
-    \textsf{bidi} backend; \LuaTeX and \pdfTeX use interfaces
-    supplied by \textsf{babelbidi}. Identical output across engines
-    is not guaranteed.
+    One motivation for \textsf{babelbidi} is to provide a reusable
+    Babel-based foundation for \textsf{unipersian}. More broadly, the
+    aim is to adapt familiar typesetting interfaces, including those
+    from \textsf{XePersian}, so that they can be used with different
+    languages in a consistent Babel workflow.
+
+    The approach taken here is to build on Babel's language declarations
+    and keep language selection distinct from direction control.
+    This distinction allows a document to change direction without
+    changing language, or to select a language together with its
+    associated direction and fonts. Understanding which operation is
+    needed is the starting point for using the interfaces in this guide.
+
+    This guide assumes basic familiarity with \LaTeX and Babel's
+    language declarations. Its organisation is intended to be familiar
+    to readers of Babel's guide, without repeating the documentation of
+    Babel's APIs. Begin with Sections~\ref{sec:installation}--\ref{sec:quick-start}
+    to install the package and prepare a document. The remaining
+    sections serve as a reference for configuration and individual
+    interfaces; engine-specific requirements and limitations are
+    explained where they apply.
+
+
+    \section{Interfaces and Engine Support}
+    \label{sec:interfaces-engine-support}
+
+    The package provides the complete user-level interfaces of
+    \textsf{bidi} and \textsf{luabidi}, together with language and font
+    interfaces built around Babel. Language-aware commands use the
+    document's configured languages; direction-only commands leave
+    the active language unchanged.
+
+    \subsection{Engine Support}
+    \label{sec:engine-support}
+
+    \LuaLaTeX, \XeLaTeX, and \pdfLaTeX are supported, with either an
+    LTR or RTL main language. \LuaLaTeX is recommended for its broader
+    capabilities and extensibility. \XeTeX uses the \textsf{bidi}
+    backend for direction and layout interfaces; \LuaTeX and \pdfTeX
+    use implementations supplied by \textsf{babelbidi}.
 
     The main engine-dependent capabilities are summarized below.
     Here, \texttt{Native} means that the feature is implemented
@@ -466,26 +511,55 @@ Ligatures=TeX
     \end{center}
 
     The table describes interface availability, not identical
-    behaviour or equal language coverage. In particular,
-    \pdfLaTeX still requires suitable input encodings, fonts,
-    and Babel language support.
+    implementations, output, or language coverage. Unicode font
+    commands require suitable OpenType fonts and \textsf{fontspec}.
+    With \pdfLaTeX, language support depends on suitable input and
+    font encodings, fonts, and Babel language support. See also
+    Section~\ref{sec:limitations}.
 
-    The following sections explain how to load and configure
-    \textsf{babelbidi}, control text direction and layout, select
-    languages and fonts, and use its additional interfaces and
-    package patches. They also describe relevant engine-specific
-    behaviour and limitations.
+    \subsection{Interface Overview}
+    \label{sec:interface-overview}
+
+    The following table locates the main interface groups.
+    Availability and behaviour depend on the engine as described
+    in the referenced sections.
+
+    \begin{center}
+        \begin{tabularx}{\linewidth}{@{}Xl@{}}
+            \toprule
+            Interface group & Sections \\
+            \midrule
+            Text direction and directional boxes
+            & \ref{sec:text-direction}, \ref{sec:boxes-positioning} \\
+            Footnotes, title notes, and footnote rules
+            & \ref{sec:footnotes} \\
+            Citations, lists, bibliographies, cases, and counters
+            & \ref{sec:citations}, \ref{sec:lists-cases-counters} \\
+            Margin notes, columns, and table of contents
+            & \ref{sec:margins-columns} \\
+            Language switching, fonts, and Latin verbatim text
+            & \ref{sec:language-fonts} \\
+            Glyph fallback (\LuaTeX)
+            & \ref{sec:font-fallback} \\
+            Engine logos
+            & \ref{sec:engine-logos} \\
+            Package patches and \textsf{minted} options
+            & \ref{sec:patches}, \ref{sec:minted} \\
+            \bottomrule
+        \end{tabularx}
+    \end{center}
 
     \section{Obtaining and Installing}
     \label{sec:installation}
 
-    The official version of \textsf{babelbidi} is available from CTAN:
+    \textsf{babelbidi} is distributed through CTAN:
 
     \begin{center}
         \url{https://ctan.org/pkg/babelbidi}
     \end{center}
 
-    Once the \TeX~Live package database has been updated, install it with:
+    With \TeX~Live, install the package from a terminal
+    or command prompt:
 
     \begin{minted}{bash}
         tlmgr install babelbidi
@@ -500,13 +574,15 @@ Ligatures=TeX
         \usepackage[<options>]{babelbidi}
     \end{minted}
 
-    Normally, \textsf{babelbidi} loads Babel and selects a
-    bidirectional backend. With \LuaLaTeX and
-    \textsf{beamer-rl}, Babel setup is delegated to the class.
-    Options not defined by \textsf{babelbidi} are passed to Babel.
-    The \texttt{bidi} and \texttt{layout} options are Babel
-    options for which \textsf{babelbidi} provides
-    engine-dependent defaults.
+    Normally, \textsf{babelbidi} loads Babel and chooses a
+    bidirectional backend for the current engine. With \LuaLaTeX
+    and \textsf{beamer-rl}, the class handles Babel setup instead.
+    Options not recognized by \textsf{babelbidi} are forwarded to
+    Babel. In particular, \texttt{bidi} and \texttt{layout} are Babel
+    options with engine-dependent defaults supplied by this package.
+
+    With \XeLaTeX, load \textsf{hyperref} before \textsf{babelbidi}
+    if hyperlinks are needed; see Section~\ref{sec:xelatex-patches}.
 
     \Needspace{10\baselineskip}
     \Describe{bidi}{=\meta{value}}
@@ -545,19 +621,8 @@ Ligatures=TeX
     applies this \texttt{layout} setting only with \LuaTeX; it has no
     effect in the \XeTeX and \pdfTeX loading branches.
 
-    \LuaLaTeX is recommended for its broader capabilities and
-    extensibility. Babel's \texttt{onchar} option can select a language
-    from the characters in the text. For Arabic, for example:
-
-    \begin{minted}{latex}
-        \babelprovide[import,mapdigits,onchar=ids fonts letters]{arabic}
-    \end{minted}
-
-    Punctuation shared by several scripts, such as parentheses, may still
-    require explicit language selection. For slides with an RTL main
-    language, \textsf{beamer-rl} is recommended over \textsf{beamer},
-    although it is not required. With \LuaLaTeX~
-    and \textsf{beamer-rl}, Babel setup is delegated to the class.
+    For slides with an RTL main language, \textsf{beamer-rl} is
+    recommended over \textsf{beamer}, although it is not required.
 
     With \LuaTeX, the boolean option
     \Describe{fontcache}{=\meta{true}/\meta{false}}
@@ -599,6 +664,7 @@ Ligatures=TeX
 
     \begin{minted}{latex}
         \documentclass{article}
+        \usepackage{hyperref} % Load before babelbidi for XeLaTeX.
         \usepackage{babelbidi}
 
         \babelprovide[import,main]{english}
@@ -616,60 +682,36 @@ Ligatures=TeX
         \end{document}
     \end{minted}
 
-    The lowercase commands \cmd{\lr} and \cmd{\rl} select a language
-    context as well as its direction. By contrast, the uppercase commands
-    \cmd{\LR} and \cmd{\RL} change direction only; they do not select a
-    language or font. The \texttt{onchar} option can automate language
-    selection for characters, as shown in the previous section.
+    The lowercase commands \cmd{\lr} and \cmd{\rl} select the configured
+    LTR or RTL language, together with its direction and fonts. The
+    uppercase commands \cmd{\LR} and \cmd{\RL} change direction only.
+    Use the lowercase forms when the passage belongs to another
+    language; use the uppercase forms when only its direction should
+    change.
 
-    \section{Font Fallback}
-    \label{sec:font-fallback}
-
-    With \LuaLaTeX, \textsf{babelbidi} can use fonts from other Babel
-    languages when the current font lacks a required glyph. Declare an
-    ordered fallback chain in the preamble:
-
-    \Describe{\fontfallback}{\marg{source}\marg{candidates}}
-    Declares an ordered list of candidate languages whose fonts can
-    provide missing glyphs for the source language.
+    With \LuaLaTeX, Babel's \texttt{onchar} option can automate
+    language and font selection from the characters in the text.
+    To enable this in the example, replace the Arabic declaration with:
 
     \begin{minted}{latex}
-        \fontfallback{english}{persian,greek}
+        \babelprovide[import,mapdigits,onchar=ids fonts letters]{arabic}
     \end{minted}
 
-    The source and candidate languages must be known to Babel,
-    and their fonts must be declared with \cmd{\babelfont}.
-    These declarations should be made in the preamble.
-    The \cmd{\fontfallback} declaration may precede them;
-    fallback mappings are resolved when the document begins.
+    Punctuation shared by several scripts, such as parentheses, may
+    still require explicit language selection. Automatic selection
+    does not remove the need to declare languages and assign suitable
+    fonts.
 
-    Fallback applies to text fonts, including custom families, but not to
-    math fonts. It works with or without \texttt{onchar=fonts} and also
-    uses the \texttt{fontcache} setting. An explicit
-    \cmd{\latinttfamily} selection uses the selected Latin language's
-    fallback chain without changing the text language or direction.
-
-    A later declaration replaces the previous chain; an empty candidate
-    list disables fallback:
-
-    \begin{minted}{latex}
-        \fontfallback{english}{}
-    \end{minted}
-
-    Unknown source or candidate languages produce warnings.
-    Repeated candidates and self-references are ignored. Fallback is not recursive
-    and is applied per glyph before shaping. If no candidate contains a
-    glyph, it remains in the original font. Combining-mark placement,
-    joining, and visual consistency across fonts are not guaranteed;
-    choose compatible fonts for the scripts involved. \XeLaTeX and
-    \pdfLaTeX warn and ignore explicit fallback declarations.
 
     \section{Text Direction}
     \label{sec:text-direction}
 
-    These interfaces control direction without changing the active
-    language. Use inline commands for a passage within a paragraph, and
-    switches or environments for paragraph-level direction.
+    These interfaces change direction while leaving the active
+    language unchanged. They do not select another language's fonts
+    or conventions. For text in another language, use the interfaces
+    in Section~\ref{sec:language-commands} or Babel's own language
+    commands. Use inline forms within a paragraph and switches or
+    environments for whole paragraphs.
 
     \subsection{Inline Text}
     \label{sec:inline-direction}
@@ -773,9 +815,10 @@ Ligatures=TeX
     \section{Footnotes and Title Notes}
     \label{sec:footnotes}
 
-    Footnote direction, rule appearance, and layout are controlled
-    separately. Explicit commands insert an individual note; direction
-    switches set the policy for subsequent ordinary footnotes.
+    Footnote direction, rule appearance, and layout are separate
+    settings. Choose an explicit command to direct one note, or a
+    switch to set the direction of subsequent ordinary footnotes.
+    Neither choice by itself changes the note's language.
 
     \subsection{Footnote Direction}
     \label{sec:footnote-direction}
@@ -821,12 +864,10 @@ Ligatures=TeX
     \DescribeOther{\unsetfootnoteLR}{}
     These equivalent commands set subsequent ordinary footnotes to RTL.
 
-    The switches take no arguments and insert no note. They
-    set the direction policy for subsequent ordinary footnotes.
-    Their assignments are local and remain in effect within
-    their scope until changed. The \texttt{unset} forms select
-    the opposite direction; they do not restore the initial
-    Babel behaviour.
+    The switches insert no note and take no arguments. Their
+    direction setting is local to the current group and remains
+    active until changed. The \texttt{unset} forms select the
+    opposite direction; they do not restore Babel's initial behaviour.
 
     Explicitly directed footnotes take precedence over the
     policy: for example, \cmd{\RTLfootnote} still produces
@@ -837,7 +878,8 @@ Ligatures=TeX
     \subsection{Footnote Rules}
     \label{sec:footnote-rules}
 
-    These controls affect the rule, not the footnote text direction.
+    The controls below position and size the rule above the footnote
+    area. They do not change the direction of the footnote text.
 
     \Describe{\leftfootnoterule}{}
     \DescribeOther{\LRfootnoterule}{}
@@ -907,9 +949,11 @@ Ligatures=TeX
     \subsection{Extra Footnote Layouts}
     \label{sec:footnote-layouts}
 
-    Enable these layouts with the \texttt{extrafootnotefeatures} package
-    option. With \LuaTeX and \pdfTeX, they apply to page and minipage
-    footnotes and preserve language, direction, labels, and hyperlinks.
+    The \texttt{extrafootnotefeatures} package option enables the
+    layouts below. With \LuaTeX and \pdfTeX, they support page and
+    minipage footnotes while preserving each note's language,
+    direction, labels, and hyperlinks. The grouping and output-order
+    restrictions described after the command list still apply.
 
     \Describe{\normalfootnotes}{\texttt{[*]}}
     Selects the ordinary one-column layout.
@@ -952,18 +996,21 @@ Ligatures=TeX
         \twocolumnfootnotes*
     \end{minted}
 
-    With \LuaTeX and \pdfTeX, paragraph and multi-column layouts collect
-    RTL and LTR notes separately. Ordinary one-column footnotes are output first, followed by the RTL group and then the LTR group. Within each
-    multi-column group, columns run right to left for RTL notes and left
-    to right for LTR notes. Consequently, the visual order of notes may
-    differ from the order of references in the text. With \XeTeX, the
-    layouts and their detailed behaviour are supplied by \textsf{bidi}.
+    With \LuaTeX and \pdfTeX, paragraph and multi-column layouts
+    collect RTL and LTR notes separately. Output begins with ordinary
+    one-column footnotes, followed by the RTL group and then the LTR
+    group. Within a multi-column group, columns run right to left for
+    RTL notes and left to right for LTR notes. The visual order may
+    therefore differ from the order of note references in the text.
+    With \XeTeX, the layouts and their detailed behaviour are supplied
+    by \textsf{bidi}.
 
-    With \LuaTeX and \pdfTeX, layout assignments are local, but
-    collected notes are assembled later. Select a layout in the preamble or at a page boundary and keep
-    it in force until the affected notes have been output. Do not rely on
-    independent paragraph and multi-column layouts within the same
-    pending stream. For a document-wide layout:
+    With \LuaTeX and \pdfTeX, a layout assignment is local, but the
+    collected notes are assembled later. Select the layout in the
+    preamble or at a page boundary, and keep it in force until the
+    affected notes have been output. Do not combine separate paragraph
+    and multi-column settings within the same pending stream.
+    For a document-wide layout:
 
     \begin{minted}{latex}
         \usepackage[extrafootnotefeatures]{babelbidi}
@@ -990,22 +1037,19 @@ Ligatures=TeX
     The rule spans the footnote area of the current document column,
     not an individual footnote column.
 
-    \section{Lists, Cases, and Counters}
-    \label{sec:lists-cases-counters}
-
-    \subsection{Citations}
+    \section{Citations}
     \label{sec:citations}
 
     \Describe{\Latincite}{\oarg{note}\marg{keys}}
-    Works like \cmd{\cite}, except that citation labels and their
-    separators are typeset using the selected Latin language and font.
-    The optional \meta{note} retains the surrounding language and
-    text direction. With standard LaTeX citations, a Persian comma
-    precedes the note in right-to-left text; ensure that this character
-    is available in the surrounding font or through font fallback. In
-    left-to-right text, an ordinary comma is used. With \textsf{cite},
-    \textsf{natbib}, or \textsf{biblatex}, the
-    citation arguments and formatting follow the active \cmd{\cite}.
+    Works like the active \cmd{\cite}, but uses the selected Latin
+    language and font for citation labels and their separators.
+    An optional \meta{note} keeps the surrounding language and text
+    direction. With standard \LaTeX citations, an Arabic comma
+    (U+060C) precedes the note in RTL text; the surrounding font or
+    a fallback font must provide this character. LTR text uses an
+    ordinary comma. With \textsf{cite}, \textsf{natbib}, or
+    \textsf{biblatex}, argument syntax and citation formatting follow
+    the active \cmd{\cite}.
 
     \begin{minted}{latex}
         \Latincite{knuth}
@@ -1013,12 +1057,15 @@ Ligatures=TeX
         \Latincite{knuth,lamport}
     \end{minted}
 
+    \section{Lists, Cases, and Counters}
+    \label{sec:lists-cases-counters}
+
     \subsection{Lists and Bibliographies}
     \label{sec:lists-bibliographies}
 
-    These environments set the direction of selected items within an
-    existing list or bibliography; they do not create a new list.
-    Use them inside the corresponding list or bibliography environment.
+    Use these environments to direct a group of entries within an
+    existing list or bibliography. They change entry direction but
+    do not create the surrounding list or select another language.
 
     \Describe{\begin\menv{LTRitems}}{\Eenv{LTRitems}}
     \DescribeOther{\begin\menv{RTLitems}}{\Eenv{RTLitems}}
@@ -1047,12 +1094,9 @@ Ligatures=TeX
     The \texttt{LTRbibitems} environment sets the direction of the enclosed
     bibliography entries to LTR; \texttt{RTLbibitems} sets it to RTL.
 
-    Use these environments inside \texttt{thebibliography}, with
-    \cmd{\bibitem} for each entry.
-
-    For bibliography entries, use \cmd{\bibitem} rather than
-    \cmd{\item}. The following example sets one entry in LTR direction
-    without changing the bibliography heading:
+    Place these environments inside \texttt{thebibliography}, using
+    \cmd{\bibitem}, not \cmd{\item}, for each entry. The following
+    example directs one entry without changing the bibliography heading:
 
     \begin{minted}{latex}
         \begin{thebibliography}{9}
@@ -1080,7 +1124,7 @@ Ligatures=TeX
     \Describe{\setdefaultbibitems}{}
     Restores the default bibliography-entry direction.
 
-    \subsection{Cases}
+    \subsection{RTL Cases}
     \label{sec:cases}
 
     \Describe{\begin\menv{RTLcases}}{\Eenv{RTLcases}}
@@ -1122,8 +1166,9 @@ Ligatures=TeX
     \subsection{Margin Notes}
     \label{sec:margin-notes}
 
-    Explicit commands insert a directed note; switches configure
-    ordinary \cmd{\marginpar} commands without inserting a note.
+    Use an explicit command to direct a single note. Use a switch to
+    configure subsequent ordinary \cmd{\marginpar} calls. Text
+    direction and margin placement are related but distinct settings.
 
     \Describe{\LTRmarginpar}{\oarg{left-text}\marg{right-text}}
     Inserts a margin note with LTR text.
@@ -1163,8 +1208,9 @@ Ligatures=TeX
     \subsection{Two-Column Output}
     \label{sec:two-column-output}
 
-    These commands change the order of completed document columns, not
-    the direction of their contents. They do not enable two-column mode.
+    These commands choose the placement order of completed document
+    columns. They neither enable two-column mode nor change the
+    direction of text within a column.
 
     \Describe{\LTRdblcol}{}
     Places the first column on the left.
@@ -1187,12 +1233,20 @@ Ligatures=TeX
     \section{Language and Font APIs}
     \label{sec:language-fonts}
 
+    These interfaces use languages selected from the document's Babel
+    configuration. ``Latin'' identifies an auxiliary Latin-script
+    language, which need not be English. The main text language and
+    its fonts are also taken from that configuration. The
+    \texttt{latin}, \texttt{ltr}, \texttt{rtl}, and \texttt{code}
+    selections serve different purposes; their defaults and explicit
+    settings are described in Section~\ref{sec:language-selection}.
+
     \subsection{Font Selection}
     \label{sec:font-selection}
 
-    With \XeLaTeX or \LuaLaTeX, the following font commands are available.
-    The optional arguments accept font feature settings supported by
-    \textsf{fontspec}.
+    These font commands are available with \XeLaTeX and \LuaLaTeX.
+    Optional font features use \textsf{fontspec} syntax. Declare the
+    relevant Babel language before assigning its fonts.
 
     \Describe{\settextfont}{\oarg{font features}\marg{font}}
     Sets the same font and font features for the \texttt{rm},
@@ -1232,14 +1286,61 @@ Ligatures=TeX
     \texttt{tt} family of the main language, making it available
     to \LuaTeX glyph fallback.
 
+
+    \subsection{Font Fallback}
+    \label{sec:font-fallback}
+
+    Glyph fallback supplies a character from another language's font
+    when the current font lacks it. It is available with \LuaLaTeX
+    and uses the fonts registered with Babel. Declare an ordered
+    fallback chain in the preamble:
+
+    \Describe{\fontfallback}{\marg{source}\marg{candidates}}
+    Declares an ordered list of candidate languages whose fonts can
+    provide missing glyphs for the source language.
+
+    \begin{minted}{latex}
+        \fontfallback{english}{persian,greek}
+    \end{minted}
+
+    The source and candidate languages must be known to Babel,
+    and their fonts must be declared with \cmd{\babelfont}.
+    These declarations should be made in the preamble.
+    The \cmd{\fontfallback} declaration may precede them;
+    fallback mappings are resolved when the document begins.
+
+    Fallback is a font operation, not a language switch. It applies
+    to text fonts, including custom families, but not to math fonts.
+    It works with or without \texttt{onchar=fonts} and uses the
+    \texttt{fontcache} setting. An explicit \cmd{\latinttfamily}
+    selection uses the selected Latin language's fallback chain
+    without changing the text language or direction.
+
+    A later declaration replaces the previous chain; an empty candidate
+    list disables fallback:
+
+    \begin{minted}{latex}
+        \fontfallback{english}{}
+    \end{minted}
+
+    Unknown source or candidate languages produce warnings.
+    Repeated candidates and self-references are ignored. Fallback is not recursive
+    and is applied per glyph before shaping. If no candidate contains a
+    glyph, it remains in the original font. Combining-mark placement,
+    joining, and visual consistency across fonts are not guaranteed;
+    choose compatible fonts for the scripts involved. \XeLaTeX and
+    \pdfLaTeX warn and ignore explicit fallback declarations.
+
+
+
     \subsection{Language Commands}
     \label{sec:language-commands}
 
-    Unlike the direction-only commands, \cmd{\lr} and \cmd{\rl} select
-    a Babel language context as well as the corresponding direction.
-    The uppercase commands \cmd{\LR} and \cmd{\RL} change direction
-    only; they do not select a language. The language-switching commands
-    are not part of the standard \textsf{bidi} interface.
+    The lowercase commands \cmd{\lr} and \cmd{\rl} select a Babel
+    language and its associated direction. Use them when the passage
+    requires that language context, rather than a direction change
+    alone. The uppercase \cmd{\LR} and \cmd{\RL} leave the active
+    language unchanged.
 
     \Describe{\lr}{\marg{text}}
     Typesets text using the selected LTR language.
@@ -1280,8 +1381,8 @@ Ligatures=TeX
     \subsection{Language Selection}
     \label{sec:language-selection}
 
-    The following package keys select the languages used by these
-    interfaces:
+    The following package keys assign Babel languages to the roles
+    used by the language, font, citation, and verbatim interfaces:
 
     \Describe{latin}{=\meta{language}}
     Selects the language for the \texttt{latin} environment,
@@ -1297,8 +1398,9 @@ Ligatures=TeX
     Selects the language for Latin verbatim interfaces and
     code-package integration.
 
-    These keys select language names; they do not load the languages.
-    For example:
+    These keys name languages; they do not declare or load them.
+    Declare each selected language through Babel before using the
+    corresponding interface. For example:
 
     \begin{minted}{latex}
         \usepackage[code=dutch,rtl=arabic]{babelbidi}
@@ -1306,9 +1408,9 @@ Ligatures=TeX
         \babelprovide[import]{arabic}
     \end{minted}
 
-    Unless specified explicitly, the values are selected automatically
-    and updated after each \cmd{\babelprovide} call. Explicit values
-    remain unchanged. The automatic selections are determined as follows:
+    A role without an explicit setting is chosen automatically and
+    reconsidered after each \cmd{\babelprovide} call. An explicit
+    setting remains fixed. The automatic choices follow these rules:
 
     \begin{description}
         \item[\texttt{latin}:]
@@ -1351,8 +1453,10 @@ Ligatures=TeX
     the language-selection keys above. Configure Babel's languages,
     direction support, and fonts as needed.
 
-   \section{Engine Logos}
-   \label{sec:engine-logos}
+
+
+    \section{Engine Logos}
+    \label{sec:engine-logos}
 
     \begingroup
     \newcommand*\LogoName[1]{%
@@ -1362,7 +1466,7 @@ Ligatures=TeX
 
     \par\medskip
     \noindent\hspace*{-1.7cm}%
-    \begin{tabular*}{\dimexpr\linewidth\relax}
+    \begin{tabular*}{\dimexpr\linewidth+1.7cm\relax}
         {@{\extracolsep{\fill}}lll@{}}
         \LogoName{\TeX}
         & \LogoName{\LaTeX}
@@ -1380,30 +1484,31 @@ Ligatures=TeX
     \endgroup
 
 
-   These commands typeset the corresponding logos, preserving
-   the surrounding language and direction. With \textsf{babelbidi},
-   they locally use English or the selected Latin language,
-   when available.
+    These commands typeset the corresponding logos, preserving
+    the surrounding language and direction. With \textsf{babelbidi},
+    they locally use English or the selected Latin language,
+    when available.
 
-   All logos use \verb|\xspace| for automatic spacing.
-   Append \verb|{}| for explicit control, as in
-   \verb|\LaTeX{}-based|.
+    All logos use \verb|\xspace| for automatic spacing.
+    Append \verb|{}| for explicit control, as in
+    \verb|\LaTeX{}-based|.
 
-   The default \texttt{logostyle=auto} uses graphics-based
-   variants when \textsf{graphics} or \textsf{graphicx} is loaded
-   before \textsf{babelbidi}. Use \texttt{logostyle=simple}
-   for variants without reflected letters. This option does
-   not affect the standard \TeX, \LaTeX, and \LaTeXe constructions.
+    The default \texttt{logostyle=auto} uses graphics-based
+    variants when \textsf{graphics} or \textsf{graphicx} is loaded
+    before \textsf{babelbidi}. Use \texttt{logostyle=simple}
+    for variants without reflected letters. This option does
+    not affect the standard \TeX, \LaTeX, and \LaTeXe constructions.
 
-   For standalone use, load \textsf{babelbidi-logos} directly,
-   with \texttt{style=auto} or \texttt{style=simple}.
+    For standalone use, load \textsf{babelbidi-logos} directly,
+    with \texttt{style=auto} or \texttt{style=simple}.
 
     \section{Patches}
     \label{sec:patches}
 
-    Patches are applied automatically when their engine and package
-    conditions are met. Load related packages in the preamble. The code
-    integrations can be loaded before or after \textsf{babelbidi}.
+    Patches are installed automatically when the relevant engine and
+    packages are present. Load the affected packages in the preamble.
+    The code-package integrations support loading their packages
+    before or after \textsf{babelbidi}.
 
     \subsection{Common Patches}
     \label{sec:common-patches}
@@ -1492,15 +1597,18 @@ Ligatures=TeX
     \section{Minted Package}
     \label{sec:minted}
 
-    Load \textsf{minted} as usual and meet its external-tool requirements:
+    Load \textsf{minted} in the preamble and satisfy the external-tool
+    requirements documented in its manual:
 
     \begin{minted}{latex}
         \usepackage{minted}
     \end{minted}
 
-    The options below are added by \textsf{babelbidi}, not by
-    \textsf{minted}. They are registered for both Latin and non-Latin
-    main scripts.
+    The options in this section are extensions supplied by
+    \textsf{babelbidi}, not standard \textsf{minted} options. They
+    are available with both Latin and non-Latin main scripts. Select
+    the language and direction separately from the syntax-highlighting
+    lexer.
 
     \subsection{Language and Direction}
     \label{sec:minted-language-direction}
@@ -1572,17 +1680,16 @@ Ligatures=TeX
 
     \begin{itemize}
         \item
-        Shared interfaces do not imply identical implementations
-        or output across engines. With \XeTeX, behaviour may also
-        depend on the installed \textsf{bidi} version.
+        Interface compatibility does not guarantee identical output
+        across engines. The \XeTeX implementations also depend on
+        the installed \textsf{bidi} version.
 
         \item
-        Direction commands do not provide language data, input
-        encodings, fonts, or glyphs. Some patches depend on Babel
-        or third-party package internals, so successful compilation
-        alone does not guarantee correct bidirectional layout. Inspect
-        the output, especially when combining direction changes with
-        other layout packages.
+        Direction control does not supply language data, input or
+        font encodings, fonts, or missing glyphs. Some patches rely
+        on Babel or other packages' internals. Inspect the resulting
+        PDF, particularly when other packages also modify layout;
+        a successful compilation is not a bidirectional-layout check.
 
         \item
         Extra footnote layouts modify insertion and output handling.
@@ -1600,7 +1707,8 @@ Ligatures=TeX
     license text is available in the \texttt{LICENSE} file.
     This independent guide adapts presentation code from the Babel
     manual. Source and copyright notices for this and other reused
-    material are in \href{run:../THIRD-PARTY-NOTICES.md}
+    material are in
+    \href{https://github.com/gambi-shah/babelbidi/blob/main/THIRD-PARTY-NOTICES.md}
     {\texttt{THIRD-PARTY-NOTICES.md}}.
 
     \section{Author and Maintainer}
@@ -1621,9 +1729,19 @@ Ligatures=TeX
     {\texttt{test/}} directory. These development files are not
     included in the CTAN distribution.
 
-    For bug reports, include a minimal example, the \TeX engine
-    and its version, and the complete log file.
-    Add \cmd{\listfiles} to the preamble to record the
-    loaded file versions in the log.
+   Please report bugs on the
+   \href{https://github.com/gambi-shah/babelbidi/issues}
+   {project's GitHub issue tracker}
+   and include:
+   \begin{enumerate}
+       \item A small, complete example that reproduces the problem.
+       \item The \textsf{babelbidi} and Babel versions, and the
+       \TeX engine used (with its version, if known).
+       \item A brief description of the expected and actual results,
+       with any error message or a screenshot of the affected output.
+   \end{enumerate}
+
+
+
 
 \end{document}
