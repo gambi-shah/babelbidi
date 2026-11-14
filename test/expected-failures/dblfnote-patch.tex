@@ -1,0 +1,11 @@
+% Compile with XeLaTeX in nonstop mode: both BabelBidi patch errors must
+% appear. Simulate an etoolbox failure without depending on package internals.
+\documentclass{article}
+\usepackage[english]{babelbidi}
+\usepackage{dblfnote}
+\makeatletter
+\AddToHook{begindocument/before}{\def\apptocmd#1#2#3#4{#4}}
+\makeatother
+\begin{document}
+Text.
+\end{document}

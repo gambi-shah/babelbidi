@@ -549,7 +549,7 @@ Ligatures=TeX
         \end{tabularx}
     \end{center}
 
-    \section{Obtaining and Installing}
+    \section{Installing}
     \label{sec:installation}
 
     \textsf{babelbidi} is distributed through CTAN:
@@ -574,89 +574,12 @@ Ligatures=TeX
         \usepackage[<options>]{babelbidi}
     \end{minted}
 
-    Normally, \textsf{babelbidi} loads Babel and chooses a
-    bidirectional backend for the current engine. With \LuaLaTeX
-    and \textsf{beamer-rl}, the class handles Babel setup instead.
     Options not recognized by \textsf{babelbidi} are forwarded to
     Babel. In particular, \texttt{bidi} and \texttt{layout} are Babel
     options with engine-dependent defaults supplied by this package.
 
-    With \XeLaTeX, load \textsf{hyperref} before \textsf{babelbidi}
-    if hyperlinks are needed; see Section~\ref{sec:xelatex-patches}.
 
-    \Needspace{10\baselineskip}
-    \Describe{bidi}{=\meta{value}}
-    Selects the bidirectional backend. If it is not specified,
-    its default value is selected according to the engine:
-
-    \begin{center}
-        \begin{tabular}{@{}ll@{}}
-            \toprule
-            Engine & Default value of \texttt{bidi} \\
-            \midrule
-            \LuaTeX & \texttt{basic} \\
-            \XeTeX & \texttt{bidi-r} \\
-            \pdfTeX & \texttt{default} \\
-            \bottomrule
-        \end{tabular}
-    \end{center}
-
-    \Describe{layout}{=\meta{selectors}}
-    With \LuaTeX, the default value is:
-
-    \begin{minted}{latex}
-        counters graphics footnotes lists
-    \end{minted}
-
-    Specifying \texttt{layout} replaces this default; it does not add to
-    it. For example:
-
-    \begin{minted}{latex}
-        layout={counters footnotes}
-    \end{minted}
-
-    This selects only \texttt{counters} and \texttt{footnotes}. To retain
-    \texttt{graphics} and \texttt{lists}, include them explicitly. Values
-    containing multiple selectors must be enclosed in braces. The package
-    applies this \texttt{layout} setting only with \LuaTeX; it has no
-    effect in the \XeTeX and \pdfTeX loading branches.
-
-    For slides with an RTL main language, \textsf{beamer-rl} is
-    recommended over \textsf{beamer}, although it is not required.
-
-    With \LuaTeX, the boolean option
-    \Describe{fontcache}{=\meta{true}/\meta{false}}
-    controls caching of Babel font mappings used by automatic font
-    selection and glyph fallback. It is enabled by default to improve
-    compilation speed. In special cases, such as font changes made
-    through the \texttt{rmfamily} hook, cached mappings may prevent
-    changes from taking effect. Disable the cache when needed:
-
-    \begin{minted}{latex}
-        \usepackage[fontcache=false]{babelbidi}
-    \end{minted}
-
-    To enable paragraph and multi-column footnote layouts, use the
-    following option:
-
-    \Describe{extrafootnotefeatures}{=\meta{on}/\meta{off}}
-    Its default is \texttt{off}. The option also accepts explicit
-    \texttt{=on} and \texttt{=off} values:
-
-    \begin{minted}{latex}
-        \usepackage[extrafootnotefeatures]{babelbidi}
-    \end{minted}
-
-    With \XeTeX, it is passed to \textsf{bidi}; with \LuaTeX and
-    \pdfTeX, \textsf{babelbidi} provides its own implementation. See
-    Section~\ref{sec:footnote-layouts} for the available commands.
-
-    \Describe{logostyle}{=\meta{auto}/\meta{simple}}
-    Selects the engine-logo style. The default is \texttt{auto}.
-    Use \texttt{simple} for non-reflected logos, even when
-    \textsf{graphicx} is loaded. See Section~\ref{sec:engine-logos}.
-
-    \section{Quick Start}
+        \subsection{Quick Start}
     \label{sec:quick-start}
 
     The following example works with \LuaLaTeX and \XeLaTeX
@@ -703,6 +626,204 @@ Ligatures=TeX
     fonts.
 
 
+    \subsection{Engine Setup}
+    \label{sec:loading-engine-setup}
+
+    Normally, \textsf{babelbidi} loads Babel and chooses a
+    bidirectional backend for the current engine. With \LuaLaTeX
+    and \textsf{beamer-rl}, the class handles Babel setup instead.
+
+    With \XeLaTeX, load \textsf{hyperref} before \textsf{babelbidi}
+    if hyperlinks are needed; see Section~\ref{sec:xelatex-patches}.
+
+    \Needspace{10\baselineskip}
+    Babel's \texttt{bidi} option selects the bidirectional backend.
+    If it is not specified, \textsf{babelbidi} selects a default
+    according to the engine:
+
+    \begin{center}
+        \begin{tabular}{@{}ll@{}}
+            \toprule
+            Engine & Default value of \texttt{bidi} \\
+            \midrule
+            \LuaTeX & \texttt{basic} \\
+            \XeTeX & \texttt{bidi-r} \\
+            \pdfTeX & \texttt{default} \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+
+    With \LuaTeX, the default value of Babel's \texttt{layout}
+    option is:
+
+    \begin{minted}{latex}
+        counters graphics footnotes lists
+    \end{minted}
+
+    Specifying \texttt{layout} replaces this default; it does not add to
+    it. For example:
+
+    \begin{minted}{latex}
+        layout={counters footnotes}
+    \end{minted}
+
+    This selects only \texttt{counters} and \texttt{footnotes}. To retain
+    \texttt{graphics} and \texttt{lists}, include them explicitly. Values
+    containing multiple selectors must be enclosed in braces. The package
+    applies this \texttt{layout} setting only with \LuaTeX; it has no
+    effect in the \XeTeX and \pdfTeX loading branches.
+
+    For slides with an RTL main language, \textsf{beamer-rl} is
+    recommended over \textsf{beamer}, although it is not required.
+
+    \subsection{Package Options}
+    \label{sec:loading-package-options}
+
+    The following keys assign languages to the four roles used by
+    BabelBidi. Their automatic defaults and selection rules are
+    described in Section~\ref{sec:language-selection}.
+
+    \Describe{latin}{=\meta{language}}
+    Assigns the Latin-script language, not necessarily English.
+
+    \Describe{ltr}{=\meta{language}}
+    Assigns the LTR language, which need not use the Latin script.
+
+    \Describe{rtl}{=\meta{language}}
+    Assigns the RTL language.
+
+    \Describe{code}{=\meta{language}}
+    Assigns the language context for code and verbatim text,
+    not a programming language or syntax-highlighting lexer.
+
+    \Describe{fontcache}{=\meta{true}/\meta{false}}
+    With \LuaTeX, controls caching of Babel font mappings used by
+    automatic font selection and glyph fallback. It is enabled by
+    default to improve compilation speed. In special cases, such as
+    font changes made through the \texttt{rmfamily} hook, cached
+    mappings may prevent changes from taking effect. Disable the
+    cache when needed:
+
+    \begin{minted}{latex}
+        \usepackage[fontcache=false]{babelbidi}
+    \end{minted}
+
+    \Describe{extrafootnotefeatures}{=\meta{on}/\meta{off}}
+    Enables paragraph and multi-column footnote layouts. The default
+    is \texttt{off}; specifying the option without a value enables it:
+
+    \begin{minted}{latex}
+        \usepackage[extrafootnotefeatures]{babelbidi}
+    \end{minted}
+
+    The option also accepts explicit \texttt{=on} and \texttt{=off}
+    values. With \XeTeX, it is passed to \textsf{bidi}; with \LuaTeX
+    and \pdfTeX, \textsf{babelbidi} provides its own implementation.
+    See Section~\ref{sec:footnote-layouts} for the available commands.
+
+    \Describe{logostyle}{=\meta{auto}/\meta{simple}}
+    Selects the engine-logo style. The default is \texttt{auto}.
+    Use \texttt{simple} for non-reflected logos, even when
+    \textsf{graphicx} is loaded. See Section~\ref{sec:engine-logos}.
+
+    \subsection{Subpackages}
+    \label{sec:subpackages}
+
+    \textsf{babelbidi} loads \textsf{babelbidi-lang} and
+    \textsf{babelbidi-logos} automatically. Both can also be used
+    independently of the main package.
+
+    \paragraph*{\textcolor{thered}{\textsf{babelbidi-lang}}}
+    Provides the four language roles, \cmd{\lr}, \cmd{\rl},
+    \cmd{\latintoday}, and the \texttt{latin} environment.
+    For standalone use, load it after Babel; it accepts the same
+    \texttt{latin}, \texttt{ltr}, \texttt{rtl}, and \texttt{code}
+    keys listed above:
+
+    \begin{minted}{latex}
+        \usepackage[english]{babel}
+        \usepackage{babelbidi-lang}
+    \end{minted}
+
+    Configure Babel's direction support and fonts as needed.
+    This subpackage does not provide the main package's
+    direction-only, font, layout, or compatibility interfaces.
+
+    \paragraph*{\textcolor{thered}{\textsf{babelbidi-logos}}}
+    Provides the engine logos documented in
+    Section~\ref{sec:engine-logos}, without requiring Babel or
+    \textsf{babelbidi}. When loaded directly, its option is named
+    \texttt{style}, rather than \texttt{logostyle}; the values are
+    \texttt{auto} (default) and \texttt{simple}:
+
+    \begin{minted}{latex}
+        \usepackage[style=simple]{babelbidi-logos}
+    \end{minted}
+
+    \paragraph*{\textcolor{thered}{\textsf{amikhteh-logo}}}
+    An optional companion for the package-family mark used in this
+    guide, not the engine logos. It is not loaded by \textsf{babelbidi}.
+    Load it explicitly with \cmd{\usepackage}\texttt{\{amikhteh-logo\}}.
+    Its \texttt{manual} option enables the optional page style;
+    activate it with \cmd{\pagestyle}\texttt{\{amikhteh-logo\}}.
+
+
+
+    \section{Language Selection}
+    \label{sec:language-selection}
+
+    BabelBidi assigns Babel languages to four independent roles:
+    \texttt{latin}, \texttt{ltr}, \texttt{rtl}, and \texttt{code}.
+    A role assignment neither loads a language nor changes the active
+    or main language; several roles may share one language.
+    ``The selected Latin language'' and similar expressions refer
+    to these roles, not the currently active language. The keys are
+    documented in Section~\ref{sec:loading}.
+
+    \subsection{Automatic Selection}
+
+    Unset roles are selected at package loading and after each
+    \cmd{\babelprovide} call. Using Babel's script and direction
+    metadata, the first applicable choice below is used:
+
+    \begin{description}
+        \item[\texttt{latin}:]
+        Latin-script main language; first loaded Latin-script
+        language; \texttt{english}.
+
+        \item[\texttt{ltr}:]
+        LTR main language; first loaded LTR language; \texttt{english}.
+
+        \item[\texttt{rtl}:]
+        RTL main language; first loaded RTL language; \texttt{arabic}.
+
+        \item[\texttt{code}:]
+        Latin-script main language; loaded \texttt{english}; first
+        loaded Latin-script language; LTR main language; first loaded
+        LTR language; main language (or \texttt{english} if it is
+        Babel's \texttt{nil} placeholder).
+    \end{description}
+
+    \subsection{Explicit Selection}
+
+    Explicit keys override automatic choices independently and remain
+    fixed when more languages are declared:
+
+    \begin{minted}{latex}
+        \usepackage[
+        latin=french, ltr=english, rtl=arabic, code=english
+        ]{babelbidi}
+        \babelprovide[import,main]{arabic}
+        \babelprovide[import]{french}
+        \babelprovide[import]{english}
+    \end{minted}
+
+    Declare every selected language through Babel before use, including
+    automatic fallbacks. Establish declarations and role assignments
+    before configuring fonts. For standalone use of
+    \textsf{babelbidi-lang}, see Section~\ref{sec:subpackages}.
+
+
     \section{Text Direction}
     \label{sec:text-direction}
 
@@ -746,11 +867,13 @@ Ligatures=TeX
     \Describe{\setLTR}{}
     \DescribeOther{\setLR}{}
     \DescribeOther{\unsetRTL}{}
+    \DescribeOther{\unsetRL}{}
     These equivalent commands set paragraph direction to LTR.
 
     \Describe{\setRTL}{}
     \DescribeOther{\setRL}{}
     \DescribeOther{\unsetLTR}{}
+    \DescribeOther{\unsetLR}{}
     These equivalent commands set paragraph direction to RTL.
 
     The switches take no arguments; place them between paragraphs and use
@@ -1037,25 +1160,7 @@ Ligatures=TeX
     The rule spans the footnote area of the current document column,
     not an individual footnote column.
 
-    \section{Citations}
-    \label{sec:citations}
 
-    \Describe{\Latincite}{\oarg{note}\marg{keys}}
-    Works like the active \cmd{\cite}, but uses the selected Latin
-    language and font for citation labels and their separators.
-    An optional \meta{note} keeps the surrounding language and text
-    direction. With standard \LaTeX citations, an Arabic comma
-    (U+060C) precedes the note in RTL text; the surrounding font or
-    a fallback font must provide this character. LTR text uses an
-    ordinary comma. With \textsf{cite}, \textsf{natbib}, or
-    \textsf{biblatex}, argument syntax and citation formatting follow
-    the active \cmd{\cite}.
-
-    \begin{minted}{latex}
-        \Latincite{knuth}
-        \Latincite[page 23]{knuth}
-        \Latincite{knuth,lamport}
-    \end{minted}
 
     \section{Lists, Cases, and Counters}
     \label{sec:lists-cases-counters}
@@ -1063,9 +1168,10 @@ Ligatures=TeX
     \subsection{Lists and Bibliographies}
     \label{sec:lists-bibliographies}
 
-    Use these environments to direct a group of entries within an
-    existing list or bibliography. They change entry direction but
-    do not create the surrounding list or select another language.
+    The \texttt{LTRitems}, \texttt{RTLitems}, \texttt{LTRbibitems},
+    and \texttt{RTLbibitems} environments direct entries within an
+    existing list or bibliography without changing the active language.
+    They do not create the surrounding list or bibliography.
 
     \Describe{\begin\menv{LTRitems}}{\Eenv{LTRitems}}
     \DescribeOther{\begin\menv{RTLitems}}{\Eenv{RTLitems}}
@@ -1088,6 +1194,12 @@ Ligatures=TeX
             \item The fourth item
         \end{itemize}
     \end{minted}
+
+    \Describe{\begin\menv{latinitems}}{\Eenv{latinitems}}
+    Like \texttt{LTRitems}, this groups items within an existing list.
+    It also selects the configured Latin-script language and its fonts,
+    as the \texttt{latin} environment does. The previous language and
+    direction are restored at the end of the group.
 
     \Describe{\begin\menv{LTRbibitems}}{\Eenv{LTRbibitems}}
     \DescribeOther{\begin\menv{RTLbibitems}}{\Eenv{RTLbibitems}}
@@ -1138,6 +1250,17 @@ Ligatures=TeX
             $-x$ & $x < 0$
         \end{RTLcases}
     \end{minted}
+
+    \Describe{\RTLcases}{\marg{cases}}
+    In mathematics, separates rows with \cmd{\cr}. The first column
+    uses math mode; an optional second column, introduced by
+    \texttt{\&}, uses text mode. Place the main expression after
+    the argument:
+
+    \begin{minted}{latex}
+        \[\RTLcases{\text{men}\cr\text{women}}\text{people}\]
+    \end{minted}
+    This example requires \textsf{amsmath} for \cmd{\text}.
 
     \subsection{Counter Separators}
     \label{sec:counter-separators}
@@ -1221,6 +1344,37 @@ Ligatures=TeX
     The default order follows the main document direction. For
     multi-column footnotes, see Section~\ref{sec:footnote-layouts}.
 
+    \subsection{Other Column Layouts}
+
+    With \textsf{multicol} loaded, these switches select the order of
+    columns in subsequent \texttt{multicols} environments; they do not
+    change the direction of the text in the columns. With \XeTeX,
+    these switches are provided by \textsf{bidi}; with \LuaTeX and
+    \pdfTeX, they are implemented by \textsf{babelbidi}.
+
+    \Describe{\RTLmulticolcolumns}{}
+    Places the first column on the right.
+
+    \Describe{\LTRmulticolcolumns}{}
+    Places the first column on the left.
+
+    With \LuaLaTeX or \XeLaTeX and \textsf{dblfnote}
+    loaded, the following switches select the order of its double-column
+    footnotes. \LuaLaTeX uses the \textsf{babelbidi} implementation;
+    \XeLaTeX uses the \textsf{bidi} integration.
+
+    \Describe{\RTLdfnmakecol}{}
+    Places the first footnote column on the right.
+
+    \Describe{\LTRdfnmakecol}{}
+    Places the first footnote column on the left.
+
+    The initial order follows the main document direction. With XeLaTeX,
+    \textsf{bidi} selects \cmd{\DFNalwaysdouble} by default; with LuaLaTeX,
+    \textsf{dblfnote}'s default \cmd{\DFNtrysingle} remains in effect.
+    Use \cmd{\DFNalwaysdouble} or \cmd{\DFNtrysingle} to select the same
+    policy explicitly on both engines.
+
     \subsection{Two-Column Table of Contents}
     \label{sec:two-column-toc}
 
@@ -1233,13 +1387,10 @@ Ligatures=TeX
     \section{Language and Font APIs}
     \label{sec:language-fonts}
 
-    These interfaces use languages selected from the document's Babel
-    configuration. ``Latin'' identifies an auxiliary Latin-script
-    language, which need not be English. The main text language and
-    its fonts are also taken from that configuration. The
-    \texttt{latin}, \texttt{ltr}, \texttt{rtl}, and \texttt{code}
-    selections serve different purposes; their defaults and explicit
-    settings are described in Section~\ref{sec:language-selection}.
+    These interfaces use the language roles defined in
+    Section~\ref{sec:language-selection}. ``The selected Latin
+    language'' refers to the \texttt{latin} role, not necessarily
+    English. Main-language font commands use Babel's main language.
 
     \subsection{Font Selection}
     \label{sec:font-selection}
@@ -1280,12 +1431,10 @@ Ligatures=TeX
     Sets the monospaced font family for the selected Latin language
     and configures it for use by \cmd{\latinttfamily}.
 
-    \Describe{\setmonofont}{\oarg{font features}\marg{font}\oarg{font features}}
-    Sets the document's monospaced font through \textsf{fontspec}.
-    When Babel is loaded, it also registers this font for the
-    \texttt{tt} family of the main language, making it available
-    to \LuaTeX glyph fallback.
-
+    The \textsf{fontspec} command \cmd{\setmonofont} sets the
+    document's monospaced font. With \textsf{babelbidi}, it also
+    registers that font for the main Babel language's \texttt{tt}
+    family, making it available to \LuaTeX glyph fallback.
 
     \subsection{Font Fallback}
     \label{sec:font-fallback}
@@ -1312,9 +1461,10 @@ Ligatures=TeX
     Fallback is a font operation, not a language switch. It applies
     to text fonts, including custom families, but not to math fonts.
     It works with or without \texttt{onchar=fonts} and uses the
-    \texttt{fontcache} setting. An explicit \cmd{\latinttfamily}
-    selection uses the selected Latin language's fallback chain
-    without changing the text language or direction.
+    \texttt{fontcache} setting. With a non-Latin main script, an
+    explicit \cmd{\latinttfamily} selection uses the selected Latin
+    language's fallback chain without changing the text language
+    or direction.
 
     A later declaration replaces the previous chain; an empty candidate
     list disables fallback:
@@ -1336,11 +1486,10 @@ Ligatures=TeX
     \subsection{Language Commands}
     \label{sec:language-commands}
 
-    The lowercase commands \cmd{\lr} and \cmd{\rl} select a Babel
-    language and its associated direction. Use them when the passage
-    requires that language context, rather than a direction change
-    alone. The uppercase \cmd{\LR} and \cmd{\RL} leave the active
-    language unchanged.
+    The lowercase commands \cmd{\lr} and \cmd{\rl} select the
+    languages assigned to the \texttt{ltr} and \texttt{rtl} roles,
+    respectively, with their associated direction and fonts.
+    The uppercase \cmd{\LR} and \cmd{\RL} change direction only.
 
     \Describe{\lr}{\marg{text}}
     Typesets text using the selected LTR language.
@@ -1352,7 +1501,10 @@ Ligatures=TeX
     Prints the current date using the selected Latin language.
 
     \Describe{\latinttfamily}{}
-    Selects the Latin monospaced font family; Unicode engines only.
+    Uses the monospaced font family of the selected Latin language
+    without changing the active language or direction; Unicode
+    engines only. With a Latin-script main language, it uses the
+    current \cmd{\ttfamily} instead.
 
     \Describe{\latinverb}{\meta{delimiter}\meta{text}\meta{delimiter}}
     Typesets inline verbatim text in the selected \texttt{code} language.
@@ -1360,8 +1512,8 @@ Ligatures=TeX
     \Describe{\latinverb*}{\meta{delimiter}\meta{text}\meta{delimiter}}
     Does the same, with visible spaces.
 
-    Despite its name, \cmd{\latinverb} selects the \texttt{code}
-    language, not the \texttt{latin} alias.
+    Despite its name, \cmd{\latinverb} uses the \texttt{code}
+    role, not the \texttt{latin} role.
 
     \subsection{Language Environments}
     \label{sec:language-environments}
@@ -1378,80 +1530,26 @@ Ligatures=TeX
     The Latin verbatim interfaces are available regardless of the
     main script.
 
-    \subsection{Language Selection}
-    \label{sec:language-selection}
 
-    The following package keys assign Babel languages to the roles
-    used by the language, font, citation, and verbatim interfaces:
+    \subsection{Citations}
+    \label{sec:citations}
 
-    \Describe{latin}{=\meta{language}}
-    Selects the language for the \texttt{latin} environment,
-    \cmd{\latintoday}, \cmd{\latinttfamily}, \cmd{\latinfont}, \cmd{\Latincite}, and Latin font commands.
-
-    \Describe{ltr}{=\meta{language}}
-    Selects the language used by \cmd{\lr}.
-
-    \Describe{rtl}{=\meta{language}}
-    Selects the language used by \cmd{\rl}.
-
-    \Describe{code}{=\meta{language}}
-    Selects the language for Latin verbatim interfaces and
-    code-package integration.
-
-    These keys name languages; they do not declare or load them.
-    Declare each selected language through Babel before using the
-    corresponding interface. For example:
+    \Describe{\Latincite}{\oarg{note}\marg{keys}}
+    Works like the active \cmd{\cite}, but uses the selected Latin
+    language and font for citation labels and their separators.
+    An optional \meta{note} keeps the surrounding language and text
+    direction. With standard \LaTeX citations, an Arabic comma
+    (U+060C) precedes the note in RTL text; the surrounding font or
+    a fallback font must provide this character. LTR text uses an
+    ordinary comma. With \textsf{cite}, \textsf{natbib}, or
+    \textsf{biblatex}, argument syntax and citation formatting follow
+    the active \cmd{\cite}.
 
     \begin{minted}{latex}
-        \usepackage[code=dutch,rtl=arabic]{babelbidi}
-        \babelprovide[import]{dutch}
-        \babelprovide[import]{arabic}
+        \Latincite{knuth}
+        \Latincite[page 23]{knuth}
+        \Latincite{knuth,lamport}
     \end{minted}
-
-    A role without an explicit setting is chosen automatically and
-    reconsidered after each \cmd{\babelprovide} call. An explicit
-    setting remains fixed. The automatic choices follow these rules:
-
-    \begin{description}
-        \item[\texttt{latin}:]
-        The main language if it uses the Latin script; otherwise, the
-        first loaded Latin-script language; otherwise, \texttt{english}.
-
-        \item[\texttt{ltr}:]
-        The main language if it is LTR; otherwise, the first loaded LTR
-        language; otherwise, \texttt{english}.
-
-        \item[\texttt{rtl}:]
-        The main language if it is RTL; otherwise, the first loaded RTL
-        language; otherwise, \texttt{arabic}.
-
-        \item[\texttt{code}:]
-        The main language if it uses the Latin script; otherwise,
-        loaded \texttt{english}; otherwise, the first loaded Latin-script
-        language; otherwise, the main or first loaded LTR language;
-        finally, the main language. If the main language is Babel's
-        \texttt{nil} placeholder, the final fallback is \texttt{english}.
-    \end{description}
-
-    Selections use Babel's language metadata and loading order. Ensure
-    that a selected language is declared before using it, including a
-    default such as \texttt{english} or \texttt{arabic}. Declare
-    languages before configuring their fonts.
-
-    \Needspace{11\baselineskip}
-    These selections are handled by \textsf{babelbidi-lang}, which
-    \textsf{babelbidi} loads automatically. For standalone use, load
-    Babel first:
-
-    \begin{minted}{latex}
-        \usepackage[english]{babel}
-        \usepackage{babelbidi-lang}
-    \end{minted}
-
-    The standalone package provides \cmd{\lr}, \cmd{\rl},
-    \cmd{\latintoday}, and the \texttt{latin} environment, and accepts
-    the language-selection keys above. Configure Babel's languages,
-    direction support, and fonts as needed.
 
 
 
@@ -1532,6 +1630,28 @@ Ligatures=TeX
         Register the options described in Section~\ref{sec:minted} for
         both Latin and non-Latin main scripts. Additional display wrappers
         are installed for non-Latin main scripts.
+        For \cmd{\inputminted}, the temporary code-language
+        switch does not write Babel language changes to the auxiliary file.
+
+        \item
+        \textsf{fontspec}:
+        With Unicode engines, adapt \cmd{\setmonofont} to register the
+        selected monospaced font for the main Babel language's \texttt{tt}
+        family, making it available to \LuaTeX glyph fallback.
+
+        \item
+        \textsf{bidituftesidenote}:
+        Adapt the directional notes supplied by this package and the
+        \textsf{biditufte-book} and \textsf{biditufte-handout} classes.
+        With \LuaLaTeX, provide their directional note handling; with
+        \XeLaTeX, adapt the \textsf{bidi} implementation. The package's
+        \cmd{\LTRsidenote} and \cmd{\RTLsidenote} accept optional note
+        numbers and vertical offsets, while \cmd{\LTRmarginnote} and
+        \cmd{\RTLmarginnote} accept an optional vertical offset.
+        The directional footnote commands \cmd{\LTRfootnote} and
+        \cmd{\RTLfootnote} also place notes in the margin. With
+        \textsf{hyperref}, labels inside numbered directional notes link
+        to the corresponding note.
 
         \item
         \textbf{Labels and link targets:}
@@ -1614,8 +1734,8 @@ Ligatures=TeX
     \label{sec:minted-language-direction}
 
     \Describe{textlang}{=\meta{language}}
-    Selects an already declared Babel language. If it is empty,
-    the selected \texttt{code} language is used.
+    Selects an already declared Babel language. An empty value
+    uses the language assigned to the \texttt{code} role.
 
     \Describe{textdir}{=\meta{direction}}
     Accepts \texttt{ltr} or \texttt{rtl}. It is applied after
@@ -1685,6 +1805,11 @@ Ligatures=TeX
         the installed \textsf{bidi} version.
 
         \item
+        Compatibility with \textsf{dblfnote} has been tested with
+        version 1.1 (2018/09/03). Other versions have not been
+        independently tested.
+
+        \item
         Direction control does not supply language data, input or
         font encodings, fonts, or missing glyphs. Some patches rely
         on Babel or other packages' internals. Inspect the resulting
@@ -1729,17 +1854,17 @@ Ligatures=TeX
     {\texttt{test/}} directory. These development files are not
     included in the CTAN distribution.
 
-   Please report bugs on the
-   \href{https://github.com/gambi-shah/babelbidi/issues}
-   {project's GitHub issue tracker}
-   and include:
-   \begin{enumerate}
-       \item A small, complete example that reproduces the problem.
-       \item The \textsf{babelbidi} and Babel versions, and the
-       \TeX engine used (with its version, if known).
-       \item A brief description of the expected and actual results,
-       with any error message or a screenshot of the affected output.
-   \end{enumerate}
+    Please report bugs on the
+    \href{https://github.com/gambi-shah/babelbidi/issues}
+    {project's GitHub issue tracker}
+    and include:
+    \begin{enumerate}
+        \item A small, complete example that reproduces the problem.
+        \item The \textsf{babelbidi} and Babel versions, and the
+        \TeX engine used (with its version, if known).
+        \item A brief description of the expected and actual results,
+        with any error message or a screenshot of the affected output.
+    \end{enumerate}
 
 
 

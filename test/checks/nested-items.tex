@@ -1,0 +1,27 @@
+% Compare nested ordinary, Latin, and LTR list geometry in an RTL document.
+\documentclass{article}
+\usepackage[english,arabic,latin=english]{babelbidi}
+\usepackage{fontspec}
+\babelprovide[import]{english}
+\babelprovide[import,main]{arabic}
+\babelfont[english]{rm}{TeX Gyre Termes}
+\babelfont[arabic]{rm}{Amiri}
+\begin{document}
+\begin{itemize}
+\item Ordinary parent
+  \begin{itemize}\item Ordinary child\end{itemize}
+\begin{latinitems}
+\item LATINPARENT
+  \begin{enumerate}\item LATINCHILD
+    \begin{itemize}\item LATINGRANDCHILD\end{itemize}
+  \end{enumerate}
+\end{latinitems}
+\begin{LTRitems}
+\item LTRPARENT
+  \begin{enumerate}\item LTRCHILD
+    \begin{itemize}\item LTRGRANDCHILD\end{itemize}
+  \end{enumerate}
+\end{LTRitems}
+\item Ordinary after
+\end{itemize}
+\end{document}

@@ -20,7 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-api-layout.def}[2026/11/11 v0.2.0 Additional Bidi API for Babelbidi]
+\ProvidesFile{babelbidi-api-layout.def}[2026/11/14 v0.3.0 Additional Bidi API for Babelbidi]
 
 \makeatletter
 
@@ -43,10 +43,165 @@
 }
 
 % ------------------------------------------
+% Latin-language list items
+% ------------------------------------------
+
+% As in the latin environment, choose the configured Latin-script language;
+% LTRitems supplies the list geometry without opening a new list.
+\ProvideDocumentEnvironment{latinitems}{}
+{\begin{otherlanguage}{\bbd@main@latin}\begin{LTRitems}}
+{\end{LTRitems}\end{otherlanguage}}
+
+
+% ------------------------------------------
+% multicol column order
+% ------------------------------------------
+
+% XeTeX's bidi integration supplies its own switches.
+\def\bbd@multicol@setup{%
+    \ProvideDocumentCommand{\RTLmulticolcolumns}{}{\RLmulticolcolumns}%
+    \ProvideDocumentCommand{\LTRmulticolcolumns}{}{\LRmulticolcolumns}%
+}
+\ifXeTeX\else
+    \AddToHook{package/multicol/after}{\bbd@multicol@setup}
+    \@ifpackageloaded{multicol}{\bbd@multicol@setup}{}%
+\fi
+
+
+% ------------------------------------------
+% dblfnote column order
+% ------------------------------------------
+
+% dblfnote output uses two boxes; reverse their physical placement without
+% changing the order in which the footnotes are split into those boxes.
+\RequirePackage{etoolbox}
+\newif\ifbbd@dfn@rtl
+\newif\ifbbd@dfn@explicit
+\def\bbd@dfn@hbox{%
+    \ifbbd@dfn@rtl\hbox dir TRT\else\hbox dir TLT\fi
+}
+\def\bbd@dfn@default{%
+    \if@RTLmain\bbd@dfn@rtltrue\else\bbd@dfn@rtlfalse\fi
+}
+\def\bbd@dfn@setup{%
+    \patchcmd{\dfn@makecol}{\hbox}{\bbd@dfn@hbox}{}%
+    {\PackageError{babelbidi}{Cannot adapt dblfnote output routine}%
+        {The installed version of dblfnote is not supported.}}%
+    \ProvideDocumentCommand{\RTLdfnmakecol}{}{\bbd@dfn@rtltrue\bbd@dfn@explicittrue}%
+    \ProvideDocumentCommand{\LTRdfnmakecol}{}{\bbd@dfn@rtlfalse\bbd@dfn@explicittrue}%
+    \AddToHook{begindocument}{%
+        \ifbbd@dfn@explicit\else\bbd@dfn@default\fi}%
+}
+\ifLuaTeX
+    \@ifpackageloaded{dblfnote}{\bbd@dfn@setup}{%
+        \AddToHook{package/dblfnote/after}{\bbd@dfn@setup}%
+    }%
+\fi
+
+% bidi's dblfnote adapter otherwise saves dblfnote's wrapper as its own
+% underlying footnote command, causing recursion when dblfnote is loaded
+% after bidi. Preserve the original command across bidi's begin-document hook.
+\ifXeTeX
+    \AddToHook{begindocument/before}{%
+        \@ifpackageloaded{dblfnote}{%
+            \let\bbd@dfn@footnotetext\dfn@latex@footnotetext
+        }{}%
+    }
+    \AddToHook{begindocument/end}{%
+        \@ifpackageloaded{dblfnote}{%
+            \let\dfn@latex@footnotetext\bbd@dfn@footnotetext
+            \apptocmd{\RTLdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
+                \PackageError{babelbidi}{Could not patch \string\RTLdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
+            \apptocmd{\LTRdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
+                \PackageError{babelbidi}{Could not patch \string\LTRdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
+        }{}%
+    }
+\fi
+
+
+% The math form follows bidi's RTLcases alignment (see third-party notices).
+% Keep the environment form while accepting the documented math form.
+\def\bbd@install@RTLcases{%
+    \let\bbd@RTLcases@environment\RTLcases
+    \def\bbd@RTLcases@name{RTLcases}
+    \long\def\bbd@RTLcases@command##1{%
+        \left.\vcenter{\normalbaselines\m@th
+            \ialign{$####\hfil$&\quad{####}\hfil\crcr##1\crcr}}\,\right\}%
+    }%
+    \protected\def\RTLcases{%
+        \ifx\@currenvir\bbd@RTLcases@name
+            \expandafter\bbd@RTLcases@environment
+        \else
+            \expandafter\bbd@RTLcases@command
+        \fi
+    }%
+}
+
+% ------------------------------------------
 % XeTeX uses bidi's original interfaces, including its footnote machinery.
 % ------------------------------------------
 
+% A note label needs a target in the margin, without changing the target of
+% labels subsequently placed in the surrounding text.
+\def\bbd@tufte@anchor{%
+    \@ifpackageloaded{hyperref}{%
+        \let\bbd@tufte@saved@href\@currentHref
+        \phantomsection
+    }{}%
+}
+\def\bbd@tufte@restore@anchor{%
+    \@ifpackageloaded{hyperref}{%
+        \global\let\@currentHref\bbd@tufte@saved@href
+    }{}%
+}
+% The optional-argument command is a wrapper; LaTeX stores its body in a
+% control sequence named \string#1 (including the current escape character).
+\def\bbd@xe@tufte@anchorpatch#1{%
+    \expandafter\patchcmd\csname\string#1\endcsname
+    {\protected@edef\@currentlabel}
+    {\bbd@tufte@anchor\protected@edef\@currentlabel}{}%
+    {\PackageWarning{babelbidi}{Could not add a note target to \string#1}}%
+    \expandafter\patchcmd\csname\string#1\endcsname
+    {\color@endgroup}
+    {\color@endgroup\bbd@tufte@restore@anchor}{}%
+    {\PackageWarning{babelbidi}{Could not restore the target after \string#1}}%
+}
+\def\bbd@xe@tufte@setup{%
+    \@ifpackageloaded{bidi}{%
+        % The upstream reset starts an RTL run only in the first paragraph.
+        \patchcmd{\@RTLbidituftesidenotemarginparreset}
+        {\everypar{\@minipagefalse\everypar{}\beginR}}
+        {\everypar{\@minipagefalse\beginR}}{}%
+        {\PackageWarning{babelbidi}{Could not adapt RTL margin note paragraphs}}%
+        \bbd@xe@tufte@anchorpatch\@LTRfootnotetext
+        \bbd@xe@tufte@anchorpatch\@RTLfootnotetext
+    }{}%
+}
+
+% bidi changes the parent paragraph shape in LTRitems, but its nested
+% lists recalculate their shape without that adjustment. Keep the offset
+% local to the environment and leave RTL lists to bidi's own machinery.
+\long\def\bbd@xe@items@list#1#2{%
+    \bbd@xe@items@original@list{#1}{#2}%
+    \if@RTL\else
+        \parshape\@ne\dimexpr\@totalleftmargin+\bbd@xe@items@offset\relax\linewidth
+    \fi
+    \ignorespaces
+}
 \ifXeTeX
+    \@ifpackageloaded{bidituftesidenote}{\bbd@xe@tufte@setup}{%
+        \AddToHook{package/bidituftesidenote/after}{\bbd@xe@tufte@setup}%
+    }%
+    \@ifundefined{LTRitems}{}{%
+        \apptocmd{\LTRitems}{%
+            \edef\bbd@xe@items@offset{\the\dimexpr\parshapeindent1-\@totalleftmargin\relax}%
+            \ifx\list\bbd@xe@items@list\else
+                \let\bbd@xe@items@original@list\list
+                \let\list\bbd@xe@items@list
+            \fi
+        }{}{\PackageError{babelbidi}{Could not adapt LTRitems}{Check compatibility with the installed bidi package.}}%
+    }%
+    \bbd@install@RTLcases
     \makeatother
     \expandafter\endinput
 \fi
@@ -314,6 +469,8 @@
 {}
 
 
+\bbd@install@RTLcases
+
 % ------------------------------------------
 % Separator in compound counter representations
 % ------------------------------------------
@@ -366,6 +523,52 @@
 \AddToHook{package/amsthm/after}{%
     \def\@thmcountersep{\@SepMark}%
 }
+
+
+% ------------------------------------------
+% Directional biditufte notes (LuaTeX)
+% ------------------------------------------
+
+% The class supplies note placement and numbering. Its bidi adapter is
+% installed only by the XeTeX backend, so provide the corresponding LuaTeX
+% text builders and keep the class's optional arguments and citation logic.
+\def\bbd@tufte@setup{%
+    \def\@LTRbidituftesidenotemarginparreset{%
+        \reset@font\normalsize\@minipagetrue\bbd@setdir{0}%
+        \everypar{\@minipagefalse\everypar{}}}%
+    \def\@RTLbidituftesidenotemarginparreset{%
+        \reset@font\normalsize\@minipagetrue\bbd@setdir{1}%
+        \everypar{\@minipagefalse\everypar{}}}%
+    \DeclareDocumentCommand{\@LTRfootnotetext}{O{0pt} +m}{%
+        \bbd@tufte@footnotetext\LTRbidituftesidenotemarginpar
+        \@bidituftesidenote@LTRsidenote@font{##1}{##2}%
+    }%
+    \DeclareDocumentCommand{\@RTLfootnotetext}{O{0pt} +m}{%
+        \bbd@tufte@footnotetext\RTLbidituftesidenotemarginpar
+        \@bidituftesidenote@RTLsidenote@font{##1}{##2}%
+    }%
+    \let\LTRfootnote\LTRsidenote
+    \let\RTLfootnote\RTLsidenote
+}
+\long\def\bbd@tufte@footnotetext#1#2#3#4{%
+    #1{%
+        \hbox{}\vspace*{#3}%
+        \def\baselinestretch{\setspace@singlespace}%
+        \reset@font#2\@bidituftesidenote@margin@par
+        \vspace*{-\baselineskip}\noindent
+        \bbd@tufte@anchor
+        \protected@edef\@currentlabel{\csname p@footnote\endcsname\@thefnmark}%
+        \color@begingroup
+        \@makefntext{\ignorespaces#4}%
+        \color@endgroup
+        \bbd@tufte@restore@anchor
+    }%
+}
+\ifLuaTeX
+    \@ifpackageloaded{bidituftesidenote}{\bbd@tufte@setup}{%
+        \AddToHook{package/bidituftesidenote/after}{\bbd@tufte@setup}%
+    }%
+\fi
 
 
 % ------------------------------------------

@@ -1,0 +1,30 @@
+% Compare left, right, full-width, and automatic footnote rules in the PDF.
+\documentclass{article}
+
+\usepackage{babelbidi}
+
+\begin{document}
+
+    \setlength{\footnoterulewidth}{.6\columnwidth}
+
+    \leftfootnoterule
+    Left rule.\LTRfootnote{Left rule footnote.}
+    \newpage
+
+    \rightfootnoterule
+    Right rule.\LTRfootnote{Right rule footnote.}
+    \newpage
+
+    \textwidthfootnoterule
+    Full-width rule.\LTRfootnote{Full-width rule footnote.}
+    \newpage
+
+    \autofootnoterule
+    First RTL.\RTLfootnote{First RTL footnote.}
+    Then LTR.\LTRfootnote{Second LTR footnote.}
+    \newpage
+
+    First LTR.\LTRfootnote{First LTR footnote.}
+    Then RTL.\RTLfootnote{Second RTL footnote.}
+
+\end{document}

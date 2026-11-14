@@ -1,0 +1,76 @@
+% Compile twice with XeLaTeX or LuaLaTeX; use \def\UseTufteBook{}
+% before input to test biditufte-book instead of biditufte-handout.
+\ifdefined\UseTufteBook
+  \documentclass{biditufte-book}
+\else
+  \documentclass{biditufte-handout}
+\fi
+\usepackage[english,arabic]{babelbidi}
+\usepackage{fontspec}
+\usepackage{xcolor}
+\babelprovide[import,main]{english}
+\babelprovide[import]{arabic}
+\babelfont[arabic]{rm}{Amiri}
+\makeatletter
+\newcommand\checknotedirection{%
+  \ifLuaTeX
+    \ifnum\bbl@thepardir=1\relax\else
+      \errmessage{RTL note paragraph direction lost}%
+    \fi
+  \fi
+}
+\ifXeTeX
+  % The optional-argument wrapper calls the internal control sequence whose
+  % name begins with the current escape character. Check its patched body.
+  \AtBeginDocument{%
+    \ifnum\escapechar=92\relax\else
+      \errmessage{Unexpected escapechar in Tufte patch test}%
+    \fi
+    \@for\bbdtestnote:=LTR,RTL\do{%
+      \expandafter\let\expandafter\bbdtestbody
+        \csname\expandafter\string\csname @\bbdtestnote footnotetext\endcsname\endcsname
+      \patchcmd{\bbdtestbody}{\bbd@tufte@anchor}{}{}%
+        {\errmessage{Missing Tufte note anchor in patched XeTeX body}}%
+      \patchcmd{\bbdtestbody}{\bbd@tufte@restore@anchor}{}{}%
+        {\errmessage{Missing Tufte anchor restore in patched XeTeX body}}%
+    }%
+    % Each paragraph needs its own RTL run, not only the first one.
+    \let\bbdtestreset\@RTLbidituftesidenotemarginparreset
+    \patchcmd{\bbdtestreset}{\everypar{\@minipagefalse\beginR}}{}{}%
+      {\errmessage{XeTeX RTL note paragraph reset is not patched}}%
+  }
+\fi
+\makeatother
+\begin{document}
+\section{Notes}\label{section:notes}
+Text\RTLsidenote[8][2pt]{\label{note:rtl}%
+  \checknotedirection\foreignlanguage{arabic}{\LR{PARAONE} این پاراگراف نخست یادداشت راست‌به‌چپ است.}\par
+  \checknotedirection\foreignlanguage{arabic}{\LR{PARATWO} این پاراگراف دوم است و باید جهت آن نیز حفظ شود.}\par
+  \checknotedirection\foreignlanguage{arabic}{\LR{PARATHREE} این هم پاراگراف سوم یادداشت است.}}
+\label{after:note}
+Reference to note \ref{note:rtl}; section \ref{section:notes}.
+\par\bigskip
+Text\LTRsidenote[9]{\label{note:ltr}First LTR paragraph.\par Second LTR paragraph.}
+Reference \ref{note:ltr}.
+
+% Further examples start on a separate page to keep the measured note above
+% isolated from these margin notes.
+\newpage
+\section{More directional notes}
+\begingroup
+\setstretch{2}
+Text\LTRsidenote[7][1pt]{An LTR note with \textcolor{red}{coloured text}.
+
+A second paragraph.}
+\par\bigskip
+Text\RTLsidenote[10][2pt]{\foreignlanguage{arabic}{مرحبا بكم}}.
+\par\bigskip
+Text\LTRfootnote{An LTR footnote in the margin.}
+\par\bigskip
+Text\RTLfootnote{\foreignlanguage{arabic}{پاورقی در حاشیه}}.
+\par\bigskip
+\LTRmarginnote[2pt]{An unnumbered LTR margin note.}
+\par\bigskip
+Text\RTLmarginnote[1pt]{\foreignlanguage{arabic}{مرحبا}}.
+\endgroup
+\end{document}

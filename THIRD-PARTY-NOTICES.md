@@ -24,6 +24,21 @@ revision used when the material was first written is known.
   of the cache-miss path retain code corresponding to Babel's `\bbl@mapdir`.
   The file adds a compatibility guard and a cache for font mappings.
 
+## bidi
+
+- Upstream: bidi, `latex-xetex-bidi.def` and `bidituftesidenote.sty`;
+  copyright (c) 2007–2026 Vafa
+  Khalighi and (c) 2018–2020 bidi-tex GitHub Organization; LPPL version
+  1.3c or later. Complete original distribution: https://ctan.org/pkg/bidi
+- The mathematical alignment in `babelbidi-api-layout.def` is adapted from the
+  `\def\RTLcases` in bidi's `latex-xetex-bidi.def` (version 26.01.08).
+  It supports the single-column example in bidi's guide and the optional
+  second column of that alignment. BabelBidi adds dispatch between the
+  command and environment forms.
+- The LuaTeX directional note builders in `babelbidi-api-layout.def` are
+  adapted from the biditufte note implementation distributed with bidi,
+  taking account of BabelBidi's direction and package-loading mechanisms.
+
 ## beamer-rl and beamer
 
 - Upstream: beamer-rl, compared with version 2.1 (2026-07-22),

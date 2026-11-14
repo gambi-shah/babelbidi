@@ -1,0 +1,71 @@
+% Compile with either engine. Define \PackagesFirst before input to load
+% multicol and dblfnote before BabelBidi; otherwise load them afterwards.
+\documentclass{article}
+\usepackage{iftex}
+\ifXeTeX
+  % bidi installs its multicol adapter either while bidi loads or later.
+  \AddToHook{file/multicol-xetex-bidi.def/after}{%
+    \global\let\savedRTLcolumns\RTLmulticolcolumns
+    \global\let\savedLTRcolumns\LTRmulticolcolumns}
+\fi
+\ifdefined\PackagesFirst
+  \usepackage{multicol}
+  \usepackage{dblfnote}
+\fi
+% The multicol adapter must supply whichever switch was not defined already.
+% bidi itself owns both switches on XeTeX; do not predefine them there.
+\ifLuaTeX
+  \ifdefined\PredefinedRTL
+    \newcommand\RTLmulticolcolumns{\relax}
+    \let\savedcolumnswitch\RTLmulticolcolumns
+  \fi
+  \ifdefined\PredefinedLTR
+    \newcommand\LTRmulticolcolumns{\relax}
+    \let\savedcolumnswitch\LTRmulticolcolumns
+  \fi
+\fi
+\usepackage[english]{babelbidi}
+\ifdefined\PackagesFirst\else
+  \usepackage{multicol}
+  \usepackage{dblfnote}
+\fi
+\makeatletter
+\@ifundefined{LTRmulticolcolumns}{\errmessage{LTR column switch missing}}{}
+\@ifundefined{RTLmulticolcolumns}{\errmessage{RTL column switch missing}}{}
+\ifLuaTeX
+  \ifdefined\PredefinedRTL
+    \ifx\RTLmulticolcolumns\savedcolumnswitch\else
+      \errmessage{Existing RTL column switch replaced}\fi
+  \fi
+  \ifdefined\PredefinedLTR
+    \ifx\LTRmulticolcolumns\savedcolumnswitch\else
+      \errmessage{Existing LTR column switch replaced}\fi
+  \fi
+\fi
+\ifXeTeX
+  \ifx\RTLmulticolcolumns\savedRTLcolumns\else
+    \errmessage{bidi RTL column switch replaced}\fi
+  \ifx\LTRmulticolcolumns\savedLTRcolumns\else
+    \errmessage{bidi LTR column switch replaced}\fi
+\fi
+\makeatother
+\DFNalwaysdouble
+\begin{document}
+% Skip the replaced command for the partial-definition tests.
+\ifdefined\PredefinedRTL\else
+  \RTLmulticolcolumns
+  \begin{multicols}{2}MRIGHTFIRST\par\columnbreak MLEFTSECOND\par\end{multicols}
+\fi
+\ifdefined\PredefinedLTR\else
+  \LTRmulticolcolumns
+  \begin{multicols}{2}MLEFTFIRST\par\columnbreak MRIGHTSECOND\par\end{multicols}
+\fi
+\clearpage
+\LTRdfnmakecol
+LTR\footnote{FLEFTFIRST.} text\footnote{FRIGHTSECOND.}\clearpage
+\begingroup
+\RTLdfnmakecol
+RTL\footnote{FRIGHTFIRST.} text\footnote{FLEFTSECOND.}\clearpage
+\endgroup
+Restored\footnote{FRESTOREFIRST.} text\footnote{FRESTORESECOND.}\clearpage
+\end{document}

@@ -1,0 +1,21 @@
+\documentclass{article}
+\usepackage{iftex}
+% XeTeX's bidi integration owns these commands; exercise partial predefinition
+% in the BabelBidi implementation used by LuaTeX.
+\ifLuaTeX\newcommand\RTLmulticolcolumns{\relax}\fi
+\ifLuaTeX\let\savedRTLmulticolcolumns\RTLmulticolcolumns\fi
+\usepackage[english]{babelbidi}
+\usepackage{multicol}
+\begin{document}
+\makeatletter
+\@ifundefined{LTRmulticolcolumns}{\errmessage{LTR column switch missing}}{}
+\@ifundefined{RTLmulticolcolumns}{\errmessage{RTL column switch missing}}{}
+\ifLuaTeX
+  \ifx\RTLmulticolcolumns\savedRTLmulticolcolumns\else
+    \errmessage{Existing RTL column switch was replaced}
+  \fi
+\fi
+\makeatother
+\LTRmulticolcolumns
+\begin{multicols}{2} First column.\columnbreak Second column.\end{multicols}
+\end{document}

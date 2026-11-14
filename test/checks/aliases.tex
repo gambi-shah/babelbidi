@@ -1,0 +1,34 @@
+% Check collisions with existing direction aliases in both Unicode engines.
+\documentclass{article}
+\usepackage{iftex}
+\def\unsetLR{previous LR}
+\def\unsetRL{previous RL}
+\let\previousLR\unsetLR
+\let\previousRL\unsetRL
+\usepackage[english]{babelbidi}
+\makeatletter
+\ifx\unsetLR\previousLR
+  \errmessage{unsetLR was not installed}
+\fi
+\def\assertaliasLTR{%
+  \if@RTL\errmessage{unsetRL did not set LTR}\fi}
+\ifLuaTeX
+  \ifx\unsetRL\previousRL\else
+    \errmessage{Existing unsetRL was not preserved}
+  \fi
+\else\ifXeTeX
+  % bidi itself installs its own direction commands on XeTeX.
+  \ifx\unsetRL\previousRL
+    \errmessage{bidi did not install unsetRL}
+  \fi
+\fi\fi
+\begin{document}
+\makeatletter
+\begingroup\unsetLR\if@RTL\else\errmessage{unsetLR did not set RTL}\fi RTL.\par\endgroup
+\ifXeTeX
+  \begingroup\setRTL\unsetRL
+    \assertaliasLTR LTR.\par
+  \endgroup
+\fi
+Alias definitions checked.
+\end{document}

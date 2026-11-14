@@ -1,0 +1,56 @@
+% Compile with both xelatex and lualatex; column order can be checked in PDF.
+\documentclass{article}
+\usepackage[english]{babelbidi}
+\usepackage{amsmath}
+\usepackage{multicol}
+\usepackage{dblfnote}
+\usepackage{bidipoem}
+\DFNalwaysdouble
+\begin{document}
+\unsetRL
+\begin{itemize}
+  \item Before
+  \begin{latinitems}
+    \item One
+    \begin{enumerate}\item Nested\end{enumerate}
+    \item Two
+  \end{latinitems}
+  \item After
+\end{itemize}
+% bidi's documented single-column command, followed by a main expression.
+\[\RTLcases{\text{men}\cr\text{women}}\text{people}\]
+\begingroup
+\setRTL
+\[\RTLcases{\text{men}\cr\text{women}}\text{people}\]
+\par
+\endgroup
+% The original alignment also accepts a second, text-mode column.
+\[\RTLcases{a & first\cr b & second}\]
+\begin{RTLcases}$x$ & $y$ \\ $z$ & $w$\end{RTLcases}
+\RTLmulticolcolumns
+\begin{multicols}{2}RIGHTFIRST\par\columnbreak LEFTSECOND\par\end{multicols}
+\LTRmulticolcolumns
+\begin{multicols}{2}LEFTFIRST\par\columnbreak RIGHTSECOND\par\end{multicols}
+% Before selecting a direction, test the default double-column layout.
+Default\footnote{DEFAULTFIRST.} text\footnote{DEFAULTSECOND.}\newpage
+\RTLdfnmakecol
+Text\footnote{First right.} text\footnote{Second left.}\newpage
+\LTRdfnmakecol
+Text\footnote{First left.} text\footnote{Second right.}
+\begin{traditionalpoem}
+One line & Two line \\
+Three line & Four line
+\end{traditionalpoem}
+\begin{traditionalpoem*}
+One line & Two line
+Three line & Four line
+\end{traditionalpoem*}
+\begin{modernpoem}
+First line \\
+Second line
+\end{modernpoem}
+\begin{modernpoem*}
+First line
+Second line
+\end{modernpoem*}
+\end{document}
