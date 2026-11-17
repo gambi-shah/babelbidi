@@ -1,0 +1,66 @@
+
+\documentclass{article}
+\usepackage{fontspec}
+\setmainfont{Amiri}[Renderer=HarfBuzz]
+\usepackage{amsmath}
+\ifdefined\UseNativeLuaBidi
+  \usepackage{luabidi}
+\else
+  \usepackage[english]{babelbidi}
+\fi
+\pagestyle{empty}
+\setlength\parindent{18pt}
+\begin{document}
+\section*{Direction switches}
+Left BEFORE \RL{سلام ABC 123 فارسی} AFTER.\par
+\setRTL سلام و \LR{English 123} ادامه.\par دومین بند.\par
+\setLTR English and \RLE{متن فارسی} done.\par
+\begin{RTL}پاراگراف اول فارسی.\par پاراگراف دوم و \LRE{English words}.\par
+\begin{LTR}LTR nested \RL{سلام دنیا}.\end{LTR}
+\end{RTL}
+\newpage
+\section*{Lists}
+\begin{itemize}\item English outer \begin{RTL}\item فارسی اول
+\begin{enumerate}\item فارسی دوم \item فارسی سوم \end{enumerate}
+\end{RTL}\item English last\end{itemize}
+\begin{RTL}\begin{itemize}\item فارسی بیرون
+\begin{LTR}\item English nested \begin{enumerate}\item LEFT ONE\item LEFT TWO\end{enumerate}\end{LTR}
+\item فارسی آخر\end{itemize}\end{RTL}
+\newpage
+\section*{Boxes}
+\fbox{\hboxL{LEFT \RL{سلام} RIGHT}} \fbox{\hboxR{LEFT \RL{سلام} RIGHT}}
+\fbox{\vboxL{\hsize=4cm First line\par Second line\par}}
+\fbox{\vboxR{\hsize=4cm First line\par Second line\par}}
+\setbox0=\hboxR to 5cm{ONE\hfil TWO}\fbox{\box0}
+\newpage
+\section*{Footnotes}
+One\LTRfootnote{English first.\par English second.} Two\RTLfootnote{یادداشت فارسی اول.\par یادداشت فارسی دوم.} Three\footnote{Default note.}
+\newpage
+\section*{Optional numbers}
+One\LTRfootnote[12]{Left note with twelve.} Two\RTLfootnote[9]{یادداشت راست با عدد دلخواه.}
+\newpage
+\section*{Rules LTR}\leftfootnoterule
+Alpha\LTRfootnote{Left note.}\par
+\newpage
+\section*{Rules RTL}\rightfootnoterule
+Beta\RTLfootnote{یادداشت سمت راست.}\par
+\newpage
+\section*{Rules auto}\autofootnoterule
+Gamma\RTLfootnote{یادداشت اول فارسی.} and\LTRfootnote{Second note.}
+\newpage
+\section*{Rules full}\textwidthfootnoterule
+Delta\LTRfootnote{Full width rule.}
+\newpage
+\section*{Math}
+\begin{RTL}
+متن فارسی قبل از فرمول.
+\begin{equation}x+y=123\end{equation}
+\[a^2+b^2=c^2\]
+\begin{align} a&=b+c\\ x&=y+z\end{align}
+متن بعد از فرمول.
+\end{RTL}
+\newpage
+\section*{Verbatim and direction}
+\RLE{\verb|a_b% c|} and \LRE{\verb|x_y#z|}.
+\begin{RTL}Before \LR{\verb|a_b% c|} after.\end{RTL}
+\end{document}

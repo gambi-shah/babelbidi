@@ -1,0 +1,28 @@
+\documentclass{article}
+\usepackage{fontspec}\setmainfont{Amiri}[Renderer=HarfBuzz]
+\usepackage{amsmath,graphicx}
+\ifdefined\UseArray\usepackage{array}\fi
+\ifdefined\UseNativeLuaBidi\usepackage{luabidi}\else\usepackage[english]{babelbidi}\fi
+\pagestyle{empty}
+\begin{document}
+\section*{Tables}
+\begin{RTL}
+\begin{tabular}{|l|c|r|}\hline Alpha & Beta & Gamma \\ \hline 123 & 456 & 789 \\ \hline\end{tabular}
+\end{RTL}
+\newpage
+\section*{Underlines}
+\begin{RTL}\underline{متن فارسی و \LR{English 123}}.\end{RTL}
+\newpage
+\section*{Graphics}
+\begin{RTL}\rotatebox{90}{متن فارسی \LR{ABC}}\quad\rotatebox{45}{Hello \RL{دنیا}}\end{RTL}
+\newpage
+\section*{Equation text}
+\begin{RTL}
+\begin{align}x&=\text{متن و \LR{ABC}}+y\\ \intertext{متن فارسی و \LR{English}} a&=b+c\end{align}
+\end{RTL}
+\newpage
+\section*{Two columns}
+\twocolumn\textwidthfootnoterule
+First\LTRfootnote{English first.} and\RTLfootnote{یادداشت فارسی.}
+\newpage Second column\footnote{A note.}
+\end{document}

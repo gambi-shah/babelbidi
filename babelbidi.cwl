@@ -2,6 +2,22 @@
 # Public interfaces; availability may depend on the engine and package options.
 #include:babel
 
+# Package options; other options are passed to Babel.
+#keyvals:\usepackage/babelbidi#c
+latin=
+ltr=
+rtl=
+code=
+fontcache=#true,false
+autofootnoterule
+textwidthfootnoterule
+arabmaths
+extrafootnotefeatures=#on,off
+logostyle=#auto,simple
+bidi=
+layout=
+#endkeyvals
+
 # Language and font selection
 \lr{text}
 \rl{text}
@@ -23,12 +39,22 @@
 \latinverb*|%<text%>|
 \begin{latin}
 \end{latin}
+\begin{latin*}
+\end{latin*}
 \begin{latinverbatim}#V
 \end{latinverbatim}
 \begin{latinverbatim*}#V
 \end{latinverbatim*}
 
+# Language aliases
+\eqcommand{alias}{original}
+\eqenvironment{alias}{original}
+\EqEnvironment{alias}{original}
+\makezwnjletter
+
 # Text direction
+\TeXXeTOn
+\TeXXeTOff
 \beginL
 \endL
 \beginR
@@ -40,13 +66,20 @@
 \setLTR
 \setLR
 \unsetRTL
+\unsetRL
 \setRTL
 \setRL
 \unsetLTR
+\unsetLR
+\setRTLmain
 \begin{LTR}
 \end{LTR}
 \begin{RTL}
 \end{RTL}
+\begin{LTR*}
+\end{LTR*}
+\begin{RTL*}
+\end{RTL*}
 
 # Directional boxes and overlaps
 \hboxL{contents}
@@ -83,7 +116,9 @@
 \SplitFootnoteRule
 \debugfootnotedirection
 \normalfootnotes
+\normalfootnotes*
 \paragraphfootnotes
+\paragraphfootnotes*
 \twocolumnfootnotes
 \twocolumnfootnotes*
 \threecolumnfootnotes
@@ -106,6 +141,8 @@
 # Citations, lists and counters
 \Latincite{keylist}#c
 \Latincite[note]{keylist}#c
+\begin{latinitems}
+\end{latinitems}
 \begin{LTRitems}
 \end{LTRitems}
 \begin{RTLitems}
@@ -117,6 +154,7 @@
 \setLTRbibitems
 \setRTLbibitems
 \setdefaultbibitems
+\RTLcases{cases}
 \begin{RTLcases}
 \end{RTLcases}
 \SepMark{separator}
@@ -131,4 +169,8 @@
 \setdefaultmarginpar
 \LTRdblcol
 \RTLdblcol
+\LTRmulticolcolumns
+\RTLmulticolcolumns
+\LTRdfnmakecol
+\RTLdfnmakecol
 \twocolumnstableofcontents

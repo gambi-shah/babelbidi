@@ -5,8 +5,37 @@
 \def\unsetRL{previous RL}
 \let\previousLR\unsetLR
 \let\previousRL\unsetRL
-\usepackage[english]{babelbidi}
+\ifdefined\StandaloneLanguage
+  \usepackage[english]{babel}
+  \usepackage{babelbidi-lang}
+\else
+  \usepackage[english]{babelbidi}
+\fi
+% Alias commands also work without UniPersian or its localize option.
+\eqcommand{aliascount}{newcount}
+\aliascount\samplecount
+\samplecount=7
+\ifnum\samplecount=7\else\errmessage{Primitive alias failed}\fi
+\def\aliastarget{before}
+\eqcommand{aliasexample}{aliastarget}
+\def\aliastarget{after}
+\def\expectedalias{after}
+\edef\actualalias{\aliasexample}
+\ifx\actualalias\expectedalias\else\errmessage{Command alias is not dynamic}\fi
+\eqenvironment{aliasexampleenv}{laterexampleenv}
+\newenvironment{laterexampleenv}{}{}
+\newenvironment{laterexampleenv*}{\def\staraliasworked{yes}}{}
+\EqEnvironment{aliasquote}{quote}
+\ifPDFTeX\else
+  \begingroup\makezwnjletter
+  \ifnum\catcode"200C=11\else\errmessage{ZWNJ was not made a letter}\fi
+  \endgroup
+\fi
 \makeatletter
+% Keep the direction conditional recognizable while TeX skips the
+% main-package-only assertions in standalone mode.
+\ifdefined\StandaloneLanguage\expandafter\newif\csname if@RTL\endcsname\fi
+\ifdefined\StandaloneLanguage\else
 \ifx\unsetLR\previousLR
   \errmessage{unsetLR was not installed}
 \fi
@@ -22,13 +51,26 @@
     \errmessage{bidi did not install unsetRL}
   \fi
 \fi\fi
+\fi
 \begin{document}
+\begin{aliasexampleenv*}
+  \ifdefined\staraliasworked\else\errmessage{Late starred environment alias failed}\fi
+\end{aliasexampleenv*}
+\begin{aliasquote}Alias environment.\end{aliasquote}
+\setlength\parindent{12pt}
+\begin{latin*}
+  \ifdim\parindent=0pt\else\errmessage{latin* did not suppress indentation}\fi
+  No indentation.\par
+\end{latin*}
+\ifdim\parindent=12pt\else\errmessage{latin* did not restore indentation}\fi
+\ifdefined\StandaloneLanguage\else
 \makeatletter
 \begingroup\unsetLR\if@RTL\else\errmessage{unsetLR did not set RTL}\fi RTL.\par\endgroup
 \ifXeTeX
   \begingroup\setRTL\unsetRL
     \assertaliasLTR LTR.\par
   \endgroup
+\fi
 \fi
 Alias definitions checked.
 \end{document}

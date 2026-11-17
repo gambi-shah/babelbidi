@@ -1,0 +1,52 @@
+% Compare bidi-specific interfaces on XeLaTeX and exercise all three engines.
+% Define \UseNativeBidi for the installed bidi package (XeLaTeX only).
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{multicol}
+\ifdefined\UseNativeBidi
+  \usepackage{bidi}
+\else
+  \usepackage[english]{babelbidi}
+\fi
+\pagestyle{empty}
+\SepMark{-}
+\begin{document}
+\ifdefined\directlua
+  \TeXXeTOff\TeXXeTOn
+\else
+  \TeXXeTOff\ifnum\TeXXeTstate=0\else\errmessage{TeXXeTOff failed}\fi
+  \TeXXeTOn\ifnum\TeXXeTstate=1\else\errmessage{TeXXeTOn failed}\fi
+\fi
+\section{Numbering}\subsection{Nested}
+\typeout{BIDI-CHECK-SECTION=\thesubsection}
+\numberwithin{equation}{section}
+\begin{equation}a=b\end{equation}
+\typeout{BIDI-CHECK-EQUATION=\theequation}
+\newpage
+\section*{Lists}
+\begin{enumerate}\item LTR item
+\begin{RTLitems}\item RTL item\begin{enumerate}\item Nested item\end{enumerate}\end{RTLitems}
+\item Back again\end{enumerate}
+\newpage
+\section*{Directed notes}
+\LTRfootnote{Left directed note.}\RTLfootnote{Right directed note.}
+\setfootnoteRL Ordinary right\footnote{Right policy.}
+\setfootnoteLR Ordinary left\footnote{Left policy.}
+\footnotemark\LTRfootnotetext{Split left note.}
+\footnotemark\RTLfootnotetext{Split right note.}
+\newpage
+\section*{Overlap and cases}
+X\bidillap{L}Y\bidirlap{R}Z
+\[f(x)=\begin{RTLcases}$x$ & first \\ $y$ & second\end{RTLcases}\]
+\newpage
+\section*{Column order}
+\RTLmulticolcolumns\begin{multicols}{2}RIGHTFIRST\par\columnbreak LEFTSECOND\end{multicols}
+\LTRmulticolcolumns\begin{multicols}{2}LEFTFIRST\par\columnbreak RIGHTSECOND\end{multicols}
+\newpage
+\section*{Margins}
+\LTRmarginpar{Left note.}\RTLmarginpar{Right note.}Text.
+\newpage
+\setRTLbibitems
+\begin{thebibliography}{9}\bibitem{a} First entry.\bibitem{b} Second entry.\end{thebibliography}
+\setdefaultbibitems
+\end{document}

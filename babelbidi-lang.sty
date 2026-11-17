@@ -20,7 +20,9 @@
 \NeedsTeXFormat{LaTeX2e}
 
 \ProvidesPackage{babelbidi-lang}
-[2026/10/14 v0.3.0 Babel language metadata, selection, and bidi utilities]
+[2026/11/17 v1.0.0 Babel language metadata, selection, and bidi utilities]
+
+\RequirePackage{iftex}
 
 
 \makeatletter
@@ -302,6 +304,53 @@
 }
 
 
+% ------------------------------------------
+% Language-independent command and environment aliases
+% ------------------------------------------
+
+% Make U+200C usable in command names on Unicode engines.
+\ifPDFTeX
+  \newcommand*\makezwnjletter{\PackageError{babelbidi-lang}
+    {Unicode command names require XeTeX or LuaTeX}
+    {Use a Unicode engine to change the category of U+200C.}}
+\else
+  \newcommand*\makezwnjletter{\catcode"200C=11\relax}
+\fi
+\ExplSyntaxOn
+\cs_new_protected:Npn \bbd_localize_command:nn #1#2
+  {
+    \cs_if_exist:cTF {#1}
+      {\msg_error:nnn {kernel} {command-already-defined} {#1}}
+      {
+        \cs_if_exist:cTF {#2}
+          {
+            \exp_args:Nc \token_if_primitive:NTF {#2}
+              {\cs_new_eq:cc {#1} {#2}}
+              {\cs_new:cpn {#1} {\use:c {#2}}}
+          }
+          {\cs_new:cpn {#1} {\use:c {#2}}}
+      }
+  }
+\NewDocumentCommand \eqcommand {mm} {\bbd_localize_command:nn {#1}{#2}}
+\cs_new_protected:Npn \bbd_localize_environment_star:nn #1#2
+  {
+    \cs_if_exist:cT {#2*}
+      {
+        \cs_if_exist:cF {#1*}
+          {\newenvironment{#1*}{\use:c {#2*}}{\use:c {end#2*}}}
+      }
+  }
+\cs_new_protected:Npn \bbd_localize_environment:nn #1#2
+  {
+    \newenvironment{#1}{\use:c {#2}}{\use:c {end#2}}
+    \bbd_localize_environment_star:nn {#1}{#2}
+    \AddToHook{begindocument}{\bbd_localize_environment_star:nn {#1}{#2}}
+  }
+\NewDocumentCommand \eqenvironment {mm} {\bbd_localize_environment:nn {#1}{#2}}
+\NewDocumentCommand \EqEnvironment {mm}
+  {\cs_new_eq:cc {#1}{#2}\cs_new_eq:cc {end#1}{end#2}}
+\ExplSyntaxOff
+
 % --------------------------------------------------------------------------
 % Inline language commands
 % --------------------------------------------------------------------------
@@ -323,6 +372,13 @@
     \end{otherlanguage}%
     \par
 }%
+
+
+% As in XePersian, the starred language block suppresses automatic
+% paragraph indentation without changing the selected language.
+\NewDocumentEnvironment{latin*}{}%
+{\begin{latin}\parindent\z@}%
+{\end{latin}}%
 
 
 % ------------------------------------------

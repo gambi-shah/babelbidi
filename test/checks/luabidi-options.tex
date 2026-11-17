@@ -1,0 +1,20 @@
+% Compare documented luabidi package options on LuaLaTeX.
+\documentclass{article}
+\usepackage{amsmath}
+\ifdefined\UseWideRule
+  \def\RuleOptions{arabmaths,textwidthfootnoterule}
+\else
+  \def\RuleOptions{arabmaths,autofootnoterule}
+\fi
+\ifdefined\UseNativeLuaBidi
+  \expandafter\usepackage\expandafter[\RuleOptions]{luabidi}
+\else
+  \edef\RuleOptions{english,\RuleOptions}
+  \expandafter\usepackage\expandafter[\RuleOptions]{babelbidi}
+\fi
+\pagestyle{empty}
+\begin{document}
+\ifnum\mathdirection=1\else\errmessage{Math direction should be RTL}\fi
+Before \RTLfootnote{Right note.} and \LTRfootnote{Left note.}
+\[ a+b=c \]
+\end{document}

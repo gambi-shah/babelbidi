@@ -20,7 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-api-core.def}[2026/11/14 v0.3.0 Bidi API for Babelbidi]
+\ProvidesFile{babelbidi-api-core.def}[2026/11/17 v1.0.0 Bidi API for Babelbidi]
 
 \makeatletter
 
@@ -59,14 +59,103 @@
 % basic bidi commands
 % ------------------------------------------
 
+% TeXXeT is available in XeTeX and pdfTeX; LuaTeX uses another mechanism.
+\ifLuaTeX
+    \ProvideDocumentCommand{\TeXXeTOn}{}{%
+        \PackageWarning{babelbidi}{TeXXeT is not available in LuaTeX}%
+    }
+    \ProvideDocumentCommand{\TeXXeTOff}{}{%
+        \PackageWarning{babelbidi}{TeXXeT is not available in LuaTeX}%
+    }
+\else
+    \ProvideDocumentCommand{\TeXXeTOn}{}{\TeXXeTstate\@ne}
+    \ProvideDocumentCommand{\TeXXeTOff}{}{\TeXXeTstate\z@}
+\fi
+
 \def\bbd@setdir#1{%
+    \def\bbd@last@direction{#1}%
     \bbl@bodydir{#1}%
     \bbl@pardir{#1}% Must precede the text direction.
     \bbl@textdir{#1}%
+    \ifLuaTeX
+        \bbd@lua@explicitdir
+        \bbd@lua@listshape
+        \ifcsname bbl@listparshape\endcsname
+            \let\bbl@listparshape\bbd@lua@listparshape
+        \fi
+    \fi
+}
+
+% Babel's basic bidi processor marks already handled nodes with 0x80.
+% Explicit direction commands use LuaTeX's direction stack instead.
+\def\bbd@lua@explicitdir{%
+    \ifnum\bbl@bidimode=101\relax
+        \setattribute\bbl@attr@dir{128}%
+        \let\bbd@lua@explicit@direction\@empty
+    \fi
+}
+
+% Track the direction of the containing vertical box when paragraphs switch.
+\def\bbd@lua@listshape{%
+    \ifcsname bbl@vbox@bodydir\endcsname
+        \ifnum\bbl@vbox@bodydir=\pardirection
+            \shapemode\z@
+        \else
+            \shapemode=-3\relax
+        \fi
+    \fi
+}
+\def\bbd@lua@listparshape#1#2#3{%
+    \parshape#1 #2 #3\relax
+    \bbd@lua@listshape
 }
 
 \ProvideDocumentCommand{\setLTR}{}{\bbd@setdir{0}}
 \ProvideDocumentCommand{\setRTL}{}{\bbd@setdir{1}}
+
+\def\bbd@capture@main@direction{%
+    \if@RTL\gdef\bbd@last@direction{1}%
+    \else\gdef\bbd@last@direction{0}\fi
+}
+\ifXeTeX
+    \def\bbd@track@main@direction{%
+        \AddToHook{begindocument/before}{\bbd@capture@main@direction}%
+    }
+\else
+    \def\bbd@track@main@direction{}
+\fi
+
+\ifLuaTeX
+    \def\bbd@lua@setRTLmain{%
+        \@RTLmaintrue
+        \pagedirection\@ne
+        \ifcsname bbl@vbox@bodydir\endcsname
+            \chardef\bbl@vbox@bodydir\@ne
+        \fi
+        \bbd@setdir{1}%
+    }
+    \def\bbd@lua@restore@RTLmain{%
+        \edef\bbd@lua@restore@direction{\bbd@last@direction}%
+        \bbd@lua@setRTLmain
+        \expandafter\bbd@setdir\expandafter{\bbd@lua@restore@direction}%
+    }
+    \ProvideDocumentCommand{\setRTLmain}{}{%
+        \bbd@lua@setRTLmain
+        \AddToHook{begindocument/end}{\bbd@lua@restore@RTLmain}%
+    }
+\else
+    \def\bbd@restore@RTLmain{%
+        \edef\bbd@restore@direction{\bbd@last@direction}%
+        \@RTLmaintrue
+        \expandafter\bbd@setdir\expandafter{\bbd@restore@direction}%
+    }
+    \ProvideDocumentCommand{\setRTLmain}{}{%
+        \@RTLmaintrue
+        \bbd@setdir{1}%
+        \bbd@track@main@direction
+        \AddToHook{begindocument/end}{\bbd@restore@RTLmain}%
+    }
+\fi
 
 
 % On TeXXeT engines beginL/R are primitives used by Babel itself.
@@ -97,16 +186,33 @@
         #2%
     }%
 }
-\ProvideDocumentCommand{\RLE}{+m}{\bbd@inline{1}{#1}}
-\ProvideDocumentCommand{\LRE}{+m}{\bbd@inline{0}{#1}}
+\ifLuaTeX
+    % Scan the opening brace without reading the contents as an argument;
+    % this permits verbatim material and changes only the inline direction.
+    \def\bbd@inline@start#1{%
+        \leavevmode
+        \ifx\bbd@inline@token\bgroup\else
+            \PackageError{babelbidi}{Missing opening brace after direction command}{}%
+        \fi
+        \bgroup
+        \ifnum#1=\z@ \@RTLfalse\else \@RTLtrue\fi
+        \ifnum\linedirection=#1\relax\else \linedirection=#1\relax\fi
+        \bbd@lua@explicitdir
+    }
+    \def\bbd@inline@right{\bbd@inline@start{1}}
+    \def\bbd@inline@left{\bbd@inline@start{0}}
+    \ProvideDocumentCommand{\RLE}{}{\afterassignment\bbd@inline@right\let\bbd@inline@token}
+    \ProvideDocumentCommand{\LRE}{}{\afterassignment\bbd@inline@left\let\bbd@inline@token}
+\else
+    \ProvideDocumentCommand{\RLE}{+m}{\bbd@inline{1}{#1}}
+    \ProvideDocumentCommand{\LRE}{+m}{\bbd@inline{0}{#1}}
+\fi
 
 \ProvideDocumentEnvironment{RTL}{}
 {%
     \par
     \begingroup
-    \bbl@pardir{1}%
-    \bbl@textdir{1}%
-    \bbl@bodydir{1}
+    \bbd@setdir{1}%
 }
 {%
     \par
@@ -118,15 +224,25 @@
 {%
     \par
     \begingroup
-    \bbl@pardir{0}%
-    \bbl@textdir{0}%
-    \bbl@bodydir{0}
+    \bbd@setdir{0}%
 }
 {%
     \par
     \endgroup
 }%
 
+
+% Starred blocks suppress automatic indentation in the local environment.
+\def\bbd@noautoindent{\parindent\z@}
+% On XeTeX, retain bidi's own starred environments and paragraph handling.
+\ifXeTeX\else
+\ProvideDocumentEnvironment{RTL*}{}
+{\begin{RTL}\bbd@noautoindent}
+{\end{RTL}}
+\ProvideDocumentEnvironment{LTR*}{}
+{\begin{LTR}\bbd@noautoindent}
+{\end{LTR}}
+\fi
 
 % ------------------------------------------
 % Aliases
@@ -151,7 +267,12 @@
     % Babel has no box-direction setter. Set the box's own direction
     % while scanning it, then synchronize its content through Babel.
     #1\ifLuaTeX bdir #2 \fi#3\bgroup
-    \bbd@setdir{#2}\let\bbd@box@brace
+    \ifLuaTeX
+        \ifnum#2=\z@ \@RTLfalse\else \@RTLtrue\fi
+    \else
+        \bbd@setdir{#2}%
+    \fi
+    \let\bbd@box@brace
 }
 \ProvideDocumentCommand{\hboxL}{}{\bbd@box\hbox{0}}
 \ProvideDocumentCommand{\hboxR}{}{\bbd@box\hbox{1}}
@@ -218,6 +339,13 @@
     \IfNoValueTF{#2}%
     {\bbd@mark}%
     {\bbd@mark[#2]}%
+    % Match luabidi's localized footnote formatter, including its protected
+    % representation in labels written inside explicitly directed notes.
+    \ifLuaTeX
+        \IfNoValueTF{#2}%
+        {\def\thefootnote{\localnumeral*{footnote}}}%
+        {\def\thefootnote{\localnumeral{#2}}}%
+    \fi
     % Apply the requested direction to the footnote text.
     \let\bbd@explicit@makefntext\@makefntext
     \long\def\@makefntext##1{%

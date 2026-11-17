@@ -81,5 +81,9 @@
 \fallbackcheck{\ttfamily}{\FallbackTTLatin}{Vazir}
 \selectlanguage{english}
 \fallbackcheck{\ttfamily}{JetBrains}{Vazir}
+{\setRTL
+  \setbox0=\hbox{\RLE{\latinttfamily سلام A}}%
+  \directlua{fallback_check_box('JetBrains', 'Vazir')}%
+}
 \typeout{FONTFALLBACK REGRESSION PASSED}
 \end{document}

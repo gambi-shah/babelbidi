@@ -1,0 +1,19 @@
+% Compile with all three engines; define \MainStartsLTR to switch the
+% paragraph direction after selecting an RTL main direction.
+\documentclass{article}
+\usepackage[english]{babelbidi}
+\setRTLmain
+\ifdefined\MainStartsLTR\setLTR\fi
+\begin{document}
+\makeatletter
+\if@RTLmain\else\errmessage{Main direction should be RTL}\fi
+\def\checkltr{\if@RTL\errmessage{Paragraph direction should be LTR}\fi}
+\def\checkrtl{\if@RTL\else\errmessage{Paragraph direction should be RTL}\fi}
+\ifdefined\MainStartsLTR
+  \checkltr
+\else
+  \checkrtl
+\fi
+\makeatother
+Main direction test.\par
+\end{document}

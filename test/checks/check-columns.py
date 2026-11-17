@@ -36,8 +36,12 @@ with tempfile.TemporaryDirectory(prefix="babelbidi-columns-", dir="/tmp") as tmp
                     if text.startswith(("MLEFT", "MRIGHT", "FLEFT", "FRIGHT", "FRESTORE")):
                         assert text not in words, (engine, order, prior, text)
                         words[text] = float(word.attrib["xMin"])
-                expected = [("FLEFTFIRST", "FRIGHTSECOND"),
-                            ("FLEFTSECOND", "FRIGHTFIRST"),
+                # With preloaded dblfnote, preserve bidi's XeTeX output
+                # routine, including its effect on the RTL switch.
+                rtl = (("FRIGHTFIRST", "FLEFTSECOND")
+                       if engine == "xelatex" and order == "first"
+                       else ("FLEFTSECOND", "FRIGHTFIRST"))
+                expected = [("FLEFTFIRST", "FRIGHTSECOND"), rtl,
                             ("FRESTOREFIRST", "FRESTORESECOND")]
                 if prior != "RTL":
                     expected.append(("MLEFTSECOND", "MRIGHTFIRST"))

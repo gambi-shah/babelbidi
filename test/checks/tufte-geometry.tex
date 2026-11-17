@@ -1,0 +1,64 @@
+% Fixture for check-tufte-geometry.py. The runner supplies class, backend and
+% cases. zref records both horizontal endpoints even outside the MediaBox.
+\documentclass[\ProbeOptions]{\ProbeClass}
+\ifdefined\NativeBidi
+  \usepackage[english,bidi=bidi-r]{babel}
+\else\ifdefined\NativeLuaBidi
+  \usepackage[english]{babel}
+  \usepackage{luabidi}
+\else
+  \usepackage[english]{babelbidi}
+\fi\fi
+\usepackage{zref-savepos}
+\usepackage{fontspec}
+\ifdefined\ProbeNarrow\setlength{\marginparwidth}{30pt}\fi
+\IfFontExistsTF{Amiri}{\newfontfamily\probearabic[Script=Arabic]{Amiri}}{\newcommand\probearabic{}}
+\pagestyle{empty}
+\makeatletter
+\newcommand\probenotetext{NOTEMARKER abcdefghijklmnopqrstuvwxyz \RL{{\probearabic سلام}}}
+\newcommand\probebounds[1]{%
+  \makebox[\marginparwidth][l]{\zsavepos{#1-a}\hfill\zsavepos{#1-b}}\par\probenotetext}
+\newcommand\probenotes[1]{%
+  \noindent TEXT \marginpar{\probebounds{#1-plain}}\par\bigskip
+  \noindent TEXT \marginpar[\probebounds{#1-optional}]{\probebounds{#1-optional}}\par\bigskip
+  \ifdefined\LTRmarginpar
+    \noindent TEXT \LTRmarginpar{\probebounds{#1-ltrmargin}}\par\bigskip
+  \fi
+  \ifdefined\RTLmarginpar
+    \noindent TEXT \RTLmarginpar{\probebounds{#1-rtlmargin}}\par\bigskip
+  \fi
+  \ifdefined\LTRsidenote
+    \ifdefined\NativeLuaBidi\else
+      \noindent TEXT \LTRsidenote{\probebounds{#1-ltrside}}\par\bigskip
+      \noindent TEXT \RTLsidenote{\probebounds{#1-rtlside}}\par\bigskip
+    \fi
+  \else
+    \ifdefined\NoTufteSide\else
+      \noindent TEXT \sidenote{\probebounds{#1-side}}\par\bigskip
+    \fi
+  \fi
+}
+\newcommand\probepage[4]{%
+  \clearpage
+  \begingroup
+  \ifnum#3=1\relax\reversemarginpar\else\normalmarginpar\fi
+  \ifcase#2\relax\or
+    \ifdefined\setLTRmarginpar\setLTRmarginpar\fi\or
+    \ifdefined\setRTLmarginpar\setRTLmarginpar\fi\or
+    \ifdefined\setdefaultmarginpar\setdefaultmarginpar\fi\fi
+  \noindent\zsavepos{#1-text-a}\makebox[\linewidth][l]{\hfill\zsavepos{#1-text-b}}\par
+  \ifcase#4\relax
+    \probenotes{#1}%
+  \or
+    \begin{RTL}RTL paragraph. \probenotes{#1}\end{RTL}%
+  \or
+    \begin{RTL}RTL first paragraph.\par RTL second paragraph.\par
+      \probenotes{#1}\end{RTL}%
+  \fi
+  \clearpage\endgroup
+}
+\begin{document}
+\typeout{PROBE-GEOMETRY paper=\the\paperwidth text=\the\textwidth margin=\the\marginparwidth sep=\the\marginparsep}
+\input{tufte-cases.tex}
+\clearpage
+\end{document}

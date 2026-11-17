@@ -37,16 +37,21 @@ with tempfile.TemporaryDirectory(prefix="babelbidi-tufte-", dir="/tmp") as tmp:
             pdf = base.with_suffix(".pdf")
             aux = base.with_suffix(".aux").read_text()
             targets = {}
-            for label in ("section:notes", "after:note", "note:rtl", "note:ltr"):
+            for label in ("section:notes", "after:note", "note:rtl", "note:ltr", "note:ltr-foot", "note:rtl-foot"):
                 match = re.search(r"\\newlabel\{" + label + r"\}\{.*\{(section\*\.\d+)\}\{\}\}", aux)
                 assert match, (engine, label)
                 targets[label] = match.group(1)
             assert targets["section:notes"] == targets["after:note"]
-            assert len({targets["section:notes"], targets["note:rtl"], targets["note:ltr"]}) == 3
+            assert len({targets[label] for label in ("section:notes", "note:rtl", "note:ltr", "note:ltr-foot", "note:rtl-foot")}) == 5
             dests = subprocess.check_output(["pdfinfo", "-dests", str(pdf)], text=True)
-            for label in ("note:rtl", "note:ltr"):
+            for label in ("note:rtl", "note:ltr", "note:ltr-foot", "note:rtl-foot"):
                 match = re.search(r'\[ XYZ\s+([\d.]+)\s+([\d.]+)\s+null\s+\]\s+"' + re.escape(targets[label]) + '"', dests)
-                assert match and float(match.group(1)) > 350, (engine, label, dests)
+                assert match, (engine, label, dests)
+                x = float(match.group(1))
+                if variant == "book" and label.endswith("-foot"):
+                    assert x < 225, (engine, label, x)
+                else:
+                    assert x > 350, (engine, label, x)
 
             bbox = subprocess.check_output(["pdftotext", "-bbox", str(pdf), "-"], text=True)
             words = list(ET.fromstring(bbox).iter(ns + "word"))
@@ -60,28 +65,49 @@ with tempfile.TemporaryDirectory(prefix="babelbidi-tufte-", dir="/tmp") as tmp:
                 links = []
                 for page in reader.pages:
                     height = float(page.mediabox.height)
-                    for ref in page.get("/Annots", []):
-                        annot = ref.get_object()
+                    annots = page.get("/Annots", [])
+                    if hasattr(annots, "get_object"):
+                        annots = annots.get_object()
+                    for ref in annots:
+                        annot = ref.get_object() if hasattr(ref, "get_object") else ref
                         if annot.get("/Subtype") == "/Link":
                             action = annot.get("/A", {})
+                            if hasattr(action, "get_object"):
+                                action = action.get_object()
                             if action.get("/S") == "/GoTo":
-                                links.append((str(action.get("/D")),
-                                              [float(x) for x in annot["/Rect"]], height))
+                                destination = action.get("/D")
+                                if hasattr(destination, "get_object"):
+                                    destination = destination.get_object()
+                                rect = annot["/Rect"]
+                                if hasattr(rect, "get_object"):
+                                    rect = rect.get_object()
+                                links.append((str(destination),
+                                              [float(x) for x in rect], height))
                 for label, number in (("note:rtl", "8"), ("note:ltr", "9")):
                     matches = [(rect, height) for dest, rect, height in links
                                if dest == targets[label]]
-                    assert len(matches) == 1, (engine, label, links)
-                    rect, height = matches[0]
                     # The annotation must cover the actual reference number in the
                     # main text, not merely be another link to the same target.
-                    refs = [w for w in words if text(w).startswith(number)
-                            and coord(w, "xMin") < 300
+                    refs = [(w, rect) for rect, height in matches for w in words
+                            if text(w).startswith(number) and coord(w, "xMin") < 300
                             and rect[0] - 1 <= coord(w, "xMin") <= rect[2] + 1
                             and height - rect[3] - 2 <= coord(w, "yMin") <= height - rect[1] + 2]
-                    assert len(refs) == 1, (engine, label, rect, refs)
-                print(engine + " " + variant + ": both PDF link annotations target their own notes")
+                    assert len(refs) == 1, (engine, label, matches, refs)
+                for label in ("note:ltr-foot", "note:rtl-foot"):
+                    assert any(dest == targets[label] for dest, rect, _ in links), (engine, label, links)
+                print(engine + " " + variant + ": PDF link annotations match note and footnote labels")
             else:
                 print(engine + " " + variant + ": PDF annotation check skipped (pypdf not installed)")
+
+            for name in ("LTRFOOTNOTE", "RTLFOOTNOTE"):
+                assert any(text(w) == name and (coord(w, "xMin") < 225 if variant == "book" else coord(w, "xMin") > 400) for w in words), (engine, name)
+
+            # Verify that complete note markers survive page clipping inside an
+            # RTL environment with RTL policy, for both text directions.
+            for name in ("NESTEDNOTE", "NESTEDLTR", "NESTEDRTL"):
+                found = [w for w in words if text(w) == name]
+                assert len(found) == 1, (engine, variant, name, len(found))
+                assert 0 <= coord(found[0], "xMin") < coord(found[0], "xMax") <= 612, (engine, name)
 
             # Unique, inline LTR markers delimit the beginning of each RTL
             # paragraph. Their positions are compared within each PDF, not between
@@ -106,4 +132,4 @@ with tempfile.TemporaryDirectory(prefix="babelbidi-tufte-", dir="/tmp") as tmp:
                              and abs(coord(w, "yMin") - coord(marker, "yMin")) < 2
                              and any(ord(c) > 127 for c in text(w))]
                 assert same_line, (engine, text(marker), "Arabic text missing or misdirected")
-            print(engine + " " + variant + ": all three RTL paragraphs and independent destinations OK")
+            print(engine + " " + variant + ": note placement and reference targets OK")

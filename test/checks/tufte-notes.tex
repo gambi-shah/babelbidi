@@ -5,7 +5,11 @@
 \else
   \documentclass{biditufte-handout}
 \fi
-\usepackage[english,arabic]{babelbidi}
+\ifdefined\UseNativeBidi
+  \usepackage[english,arabic,bidi=bidi-r]{babel}
+\else
+  \usepackage[english,arabic]{babelbidi}
+\fi
 \usepackage{fontspec}
 \usepackage{xcolor}
 \babelprovide[import,main]{english}
@@ -20,6 +24,7 @@
   \fi
 }
 \ifXeTeX
+\ifdefined\UseNativeBidi\else
   % The optional-argument wrapper calls the internal control sequence whose
   % name begins with the current escape character. Check its patched body.
   \AtBeginDocument{%
@@ -39,6 +44,7 @@
     \patchcmd{\bbdtestreset}{\everypar{\@minipagefalse\beginR}}{}{}%
       {\errmessage{XeTeX RTL note paragraph reset is not patched}}%
   }
+\fi
 \fi
 \makeatother
 \begin{document}
@@ -65,12 +71,22 @@ A second paragraph.}
 \par\bigskip
 Text\RTLsidenote[10][2pt]{\foreignlanguage{arabic}{مرحبا بكم}}.
 \par\bigskip
-Text\LTRfootnote{An LTR footnote in the margin.}
+Text\LTRfootnote{\label{note:ltr-foot}LTRFOOTNOTE in the margin.} Reference \ref{note:ltr-foot}.
 \par\bigskip
-Text\RTLfootnote{\foreignlanguage{arabic}{پاورقی در حاشیه}}.
+Text\RTLfootnote{\label{note:rtl-foot}\foreignlanguage{arabic}{\LR{RTLFOOTNOTE} پاورقی در حاشیه}}. Reference \ref{note:rtl-foot}.
 \par\bigskip
 \LTRmarginnote[2pt]{An unnumbered LTR margin note.}
 \par\bigskip
 Text\RTLmarginnote[1pt]{\foreignlanguage{arabic}{مرحبا}}.
 \endgroup
+\par\bigskip
+% The page side is independent of both paragraph and note direction.
+\begin{RTL}
+\setRTLmarginpar
+\RTLfootnote{\foreignlanguage{arabic}{\LR{NESTEDNOTE} یادداشت در متن راست‌به‌چپ}}
+\par\bigskip
+\LTRsidenote{\LR{NESTEDLTR} left-to-right note text.}
+\par\bigskip
+\RTLsidenote{\foreignlanguage{arabic}{\LR{NESTEDRTL} یادداشت راست به چپ}}
+\end{RTL}
 \end{document}

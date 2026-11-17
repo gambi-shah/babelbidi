@@ -1,0 +1,27 @@
+% Compile with all three engines. Define \ListingsFirst to change load order.
+\documentclass{article}
+\ifdefined\WithCaption\usepackage{caption}\fi
+\ifdefined\ListingsFirst\usepackage{listings}\fi
+\usepackage[english]{babelbidi}
+\ifdefined\ListingsFirst\else\usepackage{listings}\fi
+\makeatletter
+\newcommand\captionrtl{\if@RTL\else\errmessage{Caption is not RTL}\fi RTL caption}
+\newcommand\captionltr{\if@RTL\errmessage{Caption is not LTR}\fi LTR caption}
+\makeatother
+\begin{document}
+\begin{lstlisting}[caption={\captionrtl},captiondirection=RTL]
+int first;
+\end{lstlisting}
+\begin{lstlisting}[caption={\captionltr},captiondirection=LTR]
+int second;
+\end{lstlisting}
+\begin{lstlisting}[title={\captionrtl},captiondirection=RTL]
+int third;
+\end{lstlisting}
+\makeatletter\if@RTL\errmessage{Caption direction leaked}\fi\makeatother
+\begin{RTL}
+\begin{lstlisting}[caption={\captionrtl},captiondirection=textdirection]
+int fourth;
+\end{lstlisting}
+\end{RTL}
+\end{document}

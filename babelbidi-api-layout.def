@@ -20,7 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-api-layout.def}[2026/11/14 v0.3.0 Additional Bidi API for Babelbidi]
+\ProvidesFile{babelbidi-api-layout.def}[2026/11/17 v1.0.0 Additional Bidi API for Babelbidi]
 
 \makeatletter
 
@@ -101,7 +101,9 @@
 % bidi's dblfnote adapter otherwise saves dblfnote's wrapper as its own
 % underlying footnote command, causing recursion when dblfnote is loaded
 % after bidi. Preserve the original command across bidi's begin-document hook.
+\newif\ifbbd@dfn@preloaded
 \ifXeTeX
+    \@ifpackageloaded{dblfnote}{\bbd@dfn@preloadedtrue}{}
     \AddToHook{begindocument/before}{%
         \@ifpackageloaded{dblfnote}{%
             \let\bbd@dfn@footnotetext\dfn@latex@footnotetext
@@ -110,10 +112,12 @@
     \AddToHook{begindocument/end}{%
         \@ifpackageloaded{dblfnote}{%
             \let\dfn@latex@footnotetext\bbd@dfn@footnotetext
-            \apptocmd{\RTLdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
-                \PackageError{babelbidi}{Could not patch \string\RTLdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
-            \apptocmd{\LTRdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
-                \PackageError{babelbidi}{Could not patch \string\LTRdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
+            \ifbbd@dfn@preloaded\else
+                \apptocmd{\RTLdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
+                    \PackageError{babelbidi}{Could not patch \string\RTLdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
+                \apptocmd{\LTRdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
+                    \PackageError{babelbidi}{Could not patch \string\LTRdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
+            \fi
         }{}%
     }
 \fi
@@ -136,6 +140,17 @@
         \fi
     }%
 }
+
+% Set the display code language after its caption is processed.  This also
+% restores the code direction inside a block with the opposite direction.
+\def\bbd@listings@codedir{%
+    \lst@AddToHook{Init}{%
+        \lst@ifdisplaystyle
+            \par\expandafter\selectlanguage\expandafter{\bbd@main@code}%
+        \fi}%
+}
+\AddToHook{package/listings/after}{\bbd@listings@codedir}
+\@ifpackageloaded{listings}{\bbd@listings@codedir}{}%
 
 % ------------------------------------------
 % XeTeX uses bidi's original interfaces, including its footnote machinery.
@@ -178,33 +193,106 @@
     }{}%
 }
 
-% bidi changes the parent paragraph shape in LTRitems, but its nested
-% lists recalculate their shape without that adjustment. Keep the offset
-% local to the environment and leave RTL lists to bidi's own machinery.
-\long\def\bbd@xe@items@list#1#2{%
-    \bbd@xe@items@original@list{#1}{#2}%
-    \if@RTL\else
-        \parshape\@ne\dimexpr\@totalleftmargin+\bbd@xe@items@offset\relax\linewidth
+% Tufte reserves a wide margin on only one side of the text. Place the
+% output box in physical LTR coordinates, independently of the note text.
+% Keep LaTeX's requested side unless only the other side has enough room.
+\def\bbd@tufte@margin@side{%
+    \@tempdima\dimexpr1in+\hoffset+\oddsidemargin\relax
+    \if@twoside\ifodd\c@page\else
+        \@tempdima\dimexpr1in+\hoffset+\evensidemargin\relax
+    \fi\fi
+    \@tempdimb\dimexpr\paperwidth-\@tempdima-\textwidth\relax
+    \@tempdimc\dimexpr\marginparsep+\marginparwidth\relax
+    \ifnum\@tempcnta>\z@
+        \ifdim\@tempdimb<\@tempdimc
+            \ifdim\@tempdima<\@tempdimc\else\@tempcnta\m@ne\fi
+        \fi
+    \else
+        \ifdim\@tempdima<\@tempdimc
+            \ifdim\@tempdimb<\@tempdimc\else\@tempcnta\@ne\fi
+        \fi
     \fi
-    \ignorespaces
 }
+\def\bbd@xe@tufte@margin@direction{%
+        \patchcmd{\@addmarginpar}%
+            {\if@RTL\if@LTRmarginpar\beginL\else\beginR\fi\else\if@RTLmarginpar\beginR\else\beginL\fi\fi}%
+            {\beginL}{}%
+            {\PackageWarning{babelbidi}{Could not adapt Tufte margin direction}}%
+        \patchcmd{\@addmarginpar}%
+            {\if@RTL\if@LTRmarginpar\endL\else\endR\fi\else\if@RTLmarginpar\endR\else\endL\fi\fi}%
+            {\endL}{}%
+            {\PackageWarning{babelbidi}{Could not adapt Tufte margin direction}}%
+        % bidi's directional margin notes otherwise set the run direction
+        % only for the first paragraph of the note.
+        \patchcmd{\@LTRmarginparreset}%
+            {\everypar{\@minipagefalse\everypar{}\beginL}}%
+            {\everypar{\@minipagefalse\beginL}}{}%
+            {\PackageWarning{babelbidi}{Could not adapt LTR margin note paragraphs}}%
+        \patchcmd{\@RTLmarginparreset}%
+            {\everypar{\@minipagefalse\everypar{}\beginR}}%
+            {\everypar{\@minipagefalse\beginR}}{}%
+            {\PackageWarning{babelbidi}{Could not adapt RTL margin note paragraphs}}%
+}
+\def\bbd@tufte@margin@setup{%
+    \patchcmd{\@addmarginpar}{\ifnum\@tempcnta <\z@}
+        {\bbd@tufte@margin@side\ifnum\@tempcnta <\z@}{}%
+        {\PackageWarning{babelbidi}{Could not adapt Tufte margin placement}}%
+    \ifXeTeX
+        \bbd@xe@tufte@margin@direction
+        % The original Tufte classes only run this adapter when their bidi
+        % option loads bidi. Babel loads bidi independently, so run it here.
+        \@ifundefined{@tufte@pkghook@post@bidi}{}%
+            {\@tufte@pkghook@post@bidi}%
+    \else
+        \long\def\bbd@margin@place##1{\hboxL to \columnwidth{##1}}%
+    \fi
+}
+\def\bbd@tufte@margin@check{%
+    \@ifclassloaded{tufte-book}{\bbd@tufte@margin@setup}{%
+    \@ifclassloaded{tufte-handout}{\bbd@tufte@margin@setup}{%
+    \@ifclassloaded{biditufte-book}{\bbd@tufte@margin@setup}{%
+    \@ifclassloaded{biditufte-handout}{\bbd@tufte@margin@setup}{}}}}%
+}
+\ifPDFTeX\else
+    \AddToHook{begindocument/end}{\bbd@tufte@margin@check}
+\fi
+
 \ifXeTeX
     \@ifpackageloaded{bidituftesidenote}{\bbd@xe@tufte@setup}{%
         \AddToHook{package/bidituftesidenote/after}{\bbd@xe@tufte@setup}%
-    }%
-    \@ifundefined{LTRitems}{}{%
-        \apptocmd{\LTRitems}{%
-            \edef\bbd@xe@items@offset{\the\dimexpr\parshapeindent1-\@totalleftmargin\relax}%
-            \ifx\list\bbd@xe@items@list\else
-                \let\bbd@xe@items@original@list\list
-                \let\list\bbd@xe@items@list
-            \fi
-        }{}{\PackageError{babelbidi}{Could not adapt LTRitems}{Check compatibility with the installed bidi package.}}%
     }%
     \bbd@install@RTLcases
     \makeatother
     \expandafter\endinput
 \fi
+
+
+% listings caption direction is independent of the listing's code direction.
+\def\bbd@listings@setup{%
+    \lst@Key{captiondirection}{textdirection}{%
+        \lstKV@SwitchCases{##1}%
+        {textdirection:\def\bbd@lst@captiondir{-1}\\%
+         RTL:\def\bbd@lst@captiondir{1}\\%
+         LTR:\def\bbd@lst@captiondir{0}\\}%
+        {\PackageError{babelbidi}{Unknown listings caption direction '##1'}%
+            {Use textdirection, RTL or LTR.}}%
+    }%
+}
+\def\bbd@listings@captiondir{%
+    \ifnum\bbd@lst@captiondir<\z@\else
+        \bbd@setdir{\bbd@lst@captiondir}%
+    \fi
+}
+\AddToHook{package/listings/after}{\bbd@listings@setup}
+\@ifpackageloaded{listings}{\bbd@listings@setup}{}%
+\AddToHook{begindocument/end}{%
+    \@ifpackageloaded{listings}{%
+        \pretocmd{\lst@makecaption}{\bbd@listings@captiondir}{}%
+            {\PackageError{babelbidi}{Cannot adapt listings captions}{} }%
+        \pretocmd{\lst@maketitle}{\bbd@listings@captiondir}{}%
+            {\PackageError{babelbidi}{Cannot adapt listings titles}{} }%
+    }{}%
+}
 
 
 % ------------------------------------------
@@ -273,6 +361,17 @@
 \long\def\bbd@fn@language#1#2{%
     #1{\bbd@footnote@dir{\bbd@fn@policy}#2}%
 }
+\long\def\bbd@fn@explicit@language#1#2#3{%
+    #1{\bbd@footnote@dir{#2}#3}%
+}
+\def\bbd@fn@explicit@select#1#2#3{%
+    \if@RTL
+        \def\bbd@fn@next{\bbd@bidi@babel@footnote{\bbd@fn@explicit@language{#1}{1}}{#2}{#3}}%
+    \else
+        \def\bbd@fn@next{\bbd@bidi@babel@footnote{\bbd@fn@explicit@language{#1}{0}}{#2}{#3}}%
+    \fi
+    \bbd@fn@next
+}
 
 % Install after BabelBidi's engine patches and preamble package patches.
 \AddToHook{begindocument/before}[babelbidi/bidi-api]{%
@@ -280,7 +379,11 @@
         \let\bbd@bidi@babel@footnote\bbl@footnote
         \def\bbl@footnote#1#2#3{%
             \ifnum\bbd@fn@policy<\z@
-                \def\bbd@fn@next{\bbd@bidi@babel@footnote{#1}{#2}{#3}}%
+                \ifcsname bbd@lua@explicit@direction\endcsname
+                    \def\bbd@fn@next{\bbd@fn@explicit@select{#1}{#2}{#3}}%
+                \else
+                    \def\bbd@fn@next{\bbd@bidi@babel@footnote{#1}{#2}{#3}}%
+                \fi
             \else
                 \def\bbd@fn@next{\bbd@bidi@babel@footnote{\bbd@fn@language{#1}}{#2}{#3}}%
             \fi

@@ -24,7 +24,7 @@
 \NeedsTeXFormat{LaTeX2e}
 
 \ProvidesPackage{babelbidi}
-[2026/11/14 v1.1.0 Bidi extensions for Babel]
+[2026/11/17 v1.2.0 Bidi extensions for Babel]
 
 \RequirePackage{iftex}
 \RequirePackage{xkeyval}
@@ -73,6 +73,13 @@
 }
 
 \def\bbd@options{}
+
+% Options shared with luabidi; the last footnote-rule option wins.
+\def\bbd@footnote@option{}
+\newif\ifbbd@arabmaths
+\DeclareOptionX{autofootnoterule}{\def\bbd@footnote@option{\autofootnoterule}}
+\DeclareOptionX{textwidthfootnoterule}{\def\bbd@footnote@option{\textwidthfootnoterule}}
+\DeclareOptionX{arabmaths}{\bbd@arabmathstrue}
 
 % Cache Babel's repeated font mappings within each LuaTeX run.
 \newif\ifbbd@font@cache
@@ -261,6 +268,16 @@
 
 \input{babelbidi-api-core.def}
 \input{babelbidi-api-layout.def}
+\makeatletter
+\bbd@footnote@option
+\ifLuaTeX
+    \def\bbd@apply@arabmaths{\mathdirection\@ne}
+\else
+    \def\bbd@apply@arabmaths{%
+        \PackageWarning{babelbidi}{The arabmaths option requires LuaTeX}%
+    }
+\fi
+\ifbbd@arabmaths\bbd@apply@arabmaths\fi
 \input{babelbidi-cite.def}
 \RequirePackage{babelbidi-logos}
 

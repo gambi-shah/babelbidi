@@ -1,0 +1,60 @@
+% Compare the common bidi interfaces with native bidi on XeLaTeX.
+% Define \UseNativeBidi before input to select bidi directly.
+
+\documentclass{article}
+\usepackage{fontspec}
+\setmainfont{DejaVu Sans}
+\usepackage{amsmath}
+\usepackage{multicol}
+\ifdefined\UseNativeBidi
+  \usepackage{bidi}
+\else
+  \usepackage[english]{babelbidi}
+\fi
+\setlength{\parindent}{24pt}
+\pagestyle{empty}
+\begin{document}
+\section*{Direction and inline}
+Left BEFORE \RL{Mixed راست ABC 123 فارسی} AFTER.\par
+\begin{RTL}متن فارسی \LR{ABC 123} ادامه متن.\par متن دوم.\end{RTL}
+\begin{LTR}English paragraph \RL{سلام جهان} and text.\end{LTR}
+\newpage
+\section*{Starred blocks}
+\begin{LTR*}\typeout{LTRSTARINDENT=\the\parindent}
+Left first paragraph.\par Left second paragraph.\par\indent EXPLICIT INDENT.\par\noindent EXPLICIT NOINDENT.\par\setlength{\parindent}{24pt} RESET INDENT.\par RESET SECOND.\end{LTR*}
+\begin{RTL*}\typeout{RTLSTARINDENT=\the\parindent}
+متن اول فارسی.\par متن دوم فارسی.\end{RTL*}
+\newpage
+\section*{Boxes}
+\fbox{\hboxL{START \RL{سلام} END}} \fbox{\hboxR{START \RL{سلام} END}}
+\fbox{\vboxR{\hsize=5cm First paragraph\par Second paragraph\par}}
+\newpage
+\section*{Lists}
+\begin{itemize}\item Outer one
+\begin{RTLitems}\item مورد فارسی \LR{RTL item}
+\begin{enumerate}\item Nested one
+\begin{LTRitems}\item Nested LTR item\end{LTRitems}
+\end{enumerate}
+\end{RTLitems}\item Outer two\end{itemize}
+\begin{RTL}\begin{itemize}\item فهرست بیرونی
+\begin{LTRitems}\item LTR entry
+\begin{enumerate}\item Nested number\item Another nested number\end{enumerate}
+\item Next LTR\end{LTRitems}\item پایان\end{itemize}\end{RTL}
+\newpage
+\section*{Footnotes}
+First\LTRfootnote{Left footnote text.\par Second paragraph.}
+Second\RTLfootnote{متن پاورقی فارسی.\par پاراگراف دوم.}
+\newpage
+\section*{Margin notes}
+LTR note\LTRmarginpar{First note.\par Second paragraph.}\par\bigskip
+RTL note\RTLmarginpar{یادداشت اول.\par بند دوم.}\par\bigskip
+\newpage
+\section*{Cases}
+\[f(x)=\begin{RTLcases}x & first\\y & second\end{RTLcases}\]
+\newpage
+\section*{Columns}
+\RTLmulticolcolumns
+\begin{multicols}{2}FIRST RIGHT\par\columnbreak SECOND LEFT\end{multicols}
+\LTRmulticolcolumns
+\begin{multicols}{2}FIRST LEFT\par\columnbreak SECOND RIGHT\end{multicols}
+\end{document}

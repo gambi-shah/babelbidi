@@ -41,9 +41,22 @@ The documents in `checks/` cover cases that need focused inspection:
 | `check-columns.py` | Check column order and load-order variants with both engines |
 | `multicol-partial.tex` | Preserve one predefined column switch while defining the other |
 | `nested-items.tex` | Compare nested ordinary, Latin, and LTR list geometry |
+| `bidi-xetex.tex` | Shared bidi interfaces and edge cases on XeLaTeX |
+| `bidi-shared.tex` | Bidi-specific interfaces exercised with all three engines |
+| `main-direction.tex` | RTL main direction and subsequent paragraph selection |
+| `listings-direction.tex` | Listing captions, titles, and code in an RTL block |
+| `check-listings.py` | Check code order and caption state with all engines and package load orders |
+| `check-bidi-engines.py` | Check bidi-specific column order and numbering on all engines |
+| `check-bidi-xetex.py` | Compare rendered output and Tufte labels with native bidi |
+| `luabidi.tex`, `luabidi-main.tex` | Shared luabidi directions, boxes, lists, footnotes, and main direction |
+| `luabidi-layout.tex` | RTL tables, mathematics, rotated text, and two-column footnotes |
+| `luabidi-options.tex` | RTL mathematics and automatic footnote-rule options |
+| `luabidi-refs.tex` | Compare directional footnote labels and PDF link targets |
+| `check-luabidi.py` | Compare LuaLaTeX pages and reference behavior with luabidi |
 | `tufte-late.tex` | Load `bidituftesidenote` after BabelBidi |
 | `tufte-notes.tex` | Directional Tufte notes and PDF reference targets |
 | `check-tufte.py` | Compile and check the Tufte document with both Unicode engines |
+| `tufte-geometry.tex`, `check-tufte-geometry.py` | Measure Tufte margin placement across classes, engines, and direction policies |
 | `font-fallback.tex` | Check glyph fallback, cache, and language/font state |
 | `cite-engines.tex` | Citation packages and variants across TeX engines |
 | `cite-natbib.tex` | Natbib and Persian citation-note language |
@@ -73,16 +86,27 @@ Run the column and Tufte checks from the project root with Python 3:
 ```sh
 python3 test/checks/check-columns.py
 python3 test/checks/check-tufte.py
+python3 test/checks/check-bidi-xetex.py
+python3 test/checks/check-bidi-engines.py
+python3 test/checks/check-luabidi.py
 ```
 
 The Tufte check compiles `tufte-notes.tex` twice for each of `biditufte-handout`
 and `biditufte-book`, with XeLaTeX and LuaLaTeX in a temporary
 folder and checks RTL paragraph alignment and note targets using Poppler's
-`pdftotext` and `pdfinfo`. Installing `pypdf` also enables checks of the actual
+`pdftotext` and `pdfinfo`. Both engines test independent targets and RTL paragraphs. The XeLaTeX
+adapter corrects the installed bidi package's note anchors and paragraph reset. Installing
+`pypdf` also enables checks of the actual
 PDF link annotations; without it the script reports that those checks were
 skipped. The Tufte example defaults to `biditufte-handout`; its source describes
 how to select `biditufte-book`. The column check uses Poppler `pdftotext` to
 compare physical positions across load orders and scoped direction changes.
+The XeLaTeX comparison builds the same documents with bidi and BabelBidi,
+then compares rendered pages. Tufte fixes are checked separately because they
+intentionally improve on the installed bidi behavior. It requires `pdftoppm`.
+The LuaLaTeX comparison likewise renders both packages' output. Its reference
+case reproduces luabidi 1.1's deferred footnote-number behavior. With `pypdf`,
+the check also compares the link destinations.
 
 Write generated PDFs and auxiliary files to a temporary directory.
 
@@ -103,3 +127,28 @@ The expected result is a nonzero exit status and exactly two
 A successful compilation, a missing expected diagnostic, or an unrelated
 additional error indicates a failed test. Do not treat its nonzero exit
 status as an ordinary compilation failure.
+
+The last example in `tufte-notes.tex` exercises a margin note inside an RTL
+block, which can be clipped at the page edge with native bidi.
+
+Run `python3 test/checks/check-tufte-geometry.py --output /tmp/tufte.csv`
+to measure note-box endpoints, including positions beyond the page. The script
+compares both Tufte class families, engines, and native backends, and tests page
+parity, margin policies and reversal. `--quick` limits the matrix to biditufte
+classes. `--strict` fails if a measured BabelBidi note is outside the page
+or overlaps the text, including reversed margins and reversed geometry. A
+narrow-margin case checks that `\reversemarginpar` selects the requested side
+when both sides have enough space.
+Native bidi with the ordinary Tufte classes cannot compile the tested
+`\sidenote` on the installed versions; that native case is omitted while
+BabelBidi and ordinary margin notes remain measured. Standalone luabidi does not provide the same
+directional margin commands, so those commands are omitted in that backend.
+The three `tufte-geometry-*.pdf` examples show the same biditufte-handout
+cases with BabelBidi on both engines and native bidi on XeLaTeX: ordinary LTR,
+RTL with default placement, and RTL with `\setLTRmarginpar`, respectively.
+
+To create a release archive without tests, test PDFs, or `babelbidi.txt`:
+
+```sh
+python3 tools/make-ctan.py /tmp/babelbidi-ctan.zip
+```

@@ -708,6 +708,17 @@ Ligatures=TeX
         \usepackage[fontcache=false]{babelbidi}
     \end{minted}
 
+    \Describe{autofootnoterule}{}
+    \DescribeOther{textwidthfootnoterule}{}
+    Select automatic footnote-rule placement or a full-width rule at
+    package loading. The corresponding switches are described in
+    Section~\ref{sec:footnotes}.
+
+    \Describe{arabmaths}{}
+    With \LuaTeX, sets the mathematics direction to RTL. The option
+    issues a warning with \XeTeX and \pdfTeX, where this LuaTeX direction
+    setting is unavailable.
+
     \Describe{extrafootnotefeatures}{=\meta{on}/\meta{off}}
     Enables paragraph and multi-column footnote layouts. The default
     is \texttt{off}; specifying the option without a value enables it:
@@ -735,7 +746,8 @@ Ligatures=TeX
 
     \paragraph*{\textcolor{thered}{\textsf{babelbidi-lang}}}
     Provides the four language roles, \cmd{\lr}, \cmd{\rl},
-    \cmd{\latintoday}, and the \texttt{latin} environment.
+    \cmd{\latintoday}, the \texttt{latin} environments, and the command
+    and environment aliases described in Section~\ref{sec:language-aliases}.
     For standalone use, load it after Babel; it accepts the same
     \texttt{latin}, \texttt{ltr}, \texttt{rtl}, and \texttt{code}
     keys listed above:
@@ -823,6 +835,39 @@ Ligatures=TeX
     before configuring fonts. For standalone use of
     \textsf{babelbidi-lang}, see Section~\ref{sec:subpackages}.
 
+    \subsection{Command and Environment Aliases}
+    \label{sec:language-aliases}
+
+    These commands accept names without a leading backslash and can be
+    used to provide command names in another language.
+
+    \Describe{\eqcommand}{\marg{alias}\marg{original}}
+    Defines an alias that calls the original command, including any
+    arguments. Later changes to the original command are reflected in
+    the alias. For a TeX primitive, the alias is a direct copy.
+
+    \Describe{\eqenvironment}{\marg{alias}\marg{original}}
+    Defines an environment that uses the original environment. A matching
+    starred alias is defined if the original starred form exists when the
+    alias is declared or becomes available before the document begins.
+
+    \Describe{\EqEnvironment}{\marg{alias}\marg{original}}
+    Copies the original environment's begin and end commands as they
+    are at the time of the declaration.
+
+    \Describe{\makezwnjletter}{}
+    Makes the zero-width non-joiner (U+200C) a letter for subsequent
+    command names. This changes its category code in the current TeX
+    group and requires \XeLaTeX or \LuaLaTeX.
+
+    \begin{minted}{latex}
+        \eqcommand{important}{textbf}
+        \eqenvironment{quotationexample}{quote}
+        \important{Text}
+        \begin{quotationexample}A quotation.\end{quotationexample}
+    \end{minted}
+
+
 
     \section{Text Direction}
     \label{sec:text-direction}
@@ -860,6 +905,9 @@ Ligatures=TeX
     Typesets the argument as inline RTL text. The two names are equivalent.
 
     Prefer the argument-taking commands for short passages.
+    With \LuaTeX and the default \texttt{basic} mode, \cmd{\LR} and
+    \cmd{\RL} use explicit directions as in \textsf{luabidi}; Babel's
+    automatic bidirectional processing is not applied within those passages.
 
     \subsection{Paragraphs and Blocks}
     \label{sec:paragraph-direction}
@@ -879,12 +927,28 @@ Ligatures=TeX
     The switches take no arguments; place them between paragraphs and use
     a group to limit their scope. End the final paragraph before closing
     the group.
+    With \LuaTeX and the default \texttt{basic} mode, these switches and
+    the directional block environments use explicit LuaTeX directions,
+    following \textsf{luabidi}. Language selection remains available when
+    Babel's automatic bidirectional processing is needed.
+
+    \Describe{\setRTLmain}{}
+    With \LuaTeX, sets the main page and paragraph direction to RTL.
+    With \XeTeX and \pdfTeX, selects RTL as the main and current paragraph
+    direction. It may be used in the preamble to start the document in RTL
+    direction.
 
     \Describe{\begin\menv{LTR}}{\Eenv{LTR}}
     \DescribeOther{\begin\menv{RTL}}{\Eenv{RTL}}
     The \texttt{LTR} environment typesets an enclosed block in LTR direction;
     \texttt{RTL} typesets it in RTL direction. The environments handle
     paragraph boundaries and may contain several paragraphs.
+
+    \Describe{\begin\menv{LTR*}}{\Eenv{LTR*}}
+    \DescribeOther{\begin\menv{RTL*}}{\Eenv{RTL*}}
+    The starred environments also set the block direction. With \XeTeX,
+    their paragraph indentation follows \textsf{bidi}; with \LuaTeX and
+    \pdfTeX, they locally set \cmd{\parindent} to zero.
 
     \section{Boxes and Positioning}
     \label{sec:boxes-positioning}
@@ -968,6 +1032,11 @@ Ligatures=TeX
     \cmd{\LTRfootnotetext} and \cmd{\RTLfootnotetext} commands
     do not insert a mark in the main text; use them with
     \cmd{\footnotemark} when a mark is needed.
+
+    In \LuaTeX, these two directed footnote commands follow
+    \textsf{luabidi}'s number formatting. A \cmd{\label} inside a note
+    without an optional number can therefore resolve to the current
+    footnote number when referenced, rather than the original note number.
 
     \Describe{\LTRthanks}{\marg{text}}
     Inserts a title note in LTR direction.
@@ -1375,6 +1444,11 @@ Ligatures=TeX
     Use \cmd{\DFNalwaysdouble} or \cmd{\DFNtrysingle} to select the same
     policy explicitly on both engines.
 
+    When \textsf{dblfnote} is loaded before \textsf{babelbidi} with
+    \XeLaTeX, the switches retain the installed \textsf{bidi} behavior;
+    depending on its active output routine, a switch may not change the
+    displayed column order.
+
     \subsection{Two-Column Table of Contents}
     \label{sec:two-column-toc}
 
@@ -1521,6 +1595,10 @@ Ligatures=TeX
     \Describe{\begin\menv{latin}}{\Eenv{latin}}
     Typesets contents in the selected Latin language.
 
+    \Describe{\begin\menv{latin*}}{\Eenv{latin*}}
+    Uses the same language and suppresses automatic indentation at the
+    start of each paragraph by locally setting \cmd{\parindent} to zero.
+
     \Describe{\begin\menv{latinverbatim}}{\Eenv{latinverbatim}}
     \DescribeOther{\begin\menv{latinverbatim*}}{\Eenv{latinverbatim*}}
     The \texttt{latinverbatim} environment typesets a verbatim block in the
@@ -1623,7 +1701,10 @@ Ligatures=TeX
         \textsf{listings}:
         With a non-Latin main script, select the \texttt{code} language
         for display and inline listings, with direction handling for
-        inline listings.
+        inline listings. The \texttt{captiondirection} key accepts
+        \texttt{textdirection}, \texttt{LTR}, or \texttt{RTL} to control
+        the direction of a listing caption or title independently of
+        its code. With \XeTeX, this key is provided by \textsf{bidi}.
 
         \item
         \textsf{minted}:
@@ -1640,18 +1721,26 @@ Ligatures=TeX
         family, making it available to \LuaTeX glyph fallback.
 
         \item
-        \textsf{bidituftesidenote}:
+        \textsf{Tufte} and \textsf{bidituftesidenote}:
         Adapt the directional notes supplied by this package and the
         \textsf{biditufte-book} and \textsf{biditufte-handout} classes.
+        For Tufte classes, margin placement uses physical page coordinates
+        independently of note text direction. The requested margin is retained
+        when it fits; if only the opposite margin has room for the note, that
+        margin is used instead. This also applies to reversed margins and
+        mirrored page geometry. The page must have enough room for a note in
+        at least one margin. With \XeLaTeX, the original Tufte classes also
+        use their bidi adapter for ordinary sidenotes.
         With \LuaLaTeX, provide their directional note handling; with
-        \XeLaTeX, adapt the \textsf{bidi} implementation. The package's
+        \XeLaTeX, retain the \textsf{bidi} implementation. The package's
         \cmd{\LTRsidenote} and \cmd{\RTLsidenote} accept optional note
         numbers and vertical offsets, while \cmd{\LTRmarginnote} and
         \cmd{\RTLmarginnote} accept an optional vertical offset.
         The directional footnote commands \cmd{\LTRfootnote} and
         \cmd{\RTLfootnote} also place notes in the margin. With
-        \textsf{hyperref}, labels inside numbered directional notes link
-        to the corresponding note.
+        \textsf{hyperref} and \LuaLaTeX, labels inside numbered directional
+        notes link to the corresponding note. With \XeLaTeX, their targets
+        follow the \textsf{bidi} implementation.
 
         \item
         \textbf{Labels and link targets:}
@@ -1686,8 +1775,10 @@ Ligatures=TeX
         \item
         \textbf{Boxes and tables:}
         Adjust \cmd{\makebox} positioning and interchange the handling of
-        \texttt{l} and \texttt{r} alignment in RTL contexts. The table
-        patch changes cell alignment, not the declared column sequence.
+        \texttt{l} and \texttt{r} alignment in language-driven RTL contexts.
+        With the default \texttt{basic} bidi mode, explicitly directed RTL
+        blocks retain \textsf{luabidi}'s cell alignment. The table patch
+        changes cell alignment, not the declared column sequence.
 
         \item
         \textbf{Footnotes:}

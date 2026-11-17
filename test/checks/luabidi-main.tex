@@ -1,0 +1,20 @@
+\documentclass{article}
+\usepackage{fontspec}
+\setmainfont{Amiri}[Renderer=HarfBuzz]
+\ifdefined\UseNativeLuaBidi
+  \usepackage{luabidi}
+\else
+  \usepackage[english]{babelbidi}
+\fi
+
+\setRTLmain
+\ifdefined\MainStartsLTR\setLTR\fi
+\begin{document}
+متن راست‌به‌چپ فارسی و \LR{English 123}.\par
+پاراگراف دوم\ifdefined\MainNormalFootnote\footnote{Default note.}\fi و\LTRfootnote{Left note.} and\RTLfootnote{یادداشت فارسی.}
+\begin{itemize}\item فارسی یک\item فارسی دو
+\begin{LTR}LEFT paragraph.\par SECOND paragraph.\end{LTR}
+\item پایان\end{itemize}
+\newpage
+ادامه متن \RL{ABC 123} پایان.
+\end{document}

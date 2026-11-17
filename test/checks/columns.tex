@@ -24,7 +24,11 @@
     \let\savedcolumnswitch\LTRmulticolcolumns
   \fi
 \fi
-\usepackage[english]{babelbidi}
+\ifdefined\UseNativeBidi
+  \usepackage[english,bidi=bidi-r]{babel}
+\else
+  \usepackage[english]{babelbidi}
+\fi
 \ifdefined\PackagesFirst\else
   \usepackage{multicol}
   \usepackage{dblfnote}

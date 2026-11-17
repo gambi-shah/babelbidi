@@ -1,0 +1,15 @@
+\documentclass{article}
+\usepackage{fontspec}
+\setmainfont{DejaVu Sans}
+\usepackage{hyperref}
+\ifdefined\UseNativeLuaBidi
+  \usepackage{luabidi}
+\else
+  \usepackage[english]{babelbidi}
+\fi
+\begin{document}
+\section{Links}\label{sec:link}
+Left\LTRfootnote{Left\label{fn:left} note.} right\RTLfootnote{Right\label{fn:right} note.}
+References \ref{sec:link}, \ref{fn:left}, \ref{fn:right}.
+\begin{RTL}RTL footnote\LTRfootnote[5]{Number five.} and\RTLfootnote[9]{Number nine.}\end{RTL}
+\end{document}
