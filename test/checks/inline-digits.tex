@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{tikz}
+\usepackage[english]{babelbidi}
+\ifLuaTeX
+  \babelfont{rm}[Renderer=HarfBuzz]{Amiri}
+\else
+  \babelfont{rm}{Amiri}
+\fi
+\pagestyle{empty}
+\makeatletter
+\ifLuaTeX
+  \def\CheckDir#1{%
+    \ifnum\bbl@thetextdir=#1\else\errmessage{Babel text direction mismatch}\fi
+    \ifnum\textdirection=#1\else\errmessage{Lua text direction mismatch}\fi
+    \ifnum\bbl@thedir=\numexpr\bbl@thepardir*4+#1\relax\else
+      \errmessage{Babel combined direction mismatch}\fi
+    \ifnum\bbl@attr@dir=\bbl@thedir\relax\else
+      \errmessage{Babel direction attribute mismatch}\fi}
+  \def\CheckExplicit#1{%
+    \ifcsname bbd@lua@explicit@direction\endcsname
+      \ifnum#1=1\else\errmessage{Unexpected explicit direction}\fi
+      \ifx\bbd@lua@explicit@direction\@empty\else
+        \errmessage{Explicit direction marker is not empty}\fi
+    \else
+      \ifnum#1=0\else\errmessage{Missing explicit direction}\fi
+    \fi}
+\else
+  \def\CheckDir#1{}
+  \def\CheckExplicit#1{}
+\fi
+\makeatother
+\begin{document}
+\CheckDir{0}\CheckExplicit{0}
+\begin{tikzpicture}
+\node[align=center] {\RL{\CheckDir{1}متن فارسی ۱۲۳۴}};
+\end{tikzpicture}
+\CheckDir{0}
+
+\RL{\CheckDir{1}\CheckExplicit{1}متن فارسی ۱۲۳۴\LR{\CheckDir{0}\CheckExplicit{1}}\CheckDir{1}}\CheckDir{0}\CheckExplicit{0}\par
+\begin{RTL}
+\CheckDir{1}
+متن فارسی ۱۲۳۴\par
+متن دوم ۱۲۳۴\par
+\RLE{\CheckDir{1}متن فارسی ۱۲۳۴}\CheckDir{1}\par
+\begin{LTR}
+\CheckDir{0}\RL{\CheckDir{1}متن فارسی ۱۲۳۴}\CheckDir{0}\par
+\end{LTR}
+\CheckDir{1}
+\end{RTL}
+\CheckDir{0}
+
+{\setRTL\CheckDir{1} متن فارسی ۱۲۳۴\par
+\setLTR\CheckDir{0}\setRTL\CheckDir{1}}\CheckDir{0}\CheckExplicit{0}
+\RL{متن ABC 5678 متن}\par
+\hboxR{\hboxL{\verb|a_b% c|}}
+\end{document}

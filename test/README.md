@@ -44,6 +44,7 @@ The documents in `checks/` cover cases that need focused inspection:
 | `bidi-xetex.tex` | Shared bidi interfaces and edge cases on XeLaTeX |
 | `bidi-shared.tex` | Bidi-specific interfaces exercised with all three engines |
 | `main-direction.tex` | RTL main direction and subsequent paragraph selection |
+| `inline-digits.tex`, `check-inline-digits.py` | Check physical digit positions and direction state in nested blocks and TikZ nodes |
 | `listings-direction.tex` | Listing captions, titles, and code in an RTL block |
 | `check-listings.py` | Check code order and caption state with all engines and package load orders |
 | `check-bidi-engines.py` | Check bidi-specific column order and numbering on all engines |
@@ -81,7 +82,9 @@ is a LuaLaTeX check; `minted.tex` also exercises the LuaTeX-only `chardir`
 option. `cite-natbib.tex` and `examples/cite.tex` additionally require
 `unipersian` for their default configuration.
 
-Run the column and Tufte checks from the project root with Python 3:
+Run the column and Tufte checks from the project root with Python 3.
+The inline digit check requires `pdfminer.six` for individual glyph positions;
+the LuaBidi visual comparison requires Pillow:
 
 ```sh
 python3 test/checks/check-columns.py
@@ -89,6 +92,7 @@ python3 test/checks/check-tufte.py
 python3 test/checks/check-bidi-xetex.py
 python3 test/checks/check-bidi-engines.py
 python3 test/checks/check-luabidi.py
+python3 test/checks/check-inline-digits.py
 ```
 
 The Tufte check compiles `tufte-notes.tex` twice for each of `biditufte-handout`
@@ -106,7 +110,10 @@ then compares rendered pages. Tufte fixes are checked separately because they
 intentionally improve on the installed bidi behavior. It requires `pdftoppm`.
 The LuaLaTeX comparison likewise renders both packages' output. Its reference
 case reproduces luabidi 1.1's deferred footnote-number behavior. With `pypdf`,
-the check also compares the link destinations.
+the check also compares the link destinations. For inline RTL text containing
+Latin characters, BabelBidi preserves their left-to-right order instead of
+reproducing luabidi's reversal. The check verifies that improvement and compares
+the remaining rendered areas against luabidi.
 
 Write generated PDFs and auxiliary files to a temporary directory.
 

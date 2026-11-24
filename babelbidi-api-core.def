@@ -20,7 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-api-core.def}[2026/11/17 v1.0.0 Bidi API for Babelbidi]
+\ProvidesFile{babelbidi-api-core.def}[2026/11/25 v1.0.1 Bidi API for Babelbidi]
 
 \makeatletter
 
@@ -86,11 +86,8 @@
     \fi
 }
 
-% Babel's basic bidi processor marks already handled nodes with 0x80.
-% Explicit direction commands use LuaTeX's direction stack instead.
 \def\bbd@lua@explicitdir{%
     \ifnum\bbl@bidimode=101\relax
-        \setattribute\bbl@attr@dir{128}%
         \let\bbd@lua@explicit@direction\@empty
     \fi
 }
@@ -197,7 +194,10 @@
         \bgroup
         \ifnum#1=\z@ \@RTLfalse\else \@RTLtrue\fi
         \ifnum\linedirection=#1\relax\else \linedirection=#1\relax\fi
-        \bbd@lua@explicitdir
+        \ifnum\bbl@bidimode=101\relax
+            \bbl@textdir{#1}%
+            \let\bbd@lua@explicit@direction\@empty
+        \fi
     }
     \def\bbd@inline@right{\bbd@inline@start{1}}
     \def\bbd@inline@left{\bbd@inline@start{0}}
@@ -236,12 +236,12 @@
 \def\bbd@noautoindent{\parindent\z@}
 % On XeTeX, retain bidi's own starred environments and paragraph handling.
 \ifXeTeX\else
-\ProvideDocumentEnvironment{RTL*}{}
-{\begin{RTL}\bbd@noautoindent}
-{\end{RTL}}
-\ProvideDocumentEnvironment{LTR*}{}
-{\begin{LTR}\bbd@noautoindent}
-{\end{LTR}}
+    \ProvideDocumentEnvironment{RTL*}{}
+    {\begin{RTL}\bbd@noautoindent}
+    {\end{RTL}}
+    \ProvideDocumentEnvironment{LTR*}{}
+    {\begin{LTR}\bbd@noautoindent}
+    {\end{LTR}}
 \fi
 
 % ------------------------------------------
