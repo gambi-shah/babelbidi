@@ -48,6 +48,8 @@ The documents in `checks/` cover cases that need focused inspection:
 | `listings-direction.tex` | Listing captions, titles, and code in an RTL block |
 | `check-listings.py` | Check code order and caption state with all engines and package load orders |
 | `check-bidi-engines.py` | Check bidi-specific column order and numbering on all engines |
+| `check-pdftex-footnote-links.py` | Check pdfTeX footnote links and package load order |
+| `hyperref-pdftex.tex` | Minimal pdfTeX example of a hyperlinked Persian footnote |
 | `check-bidi-xetex.py` | Compare rendered output and Tufte labels with native bidi |
 | `luabidi.tex`, `luabidi-main.tex` | Shared luabidi directions, boxes, lists, footnotes, and main direction |
 | `luabidi-layout.tex` | RTL tables, mathematics, rotated text, and two-column footnotes |

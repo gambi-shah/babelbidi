@@ -20,7 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-api-layout.def}[2026/11/17 v1.0.0 Additional Bidi API for Babelbidi]
+\ProvidesFile{babelbidi-api-layout.def}[2026/11/25 v1.0.1 Additional Bidi API for Babelbidi]
 
 \makeatletter
 
@@ -68,13 +68,33 @@
 \fi
 
 
+\RequirePackage{etoolbox}
+\def\bbd@pdf@fnlink{%
+    \hyper@linkstart{link}{\Hy@footnote@currentHref}\@makefnmark\hyper@linkend}
+\def\bbd@pdf@patch@fnlinks{%
+    \@ifpackageloaded{hyperref}{%
+        \ifHy@hyperfootnotes
+            \patchcmd{\@footnotemark}%
+                {\hyper@linkstart{link}{\Hy@footnote@currentHref}\@makefnmark\hyper@linkend}%
+                {\ifnum\TeXXeTstate>\z@
+                    \beginL\hbox{\bbd@pdf@fnlink}\endL
+                \else
+                    \bbd@pdf@fnlink
+                \fi}%
+                {}{\PackageWarning{babelbidi}{Could not adapt hyperref footnote links}}%
+        \fi
+    }{}%
+}
+\ifPDFTeX
+    \AddToHook{begindocument/end}{\bbd@pdf@patch@fnlinks}
+\fi
+
 % ------------------------------------------
 % dblfnote column order
 % ------------------------------------------
 
 % dblfnote output uses two boxes; reverse their physical placement without
 % changing the order in which the footnotes are split into those boxes.
-\RequirePackage{etoolbox}
 \newif\ifbbd@dfn@rtl
 \newif\ifbbd@dfn@explicit
 \def\bbd@dfn@hbox{%
