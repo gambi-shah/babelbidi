@@ -10,7 +10,7 @@ from pypdf import PdfReader
 
 root = Path(__file__).resolve().parents[2]
 env = os.environ.copy()
-env['TEXINPUTS'] = f'{root}:' + env.get('TEXINPUTS', '')
+env['TEXINPUTS'] = f'.:{root}:' + env.get('TEXINPUTS', '')
 
 with tempfile.TemporaryDirectory(prefix='babelbidi-pdf-links-', dir='/tmp') as temp:
     for order in ('before', 'after'):

@@ -24,7 +24,7 @@
 
 
 \ProvidesFile{babelbidi-fonts.def}
-[2026/11/11 v0.5.0 Common definitions for fonts in XeTeX and LuaTeX]
+[2026/11/27 v1.0.0 Common definitions for fonts in XeTeX and LuaTeX]
 
 
 \makeatletter

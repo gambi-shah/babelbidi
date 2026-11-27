@@ -20,7 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-api-extrafootnotes.def}[2026/11/08 v0.1.0 Extra footnote layouts for Babelbidi]
+\ProvidesFile{babelbidi-api-extrafootnotes.def}[2026/11/27 v1.0.0 Extra footnote layouts for Babelbidi]
 
 \makeatletter
 

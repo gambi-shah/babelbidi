@@ -65,6 +65,14 @@
 }
 \makeatother
 \begin{document}
+\makeatletter
+\bbd@fontcache@hit=7
+\begingroup
+  \directlua{tex.setcount('bbd@fontcache@hit', 1)}%
+  \ifnum\bbd@fontcache@hit=1\else\errmessage{Cache count was not set}\fi
+\endgroup
+\ifnum\bbd@fontcache@hit=7\else\errmessage{Cache count leaked from group}\fi
+\makeatother
 \fallbackcheck{\fallbackstate}{JetBrains}{Vazir}
 \fallbackcheck{\latinttfamily\bfseries}{JetBrains}{Vazir}
 \fallbackcheck{\latinttfamily\itshape}{JetBrains}{Vazir}
@@ -85,5 +93,13 @@
   \setbox0=\hbox{\RLE{\latinttfamily سلام A}}%
   \directlua{fallback_check_box('JetBrains', 'Vazir')}%
 }
+\begingroup
+  \catcode`0=\active
+  \catcode`1=\active
+  \def0{not-a-number}\def1{not-a-number}%
+  \large\selectfont
+  \normalfont\selectfont
+  \large\selectfont
+\endgroup
 \typeout{FONTFALLBACK REGRESSION PASSED}
 \end{document}

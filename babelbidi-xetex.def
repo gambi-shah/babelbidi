@@ -21,7 +21,7 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-xetex.def}
-[2026/10/09 v0.1.0 XeTeX support for Babelbidi]
+[2026/11/27 v0.1.1 XeTeX support for Babelbidi]
 
 \makeatletter
 
@@ -32,6 +32,16 @@
 % --------------------------------------------------------------------------
 
 \providecommand{\UseMathForPositioningText}{}
+
+\def\bbd@patch@tabulary{%
+    \@ifpackageloaded{tabulary}{%
+        \patchcmd{\TY@tab}
+        {\setbox\z@\hbox\bgroup}
+        {\setbox\z@\hbox\bgroup\@RTLtabfalse}
+        {}{\PackageWarning{babelbidi}{Could not patch tabulary measurement}}%
+    }{}%
+}
+\AddToHook{begindocument/before}[babelbidi/tabulary]{\bbd@patch@tabulary}
 
 % ------------------------------------------
 % Fix RTL natbib links for recent hyperref versions.

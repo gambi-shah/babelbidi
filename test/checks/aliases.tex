@@ -41,16 +41,9 @@
 \fi
 \def\assertaliasLTR{%
   \if@RTL\errmessage{unsetRL did not set LTR}\fi}
-\ifLuaTeX
-  \ifx\unsetRL\previousRL\else
-    \errmessage{Existing unsetRL was not preserved}
-  \fi
-\else\ifXeTeX
-  % bidi itself installs its own direction commands on XeTeX.
-  \ifx\unsetRL\previousRL
-    \errmessage{bidi did not install unsetRL}
-  \fi
-\fi\fi
+\ifx\unsetRL\previousRL
+  \errmessage{unsetRL was not installed}
+\fi
 \fi
 \begin{document}
 \begin{aliasexampleenv*}
@@ -66,11 +59,9 @@
 \ifdefined\StandaloneLanguage\else
 \makeatletter
 \begingroup\unsetLR\if@RTL\else\errmessage{unsetLR did not set RTL}\fi RTL.\par\endgroup
-\ifXeTeX
-  \begingroup\setRTL\unsetRL
-    \assertaliasLTR LTR.\par
-  \endgroup
-\fi
+\begingroup\setRTL\unsetRL
+  \assertaliasLTR LTR.\par
+\endgroup
 \fi
 Alias definitions checked.
 \end{document}

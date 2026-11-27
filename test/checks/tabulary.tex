@@ -1,0 +1,31 @@
+% Compile with XeLaTeX and LuaLaTeX; define \PackagesFirst to reverse load order.
+\documentclass{article}
+\ifdefined\PackagesFirst\usepackage{tabulary}\fi
+\usepackage[english]{babelbidi}
+\ifdefined\PackagesFirst\else\usepackage{tabulary}\fi
+\ifXeTeX
+\makeatletter
+\AddToHook{begindocument/before}[tabulary-test]{%
+  \patchcmd{\TY@tab}{\setbox\z@\hbox\bgroup\@RTLtabfalse}%
+    {\setbox\z@\hbox\bgroup\@RTLtabfalse}%
+    {\typeout{TABULARY PATCH VERIFIED}}{\errmessage{Tabulary patch missing}}}
+\DeclareHookRule{begindocument/before}{tabulary-test}{after}{babelbidi/tabulary}
+\makeatother
+\fi
+\babelprovide[import]{arabic}
+\babelfont[arabic]{rm}{Amiri}
+\pagestyle{empty}
+\begin{document}
+\begin{RTL}
+\noindent\begin{tabulary}{.8\linewidth}{|L|R|}
+RFIRST \foreignlanguage{arabic}{مرحبا بالعالم} & RSECOND words \\
+\end{tabulary}
+\par
+\noindent\begin{tabular}{|l|r|}TFIRST & TSECOND\end{tabular}
+\end{RTL}
+\begin{LTR}
+\noindent\begin{tabulary}{.8\linewidth}{|L|R|}
+LFIRST words & LSECOND words \\
+\end{tabulary}
+\end{LTR}
+\end{document}

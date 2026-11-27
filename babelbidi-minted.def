@@ -23,9 +23,62 @@
 % The current maintainer of this work is Amer Amikhteh.
 
 \ProvidesFile{babelbidi-minted.def}%
-[2026/10/26 v0.4.0 Minted patches for BabelBidi]
+[2026/11/27 v0.5.0 Minted patches for BabelBidi]
 
 \makeatletter
+
+\ExplSyntaxOn
+\tl_new:N \l__bbd_minted_letters_tl
+\tl_new:N \l__bbd_minted_rest_tl
+\tl_new:N \l__bbd_minted_line_tl
+\bool_new:N \l__bbd_minted_word_bool
+\cs_new_protected:Npn \bbd_minted_word:nnn #1#2#3
+{
+    \group_begin:
+    \tl_clear:N \l__bbd_minted_letters_tl
+    \tl_clear:N \l__bbd_minted_rest_tl
+    \bool_set_true:N \l__bbd_minted_word_bool
+    \tl_map_inline:nn {#3}
+    {
+        \bool_if:NT \l__bbd_minted_word_bool
+        {
+            \int_compare:nNnF {\tex_lccode:D `##1} > {0}
+                {
+                    \int_compare:nNnF {`##1} = {"200C}
+                    {
+                        \int_compare:nNnF {`##1} = {"200D}
+                        {\str_if_in:nnF {@_:} {##1} {\bool_set_false:N \l__bbd_minted_word_bool}}
+                    }
+                }
+        }
+        \bool_if:NTF \l__bbd_minted_word_bool
+        {\tl_put_right:Nn \l__bbd_minted_letters_tl {##1}}
+        {\tl_put_right:Nn \l__bbd_minted_rest_tl {##1}}
+    }
+    \exp_args:Nne \PYG {#1} {\exp_not:n {#2}\exp_not:V \l__bbd_minted_letters_tl}
+    \tl_use:N \l__bbd_minted_rest_tl
+    \group_end:
+}
+\cs_new_protected:Npn \bbd_minted_line:n #1
+{
+    \tl_set:Nn \l__bbd_minted_line_tl {#1}
+    \regex_replace_all:nnN
+    {
+        \c{PYG} \cB\{ (k) \cE\} \cB\{
+        (\c{PYGZbs} \cB\{ \cE\} (?:[a-zA-Z@_:]+|[\x{80}-\x{10FFFF}]))
+        \cE\} ([\x{80}-\x{10FFFF}][a-zA-Z@_:\x{80}-\x{10FFFF}]*)
+    }
+    {\c{bbd_minted_word:nnn}\cB\{\1\cE\}\cB\{\2\cE\}\cB\{\3\cE\}}
+    \l__bbd_minted_line_tl
+    \exp_args:NV \bbd_minted_original_line:n \l__bbd_minted_line_tl
+}
+\cs_new_protected:Npn \bbd_minted_setup_line:
+{
+    \cs_set_eq:NN \bbd_minted_original_line:n \FancyVerbFormatText
+    \cs_set_eq:NN \FancyVerbFormatText \bbd_minted_line:n
+}
+\cs_new_eq:NN \bbd@minted@setupunicode \bbd_minted_setup_line:
+\ExplSyntaxOff
 
 % ==========================================================================
 % Character direction
@@ -155,6 +208,28 @@
     \mintedpgfkeyscreate{tex}{textdir=}%
     \mintedpgfkeyscreate{tex}{chardir=}%
 
+    \ifbbd@mintedunicode
+        \ifPDFTeX\else
+            \NewCommandCopy\bbd@minted@codewrapper\minted@codewrapper
+            \def\minted@codewrapper#1{%
+                \def\bbd@minted@latex{latex}%
+                \ifx\minted@lexer\bbd@minted@latex
+                    \begingroup
+                    \def\bbd@minted@unicodeactive{}%
+                    \bbd@minted@codewrapper{#1}%
+                    \endgroup
+                \else
+                    \bbd@minted@codewrapper{#1}%
+                \fi
+            }%
+            \AddToHook{cmd/FV@FormattingPrep/after}[babelbidi/minted/unicode]{%
+                \ifcsname bbd@minted@unicodeactive\endcsname
+                    \bbd@minted@setupunicode
+                \fi
+            }%
+        \fi
+    \fi
+
     % Keep minted's verbatim reader, including commands from newmintinline.
     % Inline language selection must follow code, independently of ltr.
     \NewCommandCopy{\bbd@RobustMintInlineProcess}{\RobustMintInlineProcess}
@@ -172,6 +247,10 @@
     }%
 
     \AddToHook{env/minted/after}%
+    [babelbidi/minted/restore]{%
+        \bbd@minted@restorechardir
+    }%
+    \AddToHook{cmd/RobustInputMintedProcess/after}%
     [babelbidi/minted/restore]{%
         \bbd@minted@restorechardir
     }%

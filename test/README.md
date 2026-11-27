@@ -33,12 +33,20 @@ The documents in `examples/` can also be used for visual checks:
 
 The documents in `checks/` cover cases that need focused inspection:
 
+`python3 test/checks/check-minted-unicode.py` checks the minted display
+adjustment with XeLaTeX and LuaLaTeX using an isolated temporary
+`latexminted` configuration.
+
 | File | Purpose |
 | --- | --- |
 | `compat.tex` | Combined cases, lists, columns, footnotes, and package compatibility |
 | `aliases.tex` | Existing definitions of direction aliases and engine-specific behavior |
 | `columns.tex` | Column direction, grouping, and package load order |
 | `check-columns.py` | Check column order and load-order variants with both engines |
+| `margin-paragraphs.tex`, `check-margin-paragraphs.py` | Check XeTeX multi-paragraph notes on both margins |
+| `check-footnote-modes.py` | Check LuaLaTeX and pdfLaTeX footnote modes and rule selectors |
+| `check-minted-chardir.py` | Check character-direction restoration and unsupported cases |
+| `tabulary.tex`, `check-tabulary.py` | Check table direction and package load order with both Unicode engines |
 | `multicol-partial.tex` | Preserve one predefined column switch while defining the other |
 | `nested-items.tex` | Compare nested ordinary, Latin, and LTR list geometry |
 | `bidi-xetex.tex` | Shared bidi interfaces and edge cases on XeLaTeX |
@@ -49,6 +57,7 @@ The documents in `checks/` cover cases that need focused inspection:
 | `check-listings.py` | Check code order and caption state with all engines and package load orders |
 | `check-bidi-engines.py` | Check bidi-specific column order and numbering on all engines |
 | `check-pdftex-footnote-links.py` | Check pdfTeX footnote links and package load order |
+| `check-xetex-hyperref.py` | Check XeTeX footnote links and both hyperref load orders |
 | `hyperref-pdftex.tex` | Minimal pdfTeX example of a hyperlinked Persian footnote |
 | `check-bidi-xetex.py` | Compare rendered output and Tufte labels with native bidi |
 | `luabidi.tex`, `luabidi-main.tex` | Shared luabidi directions, boxes, lists, footnotes, and main direction |
@@ -85,11 +94,14 @@ option. `cite-natbib.tex` and `examples/cite.tex` additionally require
 `unipersian` for their default configuration.
 
 Run the column and Tufte checks from the project root with Python 3.
-The inline digit check requires `pdfminer.six` for individual glyph positions;
-the LuaBidi visual comparison requires Pillow:
+The inline digit and minted Unicode checks require `pdfminer.six` for glyph
+positions or colors; the XeTeX hyperref check requires `pypdf`.
+The LuaBidi visual comparison requires Pillow:
 
 ```sh
 python3 test/checks/check-columns.py
+python3 test/checks/check-tabulary.py
+python3 test/checks/check-xetex-hyperref.py
 python3 test/checks/check-tufte.py
 python3 test/checks/check-bidi-xetex.py
 python3 test/checks/check-bidi-engines.py

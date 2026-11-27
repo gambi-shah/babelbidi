@@ -24,7 +24,7 @@
 \NeedsTeXFormat{LaTeX2e}
 
 \ProvidesPackage{babelbidi}
-[2026/11/25 v1.2.2 Bidi extensions for Babel]
+[2026/11/27 v1.3.0 Bidi extensions for Babel]
 
 \RequirePackage{iftex}
 \RequirePackage{xkeyval}
@@ -96,6 +96,22 @@
         \else
             \PackageError{babelbidi}{Invalid fontcache value '#1'}%
             {Use fontcache=true or fontcache=false.}%
+        \fi\fi
+}
+
+\newif\ifbbd@mintedunicode
+\bbd@mintedunicodetrue
+\DeclareOptionX{mintedunicode}[true]{%
+    \edef\bbd@mintedunicode@option{#1}%
+    \def\bbd@mintedunicode@true{true}%
+    \def\bbd@mintedunicode@false{false}%
+    \ifx\bbd@mintedunicode@option\bbd@mintedunicode@true
+        \bbd@mintedunicodetrue
+    \else\ifx\bbd@mintedunicode@option\bbd@mintedunicode@false
+            \bbd@mintedunicodefalse
+        \else
+            \PackageError{babelbidi}{Invalid mintedunicode value '#1'}%
+            {Use mintedunicode=true or mintedunicode=false.}%
         \fi\fi
 }
 
@@ -304,6 +320,24 @@
 
 % The .def files reset @; restore it before reading the remaining code.
 \makeatletter
+
+\ifXeTeX
+    \@ifpackageloaded{bidi}{%
+        \AddToHook{package/hyperref/before}[babelbidi/footnote-save]{%
+            \let\bbd@xe@beforehyper@footnotetext\@footnotetext
+            \AddToHook{begindocument/before}[babelbidi/footnote-restore]{%
+                \ifx\@footnotetext\bbd@xe@afterhyper@footnotetext
+                    \let\@footnotetext\bbd@xe@beforehyper@footnotetext
+                \else
+                    \PackageWarning{babelbidi}{Could not adapt late hyperref footnotes}%
+                \fi
+            }%
+        }%
+        \AddToHook{package/hyperref/after}[babelbidi/footnote-save]{%
+            \let\bbd@xe@afterhyper@footnotetext\@footnotetext
+        }%
+    }{}%
+\fi
 
 % Delay engine patches until the preamble is complete.
 \AddToHook{begindocument/before}{%

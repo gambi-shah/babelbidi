@@ -26,7 +26,7 @@
 % https://www.latex-project.org/lppl/
 
 \ProvidesFile{babelbidi-onchar.def}
-[2026/11/11 v0.3.3 Cache for Babel font mappings]
+[2026/11/27 v0.3.4 Cache for Babel font mappings]
 
 \makeatletter
 
@@ -45,6 +45,7 @@
     \fi}%
   \endgroup}%
 
+\newcount\bbd@fontcache@hit
 \directlua{
   babelbidi_font_cache = {entries = {}, hits = 0, misses = 0, size = 0}
   function babelbidi_font_cache.restore(key, locale, source)
@@ -53,10 +54,10 @@
   if target then
   cache.hits = cache.hits + 1
   Babel.locale_props[locale]['/' .. source] = target
-  token.set_macro('bbd@fontcache@hit', '1')
+  tex.setcount('bbd@fontcache@hit', 1)
   else
   cache.misses = cache.misses + 1
-  token.set_macro('bbd@fontcache@hit', '0')
+  tex.setcount('bbd@fontcache@hit', 0)
   end
   end
   function babelbidi_font_cache.store(key, locale, source, target)

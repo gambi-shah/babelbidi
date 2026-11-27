@@ -20,7 +20,7 @@
 %
 % The current maintainer of this work is Amer Amikhteh.
 
-\ProvidesFile{babelbidi-api-layout.def}[2026/11/25 v1.0.1 Additional Bidi API for Babelbidi]
+\ProvidesFile{babelbidi-api-layout.def}[2026/11/27 v1.0.2 Additional Bidi API for Babelbidi]
 
 \makeatletter
 
@@ -121,9 +121,7 @@
 % bidi's dblfnote adapter otherwise saves dblfnote's wrapper as its own
 % underlying footnote command, causing recursion when dblfnote is loaded
 % after bidi. Preserve the original command across bidi's begin-document hook.
-\newif\ifbbd@dfn@preloaded
 \ifXeTeX
-    \@ifpackageloaded{dblfnote}{\bbd@dfn@preloadedtrue}{}
     \AddToHook{begindocument/before}{%
         \@ifpackageloaded{dblfnote}{%
             \let\bbd@dfn@footnotetext\dfn@latex@footnotetext
@@ -132,12 +130,10 @@
     \AddToHook{begindocument/end}{%
         \@ifpackageloaded{dblfnote}{%
             \let\dfn@latex@footnotetext\bbd@dfn@footnotetext
-            \ifbbd@dfn@preloaded\else
-                \apptocmd{\RTLdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
-                    \PackageError{babelbidi}{Could not patch \string\RTLdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
-                \apptocmd{\LTRdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
-                    \PackageError{babelbidi}{Could not patch \string\LTRdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
-            \fi
+            \apptocmd{\RTLdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
+                \PackageError{babelbidi}{Could not patch \string\RTLdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
+            \apptocmd{\LTRdfnmakecol}{\ifx\@makecol\dfn@latex@makecol\else\let\@makecol\dfn@makecol\fi}{}{%
+                \PackageError{babelbidi}{Could not patch \string\LTRdfnmakecol}{Check compatibility with the loaded dblfnote package.}}%
         }{}%
     }
 \fi
@@ -242,8 +238,8 @@
             {\if@RTL\if@LTRmarginpar\endL\else\endR\fi\else\if@RTLmarginpar\endR\else\endL\fi\fi}%
             {\endL}{}%
             {\PackageWarning{babelbidi}{Could not adapt Tufte margin direction}}%
-        % bidi's directional margin notes otherwise set the run direction
-        % only for the first paragraph of the note.
+}
+\def\bbd@xe@margin@paragraphs{%
         \patchcmd{\@LTRmarginparreset}%
             {\everypar{\@minipagefalse\everypar{}\beginL}}%
             {\everypar{\@minipagefalse\beginL}}{}%
@@ -253,6 +249,9 @@
             {\everypar{\@minipagefalse\beginR}}{}%
             {\PackageWarning{babelbidi}{Could not adapt RTL margin note paragraphs}}%
 }
+\ifXeTeX
+    \AddToHook{begindocument/before}{\bbd@xe@margin@paragraphs}
+\fi
 \def\bbd@tufte@margin@setup{%
     \patchcmd{\@addmarginpar}{\ifnum\@tempcnta <\z@}
         {\bbd@tufte@margin@side\ifnum\@tempcnta <\z@}{}%

@@ -31,16 +31,16 @@ with tempfile.TemporaryDirectory(prefix="babelbidi-columns-", dir="/tmp") as tmp
                 bbox = subprocess.check_output(
                     ["pdftotext", "-bbox", str(directory / "columns.pdf"), "-"], text=True)
                 words = {}
-                for word in ET.fromstring(bbox).iter(ns + "word"):
-                    text = "".join(word.itertext()).rstrip(".")
-                    if text.startswith(("MLEFT", "MRIGHT", "FLEFT", "FRIGHT", "FRESTORE")):
-                        assert text not in words, (engine, order, prior, text)
-                        words[text] = float(word.attrib["xMin"])
-                # With preloaded dblfnote, preserve bidi's XeTeX output
-                # routine, including its effect on the RTL switch.
-                rtl = (("FRIGHTFIRST", "FLEFTSECOND")
-                       if engine == "xelatex" and order == "first"
-                       else ("FLEFTSECOND", "FRIGHTFIRST"))
+                for page in ET.fromstring(bbox).iter(ns + "page"):
+                    for word in page.iter(ns + "word"):
+                        text = "".join(word.itertext()).rstrip(".")
+                        if text.startswith(("MLEFT", "MRIGHT", "FLEFT", "FRIGHT", "FRESTORE")):
+                            assert text not in words, (engine, order, prior, text)
+                            words[text] = (float(word.attrib["xMin"]),
+                                           float(word.attrib["xMax"]),
+                                           float(word.attrib["yMin"]),
+                                           float(page.attrib["width"]), id(page))
+                rtl = ("FLEFTSECOND", "FRIGHTFIRST")
                 expected = [("FLEFTFIRST", "FRIGHTSECOND"), rtl,
                             ("FRESTOREFIRST", "FRESTORESECOND")]
                 if prior != "RTL":
@@ -48,6 +48,10 @@ with tempfile.TemporaryDirectory(prefix="babelbidi-columns-", dir="/tmp") as tmp
                 if prior != "LTR":
                     expected.append(("MLEFTFIRST", "MRIGHTSECOND"))
                 for left, right in expected:
-                    assert left in words and right in words and words[left] < words[right], (
+                    assert left in words and right in words and words[left][1] < words[right][0], (
                         engine, order, prior, left, right, words)
+                    assert words[left][4] == words[right][4], (engine, order, left, right)
+                    assert abs(words[left][2] - words[right][2]) < 2, (engine, order, left, right)
+                    assert 0 <= words[left][0] and words[right][1] <= words[right][3], (
+                        engine, order, left, right)
                 print(engine, order, prior + ": column order and scoped restore OK")

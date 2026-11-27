@@ -182,16 +182,34 @@ Ligatures=TeX
 \setlength{\parindent}{.8em}
 
 \makeatletter
+% Print a command token without executing it.
+\newcommand*\bbdDescribeSignature[2]{%
+    {\color{thegreyed}\normalsize\ttfamily
+        \underline{\strut{\color{thered}\string#1}\color{black}#2}}%
+}
+
 % Preserve the two-argument interface used throughout the manual.
-% The command token is printed rather than executed.
 \def\Describe#1#2{%
     \par\vskip 1.7ex plus .7ex minus .2ex
     \noindent\hspace*{-1.7cm}%
-    {\color{thegreyed}\normalsize\ttfamily
-        \underline{\strut{\color{thered}\string#1}\color{black}#2}}%
+    \bbdDescribeSignature{#1}{#2}%
     \par\nobreak\vskip 1.1ex plus .2ex\relax
 }
 \def\DescribeOther{\nobreak\vskip-1.1\baselineskip\Describe}
+
+% The optional argument gives the number of signatures per row (default: 2).
+\newcommand*\DescribeAlias[2]{\bbdDescribeSignature{#1}{#2}}
+\newcommand*\bbdAliasSeparator{%
+    \hspace{.65em}{\color{thegreyed}\(=\)}\hspace{.65em}%
+}
+\newenvironment{DescribeAliases}[1][2]{%
+    \par\vskip 1.7ex plus .7ex minus .2ex
+    \noindent\hspace*{-1.7cm}%
+    \begin{tabular}[t]{@{}l*{\numexpr#1-1\relax}{@{\bbdAliasSeparator}l}@{}}%
+    }{%
+    \end{tabular}%
+    \par\nobreak\vskip 1.1ex plus .2ex\relax
+}
 
 % Environment signatures: \begin{environment} ... \end{environment}.
 \def\menv#1{\char`\{#1\char`\}}
@@ -399,6 +417,11 @@ Ligatures=TeX
     \AmikhtehLogoFooterTitle{}
 
     \begin{abstract}
+        \setlength{\rightskip}{0pt}%
+        \setlength{\parfillskip}{0pt plus 1fil}%
+        \hyphenpenalty=10000\relax
+        \exhyphenpenalty=10000\relax
+        \setlength{\emergencystretch}{2em}%
         The \textsf{babelbidi} package extends Babel's bidirectional
         support by correcting specific direction-sensitive behaviour
         and providing interfaces for text direction, layout, language
@@ -579,7 +602,7 @@ Ligatures=TeX
     options with engine-dependent defaults supplied by this package.
 
 
-        \subsection{Quick Start}
+    \subsection{Quick Start}
     \label{sec:quick-start}
 
     The following example works with \LuaLaTeX and \XeLaTeX
@@ -587,7 +610,7 @@ Ligatures=TeX
 
     \begin{minted}{latex}
         \documentclass{article}
-        \usepackage{hyperref} % Load before babelbidi for XeLaTeX.
+        \usepackage{hyperref}
         \usepackage{babelbidi}
 
         \babelprovide[import,main]{english}
@@ -625,6 +648,13 @@ Ligatures=TeX
     does not remove the need to declare languages and assign suitable
     fonts.
 
+    \subsection{Package Load Order}
+    \label{sec:loading-order}
+
+    With \XeLaTeX, \textsf{babelbidi} uses \textsf{bidi} by default.
+    Both loading orders of \textsf{hyperref} and \textsf{babelbidi}
+    are supported. Follow any load-order requirements documented by
+    other packages.
 
     \subsection{Engine Setup}
     \label{sec:loading-engine-setup}
@@ -632,9 +662,6 @@ Ligatures=TeX
     Normally, \textsf{babelbidi} loads Babel and chooses a
     bidirectional backend for the current engine. With \LuaLaTeX
     and \textsf{beamer-rl}, the class handles Babel setup instead.
-
-    With \XeLaTeX, load \textsf{hyperref} before \textsf{babelbidi}
-    if hyperlinks are needed; see Section~\ref{sec:xelatex-patches}.
 
     \Needspace{10\baselineskip}
     Babel's \texttt{bidi} option selects the bidirectional backend.
@@ -707,6 +734,14 @@ Ligatures=TeX
     \begin{minted}{latex}
         \usepackage[fontcache=false]{babelbidi}
     \end{minted}
+
+    \Describe{mintedunicode}{=\meta{true}/\meta{false}}
+    Controls the adjustment of Unicode command-name highlighting in
+    \textsf{minted} \texttt{latex} code blocks and file listings with
+    \XeLaTeX{} and \LuaLaTeX{}. The default is \texttt{true}; the
+    adjustment is used only when \textsf{minted} is loaded. Set the
+    option to \texttt{false} to disable it. See
+    Section~\ref{sec:minted-unicode} for details and limitations.
 
     \Describe{autofootnoterule}{}
     \DescribeOther{textwidthfootnoterule}{}
@@ -896,12 +931,14 @@ Ligatures=TeX
     \Describe{\endR}{}
     Ends the explicit RTL text segment.
 
-    \Describe{\LR}{\marg{text}}
-    \DescribeOther{\LRE}{\marg{text}}
+    \begin{DescribeAliases}
+        \DescribeAlias{\LR}{\marg{text}} & \DescribeAlias{\LRE}{\marg{text}}
+    \end{DescribeAliases}
     Typesets the argument as inline LTR text. The two names are equivalent.
 
-    \Describe{\RL}{\marg{text}}
-    \DescribeOther{\RLE}{\marg{text}}
+    \begin{DescribeAliases}
+        \DescribeAlias{\RL}{\marg{text}} & \DescribeAlias{\RLE}{\marg{text}}
+    \end{DescribeAliases}
     Typesets the argument as inline RTL text. The two names are equivalent.
 
     Prefer the argument-taking commands for short passages.
@@ -912,16 +949,16 @@ Ligatures=TeX
     \subsection{Paragraphs and Blocks}
     \label{sec:paragraph-direction}
 
-    \Describe{\setLTR}{}
-    \DescribeOther{\setLR}{}
-    \DescribeOther{\unsetRTL}{}
-    \DescribeOther{\unsetRL}{}
+    \begin{DescribeAliases}[4]
+        \DescribeAlias{\setLTR}{} & \DescribeAlias{\setLR}{}
+        & \DescribeAlias{\unsetRTL}{} & \DescribeAlias{\unsetRL}{}
+    \end{DescribeAliases}
     These equivalent commands set paragraph direction to LTR.
 
-    \Describe{\setRTL}{}
-    \DescribeOther{\setRL}{}
-    \DescribeOther{\unsetLTR}{}
-    \DescribeOther{\unsetLR}{}
+    \begin{DescribeAliases}[4]
+        \DescribeAlias{\setRTL}{} & \DescribeAlias{\setRL}{}
+        & \DescribeAlias{\unsetLTR}{} & \DescribeAlias{\unsetLR}{}
+    \end{DescribeAliases}
     These equivalent commands set paragraph direction to RTL.
 
     The switches take no arguments; place them between paragraphs and use
@@ -1048,12 +1085,14 @@ Ligatures=TeX
     and can be used in the \cmd{\author} or \cmd{\title}
     argument.
 
-    \Describe{\setfootnoteLR}{}
-    \DescribeOther{\unsetfootnoteRL}{}
+    \begin{DescribeAliases}
+        \DescribeAlias{\setfootnoteLR}{} & \DescribeAlias{\unsetfootnoteRL}{}
+    \end{DescribeAliases}
     These equivalent commands set subsequent ordinary footnotes to LTR.
 
-    \Describe{\setfootnoteRL}{}
-    \DescribeOther{\unsetfootnoteLR}{}
+    \begin{DescribeAliases}
+        \DescribeAlias{\setfootnoteRL}{} & \DescribeAlias{\unsetfootnoteLR}{}
+    \end{DescribeAliases}
     These equivalent commands set subsequent ordinary footnotes to RTL.
 
     The switches insert no note and take no arguments. Their
@@ -1073,12 +1112,14 @@ Ligatures=TeX
     The controls below position and size the rule above the footnote
     area. They do not change the direction of the footnote text.
 
-    \Describe{\leftfootnoterule}{}
-    \DescribeOther{\LRfootnoterule}{}
+    \begin{DescribeAliases}
+        \DescribeAlias{\leftfootnoterule}{} & \DescribeAlias{\LRfootnoterule}{}
+    \end{DescribeAliases}
     These equivalent commands select a left-aligned footnote rule.
 
-    \Describe{\rightfootnoterule}{}
-    \DescribeOther{\RLfootnoterule}{}
+    \begin{DescribeAliases}
+        \DescribeAlias{\rightfootnoterule}{} & \DescribeAlias{\RLfootnoterule}{}
+    \end{DescribeAliases}
     These equivalent commands select a right-aligned footnote rule.
 
     \Describe{\textwidthfootnoterule}{}
@@ -1220,7 +1261,7 @@ Ligatures=TeX
     With \XeTeX, select \cmd{\paragraphfootnotes} in the preamble;
     its implementation in \textsf{bidi} requires preamble-only setup.
 
-    With \LuaTeX and \pdfTeX, the extra-layout implementation installs
+    With \LuaTeX and \pdfTeX, loading \texttt{extrafootnotefeatures} installs
     a rule spanning \cmd{\columnwidth} and disables
     \cmd{\autofootnoterule}, \cmd{\leftfootnoterule},
     \cmd{\LRfootnoterule}, \cmd{\rightfootnoterule},
@@ -1373,12 +1414,7 @@ Ligatures=TeX
     Explicit commands change the note's text direction, not its
     placement policy.
 
-    With \XeTeX, these explicit commands use the native
-    \textsf{bidi} implementation, which may apply the
-    explicit direction only to the first paragraph
-    of a multi-paragraph margin note. With \LuaTeX
-    and \pdfTeX, \textsf{babelbidi} keeps the selected
-    direction throughout the note.
+    The selected direction applies throughout a multi-paragraph note.
 
     \Describe{\setLTRmarginpar}{}
     Sets ordinary margin notes to LTR direction and placement.
@@ -1443,11 +1479,6 @@ Ligatures=TeX
     \textsf{dblfnote}'s default \cmd{\DFNtrysingle} remains in effect.
     Use \cmd{\DFNalwaysdouble} or \cmd{\DFNtrysingle} to select the same
     policy explicitly on both engines.
-
-    When \textsf{dblfnote} is loaded before \textsf{babelbidi} with
-    \XeLaTeX, the switches retain the installed \textsf{bidi} behavior;
-    depending on its active output routine, a switch may not change the
-    displayed column order.
 
     \subsection{Two-Column Table of Contents}
     \label{sec:two-column-toc}
@@ -1752,11 +1783,15 @@ Ligatures=TeX
     \subsection{\texorpdfstring{\XeLaTeX}{XeLaTeX} Patches}
     \label{sec:xelatex-patches}
 
-    With \XeLaTeX, load \textsf{hyperref} before \textsf{babelbidi}.
-    With current \textsf{bidi} versions, the reverse order can cause
-    errors in footnotes.
+    When \textsf{hyperref} is loaded later, avoid a recursive
+    footnote definition in the installed \textsf{bidi} integration.
 
     \begin{itemize}
+        \item
+        \textsf{tabulary}:
+        Adapt the preliminary column-width measurement in RTL tables;
+        the final table keeps its original direction.
+
         \item
         \textsf{natbib}:
         Adjust citation-link handling in RTL text with recent
@@ -1821,6 +1856,28 @@ Ligatures=TeX
     the language and direction separately from the syntax-highlighting
     lexer.
 
+    \subsection{Unicode TeX Commands}
+    \label{sec:minted-unicode}
+
+    Pygments' standard \texttt{latex} lexer recognizes only the first
+    character of a non-Latin command name. With \XeLaTeX{} or \LuaLaTeX{},
+    BabelBidi adjusts the displayed highlighting of such command names in
+    \texttt{minted} code blocks and file listings.
+
+    This adjustment, controlled by the package option described in
+    Section~\ref{sec:loading-package-options}, does not replace Pygments'
+    lexer and does not affect inline listings or commands
+    inside math mode. When Pygments splits a name into several syntax
+    tokens, for example around an underscore, the remainder may retain
+    its original highlighting.
+
+    \begin{minted}[textlang=persian,textdir=ltr,formatcom=\latinttfamily,
+        chardir={{\\}{l},{\{}{l},{\}}{l}}]{latex}
+        \begin{min||ted}{latex}
+            \نمونه{متن فارسی}
+        \end{min||ted}
+    \end{minted}
+
     \subsection{Language and Direction}
     \label{sec:minted-language-direction}
 
@@ -1870,9 +1927,10 @@ Ligatures=TeX
         \end{min||ted}
     \end{minted}
 
-    Saved properties are restored after the \texttt{minted} environment.
-    The restoration hook is environment-based; do not assume equivalent
-    restoration for inline commands or file-input interfaces. A nonempty
+    Saved properties are restored after a \texttt{minted} environment or
+    \cmd{\inputminted}. Do not use nonempty \texttt{chardir} with
+    \cmd{\mintinline}: Babel requires character-property changes in
+    vertical mode. A nonempty
     \texttt{chardir} value raises an error with \XeLaTeX or \pdfLaTeX;
     it is not silently ignored.
 
@@ -1896,9 +1954,9 @@ Ligatures=TeX
         the installed \textsf{bidi} version.
 
         \item
-        Compatibility with \textsf{dblfnote} has been tested with
-        version 1.1 (2018/09/03). Other versions have not been
-        independently tested.
+        Compatibility has been tested with \texttt{dblfnote.sty}
+        version 1.1 (2018/09/03), from the \textsf{yafoot} 1.1 bundle.
+        Other versions have not been independently tested.
 
         \item
         Direction control does not supply language data, input or

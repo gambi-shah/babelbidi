@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage[paperwidth=600pt,paperheight=700pt,textwidth=300pt,
+  marginparwidth=90pt,marginparsep=12pt]{geometry}
+\usepackage[english]{babelbidi}
+\babelfont{rm}[Script=Arabic]{Amiri}
+\def\checkparagraph#1{\typeout{MARGIN-#1: \the\everypar}}
+\begin{document}
+\RTLmarginpar{\checkparagraph{R1}سلام جهان و متن آزمایشی برای شکستن خط.
+\par\checkparagraph{R2}پاراگراف دوم با چند واژه برای شکستن خط.
+\par\checkparagraph{R3}پاراگراف سوم با چند واژه برای شکستن خط.}
+MAINFIRST ordinary paragraph.
+\newpage
+\reversemarginpar
+\LTRmarginpar{\checkparagraph{L1}First paragraph with several words to wrap.
+\par\checkparagraph{L2}Second paragraph with several words to wrap.
+\par\checkparagraph{L3}Third paragraph with several words to wrap.}
+MAINSECOND ordinary paragraph.
+\newpage
+\RTLmarginpar{\checkparagraph{R4}سلام جهان و متن آزمایشی برای شکستن خط.
+\par\checkparagraph{R5}پاراگراف دوم با چند واژه برای شکستن خط.
+\par\checkparagraph{R6}پاراگراف سوم با چند واژه برای شکستن خط.}
+MAINTHIRD ordinary paragraph.
+\newpage
+\normalmarginpar
+\LTRmarginpar{\checkparagraph{L4}First paragraph with several words to wrap.
+\par\checkparagraph{L5}Second paragraph with several words to wrap.
+\par\checkparagraph{L6}Third paragraph with several words to wrap.}
+MAINFOURTH ordinary paragraph.
+\end{document}

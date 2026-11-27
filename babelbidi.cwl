@@ -9,6 +9,7 @@ ltr=
 rtl=
 code=
 fontcache=#true,false
+mintedunicode=#true,false
 autofootnoterule
 textwidthfootnoterule
 arabmaths
@@ -16,6 +17,21 @@ extrafootnotefeatures=#on,off
 logostyle=#auto,simple
 bidi=
 layout=
+#endkeyvals
+
+# BabelBidi extensions to minted and listings options.
+#keyvals:\begin{minted},\mint,\mintinline,\inputminted,\setminted,\setmintedinline,\newminted,\newmint,\newmintinline,\newmintedfile
+textlang=%<language%>
+textdir=#ltr,rtl
+#endkeyvals
+
+# Nonempty chardir is supported with LuaLaTeX in blocks and file listings.
+#keyvals:\begin{minted},\inputminted,\setminted,\newminted,\newmintedfile
+chardir={%<character and direction pairs%>}
+#endkeyvals
+
+#keyvals:\lstset,\begin{lstlisting},\lstinputlisting,\lstdefinestyle
+captiondirection=#textdirection,LTR,RTL
 #endkeyvals
 
 # Language and font selection

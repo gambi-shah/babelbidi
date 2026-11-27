@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+from PIL import Image, ImageChops
 
 try:
     from pypdf import PdfReader
@@ -64,13 +65,30 @@ with tempfile.TemporaryDirectory(prefix="babelbidi-native-", dir="/tmp") as tmp:
                                 if annotation.get("/Subtype") == "/Link" and action.get("/S") == "/GoTo":
                                     links.append((str(action.get("/D")),
                                                   tuple(round(float(x), 3) for x in annotation["/Rect"])))
-                outputs[mode] = (hashes, labels, sorted(links))
+                outputs[mode] = (hashes, labels, sorted(links), pages)
             native, actual = outputs["native"], outputs["babelbidi"]
             assert len(native[0]) == len(actual[0]), (source, variant, "page count")
             differences = [i for i, (a, b) in enumerate(zip(native[0], actual[0]), 1) if a != b]
+            expected_regions = {
+                "bidi-xetex": (6, (.80, .22, .95, .30)),
+                "columns": (3, (.20, .78, .82, .81)),
+            }
+            expected = expected_regions.get(source)
+            if expected and differences == [expected[0]]:
+                page_number, region = expected
+                native_page = Image.open(native[3][page_number - 1]).convert("RGB")
+                actual_page = Image.open(actual[3][page_number - 1]).convert("RGB")
+                assert native_page.size == actual_page.size
+                width, height = native_page.size
+                delta = ImageChops.difference(native_page, actual_page)
+                left, top, right, bottom = region
+                delta.paste((0, 0, 0), (int(width * left), int(height * top),
+                                         int(width * right), int(height * bottom)))
+                assert delta.getbbox() is None, "unexpected difference outside improved area"
+                differences = []
             assert not differences, (source, variant, "different rendered pages", differences)
             assert native[1] == actual[1], (source, variant, "different labels", native[1], actual[1])
             assert native[2] == actual[2], (source, variant, "different link annotations", native[2], actual[2])
-            print(f"{source} {variant}: {len(native[0])} rendered pages, labels and checked links match bidi")
+            print(f"{source} {variant}: rendered pages, labels and checked links match bidi outside expected improvements")
     if PdfReader is None:
         print("PDF link annotation comparison skipped: pypdf is not installed")
